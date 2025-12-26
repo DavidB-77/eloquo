@@ -8,6 +8,7 @@ import { FormField } from "@/components/forms/FormField";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Zap, Sparkles, Layers, Globe } from "lucide-react";
+import { FileUpload, type ContextFile } from "./FileUpload";
 
 const TARGET_MODELS = [
     { value: "universal", label: "Universal (Best for all models)" },
@@ -18,40 +19,65 @@ const TARGET_MODELS = [
 ];
 
 const STRENGTH_OPTIONS = [
-    { value: "light", label: "Light", description: "Subtle improvements, preserve original style" },
-    { value: "medium", label: "Medium", description: "Balanced optimization" },
-    { value: "aggressive", label: "Aggressive", description: "Maximum transformation" },
+    { value: "light", label: "Light", description: "Subtle improvements" },
+    { value: "medium", label: "Medium", description: "Balanced" },
+    { value: "aggressive", label: "Aggressive", description: "Maximum" },
 ];
 
+export interface OptimizeFormData {
+    prompt: string;
+    targetModel: string;
+    strength: string;
+    context: string;
+    contextFiles: ContextFile[];
+    useOrchestration: boolean;
+}
+
 interface OptimizeFormProps {
-    onSubmit: (data: {
-        prompt: string;
-        targetModel: string;
-        strength: string;
-        context: string;
-        useOrchestration: boolean;
-    }) => void;
+    onSubmit: (data: OptimizeFormData) => void;
     isLoading?: boolean;
     canOptimize?: boolean;
     canOrchestrate?: boolean;
+    initialData?: Partial<OptimizeFormData>;
 }
 
 export function OptimizeForm({
     onSubmit,
     isLoading = false,
     canOptimize = true,
-    canOrchestrate = false
+    canOrchestrate = false,
+    initialData,
 }: OptimizeFormProps) {
-    const [prompt, setPrompt] = React.useState("");
-    const [targetModel, setTargetModel] = React.useState("universal");
-    const [strength, setStrength] = React.useState("medium");
-    const [context, setContext] = React.useState("");
-    const [useOrchestration, setUseOrchestration] = React.useState(false);
+    const [prompt, setPrompt] = React.useState(initialData?.prompt || "");
+    const [targetModel, setTargetModel] = React.useState(initialData?.targetModel || "universal");
+    const [strength, setStrength] = React.useState(initialData?.strength || "medium");
+    const [context, setContext] = React.useState(initialData?.context || "");
+    const [contextFiles, setContextFiles] = React.useState<ContextFile[]>(initialData?.contextFiles || []);
+    const [useOrchestration, setUseOrchestration] = React.useState(initialData?.useOrchestration || false);
+
+    // Update form when initialData changes (for edit mode)
+    React.useEffect(() => {
+        if (initialData) {
+            setPrompt(initialData.prompt || "");
+            setTargetModel(initialData.targetModel || "universal");
+            setStrength(initialData.strength || "medium");
+            setContext(initialData.context || "");
+            setContextFiles(initialData.contextFiles || []);
+            setUseOrchestration(initialData.useOrchestration || false);
+        }
+    }, [initialData]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!prompt.trim()) return;
-        onSubmit({ prompt, targetModel, strength, context, useOrchestration });
+        onSubmit({ prompt, targetModel, strength, context, contextFiles, useOrchestration });
+    };
+
+    const clearForm = () => {
+        setPrompt("");
+        setContext("");
+        setContextFiles([]);
+        setUseOrchestration(false);
     };
 
     return (
@@ -114,8 +140,8 @@ export function OptimizeForm({
                                         type="button"
                                         onClick={() => setStrength(option.value)}
                                         className={`flex-1 p-2 rounded-lg border text-sm font-medium transition-all ${strength === option.value
-                                            ? "bg-primary text-primary-foreground border-primary"
-                                            : "bg-background hover:bg-muted border-input"
+                                                ? "bg-primary text-primary-foreground border-primary"
+                                                : "bg-background hover:bg-muted border-input"
                                             }`}
                                     >
                                         {option.label}
@@ -139,18 +165,26 @@ export function OptimizeForm({
                         />
                     </FormField>
 
+                    {/* File Upload */}
+                    <FileUpload
+                        onFilesChange={setContextFiles}
+                        disabled={isLoading}
+                    />
+
                     {/* Orchestration Toggle */}
                     {canOrchestrate && (
                         <div
                             className={`p-4 rounded-lg border cursor-pointer transition-all ${useOrchestration
-                                ? "bg-primary/5 border-primary"
-                                : "bg-muted/30 border-input hover:border-muted-foreground"
+                                    ? "bg-primary/5 border-primary"
+                                    : "bg-muted/30 border-input hover:border-muted-foreground"
                                 }`}
                             onClick={() => setUseOrchestration(!useOrchestration)}
                         >
                             <div className="flex items-start space-x-3">
-                                <div className={`h-5 w-5 rounded border-2 flex items-center justify-center mt-0.5 ${useOrchestration ? "bg-primary border-primary" : "border-input"
-                                    }`}>
+                                <div
+                                    className={`h-5 w-5 rounded border-2 flex items-center justify-center mt-0.5 ${useOrchestration ? "bg-primary border-primary" : "border-input"
+                                        }`}
+                                >
                                     {useOrchestration && (
                                         <svg className="h-3 w-3 text-primary-foreground" fill="currentColor" viewBox="0 0 12 12">
                                             <path d="M10.28 2.28L3.989 8.575 1.695 6.28A1 1 0 00.28 7.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 2.28z" />
@@ -164,7 +198,7 @@ export function OptimizeForm({
                                         <Badge variant="secondary" className="text-[10px]">Premium</Badge>
                                     </div>
                                     <p className="text-xs text-muted-foreground mt-1">
-                                        For complex tasks. Breaks your request into multiple targeted prompts for different AI models.
+                                        For complex tasks. Breaks your request into multiple targeted prompts.
                                     </p>
                                 </div>
                             </div>
@@ -189,7 +223,9 @@ export function OptimizeForm({
                             isLoading={isLoading}
                             disabled={!canOptimize || !prompt.trim()}
                         >
-                            {useOrchestration ? (
+                            {isLoading ? (
+                                "⏳ Optimizing..."
+                            ) : useOrchestration ? (
                                 <>
                                     <Layers className="h-4 w-4 mr-2" />
                                     Orchestrate
@@ -207,3 +243,5 @@ export function OptimizeForm({
         </Card>
     );
 }
+
+export { type ContextFile };
