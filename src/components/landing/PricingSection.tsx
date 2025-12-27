@@ -111,29 +111,42 @@ export function PricingSection() {
     // Helper to get price display
     const getPriceDisplay = (tierKey: keyof PricingConfig, tierName: string) => {
         const tier = pricing[tierKey];
-        const isFoundingEligible = founding.enabled && founding.applies_to.includes(tierKey) && !isAnnual;
+        const isFoundingEligible = founding.enabled && founding.applies_to.includes(tierKey);
 
-        // Founding price logic
-        let price = isAnnual ? tier.annual_price / 12 : tier.monthly_price;
-        let originalPrice = null;
-        let foundingPrice = null;
+        // Base prices
+        let monthly = tier.monthly_price;
+        let annualTotal = tier.annual_price;
 
+        let originalMonthly = null;
+        let originalAnnualTotal = null;
+
+        let isFoundingPrice = false;
+
+        // Apply Founding Logic
         if (isFoundingEligible && currentWave) {
-            if (tierKey === 'pro') foundingPrice = currentWave.pro_price;
-            if (tierKey === 'business') foundingPrice = currentWave.business_price;
+            let foundMonthly = 0;
+            if (tierKey === 'pro') foundMonthly = currentWave.pro_price;
+            if (tierKey === 'business') foundMonthly = currentWave.business_price;
 
-            if (foundingPrice) {
-                originalPrice = tier.monthly_price;
-                price = foundingPrice;
+            if (foundMonthly > 0) {
+                isFoundingPrice = true;
+                originalMonthly = monthly;
+                originalAnnualTotal = annualTotal;
+
+                monthly = foundMonthly;
+                // Annual founding price is just 12 * monthly founding price (standard practice, or could be further discounted)
+                // Prompt request said: "Pro: $108/year (show $150 with strikethrough)" which implies 12 * $9
+                annualTotal = foundMonthly * 12;
             }
         }
 
         return {
-            amount: price.toFixed(isAnnual ? 2 : 0),
-            originalAmount: originalPrice,
-            isFounding: !!foundingPrice,
-            period: isAnnual ? '/mo' : '/mo', // Always show /mo, annual just shows breakdown
-            totalAnnual: isAnnual ? tier.annual_price : null
+            amount: isAnnual ? (annualTotal / 12).toFixed(2) : monthly.toFixed(0),
+            originalAmount: isAnnual ? (originalAnnualTotal ? (originalAnnualTotal / 12).toFixed(2) : null) : originalMonthly,
+            isFounding: isFoundingPrice,
+            period: '/mo',
+            totalAnnual: isAnnual ? annualTotal : null,
+            originalTotalAnnual: isAnnual ? originalAnnualTotal : null
         };
     };
 
@@ -166,7 +179,7 @@ export function PricingSection() {
 
                 <div className="pricing-header text-center mb-16">
                     <h2 className="text-4xl md:text-6xl font-normal font-display mb-6 text-white uppercase glow-sm">
-                        Neural <span className="text-electric-cyan italic">Credits</span> Matrix
+                        Protocol <span className="text-electric-cyan italic">Optimization</span> Matrix
                     </h2>
                     <p className="text-white/60 text-lg max-w-2xl mx-auto mb-10 font-medium tracking-wide">
                         Choose the protocol that fits your frequency.
@@ -221,7 +234,7 @@ export function PricingSection() {
                             "Web dashboard access",
                             `${pricing.pro.history_days}-day prompt history`,
                             "Priority support",
-                            "MAINFRAME INTEGRATION (MCP)",
+                            "MCP Server Access",
                             "Full API Access"
                         ]}
                         cta="Initialize Pro"
@@ -240,7 +253,7 @@ export function PricingSection() {
                             "Web dashboard access",
                             "Unlimited prompt history",
                             "Dedicated support",
-                            "MAINFRAME INTEGRATION (MCP)",
+                            "MCP Server Access",
                             "Full API Access",
                             "Priority processing queue"
                         ]}

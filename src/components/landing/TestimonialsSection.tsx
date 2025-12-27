@@ -63,7 +63,7 @@ export function TestimonialsSection() {
             <Container>
                 <div className="testi-header text-center mb-24">
                     <h2 className="text-4xl md:text-6xl font-normal font-display tracking-tight mb-6 text-white uppercase glow-sm">
-                        Neural <span className="text-sunset-orange italic">Feedback</span> Loop
+                        User <span className="text-sunset-orange italic">Feedback</span> Loop
                     </h2>
                     <p className="text-white/60 text-lg max-w-2xl mx-auto font-medium tracking-wide">
                         See why elite operators trust Eloquo to maximize their AI potential.

@@ -246,7 +246,7 @@ function SettingsContent() {
                                                 </li>
                                                 <li className="flex items-center">
                                                     <Check className={`h-4 w-4 mr-2 ${tier === "free" ? "text-muted" : "text-success"}`} />
-                                                    Neural Archive access
+                                                    Prompt Archive access
                                                 </li>
                                             </ul>
                                         </div>

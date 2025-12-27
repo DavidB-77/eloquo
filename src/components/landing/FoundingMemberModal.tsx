@@ -21,10 +21,10 @@ export function FoundingMemberModal({ config }: FoundingMemberModalProps) {
         const hasDismissed = localStorage.getItem("eloquo_founding_dismissed");
         if (hasDismissed) return;
 
-        // Trigger after 10 seconds
+        // Trigger after 3 seconds
         const timer = setTimeout(() => {
             setIsOpen(true);
-        }, 10000);
+        }, 3000);
 
         // Also trigger on scroll to pricing if not yet shown (handled by simple listener for now)
         const handleScroll = () => {
@@ -64,33 +64,26 @@ export function FoundingMemberModal({ config }: FoundingMemberModalProps) {
     // Calculate current wave data
     let currentWaveIndex = 0;
     let accumSpots = 0;
-    let spotsInWave = 0;
-    let spotsUsedInWave = 0;
 
     for (let i = 0; i < config.waves.length; i++) {
-        const wave = config.waves[i];
-        if (config.current_count < accumSpots + wave.spots) {
+        if (config.current_count < accumSpots + config.waves[i].spots) {
             currentWaveIndex = i;
-            spotsInWave = wave.spots;
-            spotsUsedInWave = config.current_count - accumSpots;
             break;
         }
-        accumSpots += wave.spots;
+        accumSpots += config.waves[i].spots;
     }
 
-    const currentWave = config.waves[currentWaveIndex];
-    const spotsRemaining = spotsInWave - spotsUsedInWave;
-
-    if (!currentWave) return null; // Should not happen unless all waves full
+    // Recalculate accumulation for display logic
+    let displayAccum = 0;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="relative w-full max-w-lg bg-midnight border border-electric-cyan/30 rounded-2xl shadow-[0_0_50px_rgba(9,183,180,0.2)] overflow-hidden scale-in-95 animate-in duration-300">
+            <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-midnight border border-electric-cyan/30 rounded-2xl shadow-[0_0_50px_rgba(9,183,180,0.2)] scale-in-95 animate-in duration-300 scrollbar-hide">
 
                 {/* Close Button */}
                 <button
                     onClick={handleDismiss}
-                    className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors"
+                    className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors z-10"
                 >
                     <X className="h-5 w-5" />
                 </button>
@@ -109,43 +102,83 @@ export function FoundingMemberModal({ config }: FoundingMemberModalProps) {
                         Be one of the first 500 members to join Eloquo and secure exclusive discounted rates forever.
                     </p>
 
-                    <div className="bg-deep-teal/20 border border-electric-cyan/20 rounded-xl p-6 mb-8 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                            <Sparkles className="h-24 w-24 text-electric-cyan" />
-                        </div>
+                    <div className="space-y-3 mb-8">
+                        {config.waves.map((wave, idx) => {
+                            const isCurrent = idx === currentWaveIndex;
+                            const isPast = idx < currentWaveIndex;
+                            const isFuture = idx > currentWaveIndex;
 
-                        <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-4">
-                            <span className="text-xs font-bold text-neon-orange uppercase tracking-widest">Wave {currentWave.wave} Active</span>
-                            <span className="text-xs font-mono text-white/60">{spotsRemaining} Spots Left</span>
-                        </div>
+                            // Calculate spots remaining for this specific wave if it's current
+                            const spotsInThisWave = wave.spots;
+                            const spotsUsedPreviously = displayAccum;
+                            const spotsUsedTotal = config.current_count;
+                            const spotsUsedInThisWave = Math.max(0, spotsUsedTotal - spotsUsedPreviously);
+                            const remaining = Math.max(0, spotsInThisWave - spotsUsedInThisWave);
 
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                                <span className="text-white font-medium">Pro Plan</span>
-                                <div className="text-right">
-                                    <span className="text-electric-cyan font-bold text-lg">${currentWave.pro_price}/mo</span>
-                                    <span className="text-white/40 text-xs line-through ml-2">$15</span>
-                                    <span className="text-[10px] text-green-400 font-bold ml-2">SAVE {Math.round((1 - currentWave.pro_price / 15) * 100)}%</span>
+                            // Update accum for next iteration
+                            displayAccum += wave.spots;
+
+                            return (
+                                <div
+                                    key={wave.wave}
+                                    className={cn(
+                                        "relative border rounded-xl p-4 transition-all",
+                                        isCurrent ? "bg-deep-teal/20 border-electric-cyan/40 shadow-[0_0_15px_rgba(9,183,180,0.1)]" : "bg-white/5 border-white/5 opacity-60 grayscale"
+                                    )}
+                                >
+                                    {isCurrent && (
+                                        <div className="absolute -top-2.5 right-4 bg-neon-orange text-midnight text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full">
+                                            Current Wave 🔥
+                                        </div>
+                                    )}
+
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                            <div className={cn("text-xs font-bold uppercase tracking-wider mb-1", isCurrent ? "text-white" : "text-white/40")}>
+                                                Wave {wave.wave} <span className="text-white/30 font-medium normal-case ml-1">(Next {wave.spots})</span>
+                                            </div>
+                                            {isCurrent && (
+                                                <div className="text-[10px] font-mono text-neon-orange font-bold">
+                                                    {remaining} spots remaining
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center space-x-6">
+                                        <div>
+                                            <span className="text-[10px] uppercase text-white/40 block">Pro</span>
+                                            <span className={cn("font-bold", isCurrent ? "text-electric-cyan" : "text-white/60")}>${wave.pro_price}/mo</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] uppercase text-white/40 block">Business</span>
+                                            <span className={cn("font-bold", isCurrent ? "text-electric-cyan" : "text-white/60")}>${wave.business_price}/mo</span>
+                                        </div>
+                                    </div>
+
+                                    {isPast && (
+                                        <div className="absolute inset-0 bg-midnight/60 flex items-center justify-center rounded-xl backdrop-blur-[1px]">
+                                            <span className="text-xs font-bold text-white/40 uppercase tracking-widest border border-white/20 px-3 py-1 rounded-full bg-midnight">Sold Out</span>
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-white font-medium">Business Plan</span>
-                                <div className="text-right">
-                                    <span className="text-electric-cyan font-bold text-lg">${currentWave.business_price}/mo</span>
-                                    <span className="text-white/40 text-xs line-through ml-2">$35</span>
-                                    <span className="text-[10px] text-green-400 font-bold ml-2">SAVE {Math.round((1 - currentWave.business_price / 35) * 100)}%</span>
-                                </div>
-                            </div>
-                        </div>
+                            );
+                        })}
 
-                        <div className="mt-4 pt-4 border-t border-white/5 space-y-2">
-                            <div className="flex items-center text-xs text-white/60">
-                                <Check className="h-3 w-3 text-electric-cyan mr-2" />
-                                Price locked forever
+                        {/* Final Regular Pricing Block */}
+                        <div className="bg-transparent border border-white/5 rounded-xl p-4 opacity-40 grayscale">
+                            <div className="text-xs font-bold uppercase tracking-wider mb-2 text-white/40">
+                                After 500 Founders
                             </div>
-                            <div className="flex items-center text-xs text-white/60">
-                                <Check className="h-3 w-3 text-electric-cyan mr-2" />
-                                Never increases as long as you stay subscribed
+                            <div className="flex items-center space-x-6">
+                                <div>
+                                    <span className="text-[10px] uppercase text-white/40 block">Pro</span>
+                                    <span className="font-bold text-white/60">$15/mo</span>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] uppercase text-white/40 block">Business</span>
+                                    <span className="font-bold text-white/60">$35/mo</span>
+                                </div>
                             </div>
                         </div>
                     </div>

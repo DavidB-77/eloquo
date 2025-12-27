@@ -191,7 +191,7 @@ export default function DashboardPage() {
                                     <History className="h-4 w-4 text-sunset-orange" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-xs font-bold text-white uppercase tracking-wider">Neural Archive</p>
+                                    <p className="text-xs font-bold text-white uppercase tracking-wider">Prompt Archive</p>
                                     <p className="text-[10px] text-white/20 uppercase tracking-tighter opacity-60">View all optimization history</p>
                                 </div>
                                 <ArrowRight className="h-3 w-3 text-electric-cyan opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
