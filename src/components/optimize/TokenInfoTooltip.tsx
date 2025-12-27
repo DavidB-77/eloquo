@@ -20,7 +20,7 @@ export function TokenInfoTooltip({ targetModel, accuracy }: TokenInfoTooltipProp
             <Tooltip>
                 <TooltipTrigger asChild>
                     <button
-                        className="ml-1 text-gray-400 hover:text-gray-600 transition-colors inline-flex items-center"
+                        className="ml-1 text-muted-foreground hover:text-foreground transition-colors inline-flex items-center"
                         aria-label="Token calculation info"
                         type="button"
                     >

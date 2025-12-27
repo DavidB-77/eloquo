@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { callOptimize, type OptimizeRequest } from '@/lib/n8n';
 import { checkUsageLimits, incrementUsage, saveToHistory, getUserUsage } from '@/lib/usage';
-import { calculateTokenSavings } from '@/lib/tokenizer';
+import { calculateTokenSavings, countTokens } from '@/lib/tokenizer';
 
 export async function POST(request: Request) {
     try {
@@ -109,12 +109,41 @@ export async function POST(request: Request) {
 
             // Save to history using updated RPC
             try {
+                // Debug: Log what we're calculating
+                const originalPrompt = prompt; // The user's input
+                const optimizedPrompt = result.results.full;
+
+                console.log('Token calculation debug:', {
+                    originalPromptLength: originalPrompt?.length,
+                    optimizedPromptLength: optimizedPrompt?.length,
+                    optimizedPromptPreview: optimizedPrompt?.substring(0, 100),
+                });
+
                 // Calculate tokens
                 const tokenData = calculateTokenSavings(
                     prompt,
-                    result.results.full,
+                    optimizedPrompt || '',
                     targetModel
                 );
+
+                console.log('Token counts:', {
+                    tokensOriginal: tokenData.original,
+                    tokensOptimized: tokenData.optimized,
+                    tokensSaved: tokenData.saved
+                });
+
+                console.log('SAVING TO DB:', {
+                    p_tokens_original: tokenData.original,
+                    p_tokens_optimized: tokenData.optimized,
+                    p_tokens_saved: tokenData.saved,
+                    p_optimized_prompt_preview: optimizedPrompt?.substring(0, 50),
+                });
+
+                // Prepare metrics with quality score
+                const saveMetrics = {
+                    ...result.metrics,
+                    qualityScore: result.validation?.score || 0
+                };
 
                 const { error: saveError } = await supabase.rpc('save_optimization', {
                     p_user_id: user.id,
@@ -126,7 +155,7 @@ export async function POST(request: Request) {
                     p_tokens_optimized: tokenData.optimized,
                     p_tokens_saved: tokenData.saved,
                     p_improvements: result.improvements || [],
-                    p_metrics: result.metrics || {},
+                    p_metrics: saveMetrics,
                     p_quick_reference: result.results.quickRef || null,
                     p_snippet: result.results.snippet || null,
                     p_was_orchestrated: false,
