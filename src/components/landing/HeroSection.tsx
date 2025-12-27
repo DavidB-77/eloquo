@@ -64,7 +64,7 @@ export function HeroSection() {
                             <span className="inline-block text-electric-cyan glow-sm italic">Powerful</span> <span className="inline-block">Results</span>
                         </h1>
 
-                        <p className="hero-description text-xl text-dusty-rose mb-10 max-w-2xl mx-auto font-medium leading-relaxed">
+                        <p className="hero-description text-xl text-white/60 mb-10 max-w-2xl mx-auto font-medium leading-relaxed">
                             Eloquo optimizes your raw prompts for ChatGPT, Claude, and Gemini. Get higher quality responses while reducing API token costs by up to 40%.
                         </p>
 
@@ -79,7 +79,7 @@ export function HeroSection() {
                             </Button>
                         </div>
 
-                        <div className="hero-stats mt-16 flex items-center justify-center space-x-8 text-[10px] font-bold text-dusty-rose/60 uppercase tracking-[0.2em]">
+                        <div className="hero-stats mt-16 flex items-center justify-center space-x-8 text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">
                             <div className="flex items-center space-x-2">
                                 <span className="text-white">10+</span>
                                 <span>Optimizations Free</span>

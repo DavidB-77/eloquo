@@ -23,7 +23,7 @@ export function UsageBar({
 
     return (
         <div className={cn("space-y-3", className)}>
-            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-[0.2em] text-dusty-rose">
+            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">
                 <span>{label}</span>
                 {showNumbers && (
                     <span className="text-white">

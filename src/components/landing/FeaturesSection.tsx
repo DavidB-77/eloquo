@@ -92,7 +92,7 @@ export function FeaturesSection() {
                     <h2 className="text-4xl md:text-6xl font-normal font-display tracking-tight mb-6 text-white uppercase glow-sm">
                         Master AI Communication
                     </h2>
-                    <p className="text-dusty-rose text-lg max-w-2xl mx-auto font-medium leading-relaxed tracking-wide">
+                    <p className="text-white/60 text-lg max-w-2xl mx-auto font-medium leading-relaxed tracking-wide">
                         Powerful modules designed to make your AI interactions faster, more precise, and significantly cheaper.
                     </p>
                 </div>
@@ -118,7 +118,7 @@ export function FeaturesSection() {
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="relative z-10">
-                                    <p className="text-dusty-rose text-sm leading-relaxed font-normal">
+                                    <p className="text-white/60 text-sm leading-relaxed font-normal">
                                         {feature.description}
                                     </p>
                                 </CardContent>

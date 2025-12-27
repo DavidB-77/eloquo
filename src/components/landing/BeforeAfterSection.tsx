@@ -57,7 +57,7 @@ export function BeforeAfterSection() {
                     <h2 className="text-4xl md:text-6xl font-normal font-display tracking-tight mb-6 text-white uppercase glow-sm">
                         Protocol <span className="text-electric-cyan italic">Comparison</span>
                     </h2>
-                    <p className="text-dusty-rose text-lg max-w-2xl mx-auto font-medium tracking-wide">
+                    <p className="text-white/60 text-lg max-w-2xl mx-auto font-medium tracking-wide">
                         Compare a standard prompt with an Eloquo-optimized sequence. Precision is the ultimate leverage.
                     </p>
                 </div>
@@ -67,21 +67,21 @@ export function BeforeAfterSection() {
                     <div className="compare-col">
                         <Card className="h-full glass bg-deep-teal/5 border-white/5 p-4 transition-all duration-500 hover:border-white/10">
                             <CardHeader className="flex flex-row items-center justify-between pb-8">
-                                <CardTitle className="text-dusty-rose/40 font-display uppercase tracking-widest text-sm">Raw Input</CardTitle>
+                                <CardTitle className="text-white/40 font-display uppercase tracking-widest text-sm">Raw Input</CardTitle>
                                 <Badge variant="outline" className="opacity-30 text-[8px] uppercase tracking-widest border-white/20 text-white leading-none">Unrefined</Badge>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                <div className="bg-midnight/60 border border-white/5 p-6 rounded-2xl font-mono text-xs leading-relaxed text-dusty-rose/40 italic">
+                                <div className="bg-midnight/60 border border-white/5 p-6 rounded-2xl font-mono text-xs leading-relaxed text-white/40 italic">
                                     &quot;Write a blog post about why businesses should use AI for marketing.
                                     Make it interesting and use some keywords. Keep it under 500 words.&quot;
                                 </div>
                                 <div className="grid grid-cols-2 gap-6">
                                     <div className="p-4 border border-white/5 bg-white/2 rounded-xl">
-                                        <div className="text-[10px] uppercase tracking-[0.2em] text-dusty-rose/30 font-bold mb-2">Clarity Index</div>
+                                        <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 font-bold mb-2">Clarity Index</div>
                                         <div className="text-sm font-bold text-terracotta uppercase">Critical</div>
                                     </div>
                                     <div className="p-4 border border-white/5 bg-white/2 rounded-xl">
-                                        <div className="text-[10px] uppercase tracking-[0.2em] text-dusty-rose/30 font-bold mb-2">Token Density</div>
+                                        <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 font-bold mb-2">Token Density</div>
                                         <div className="text-sm font-bold text-white">45 Units</div>
                                     </div>
                                 </div>
@@ -123,7 +123,7 @@ export function BeforeAfterSection() {
                 </div>
 
                 <div className="compare-footer mt-20 flex flex-wrap items-center justify-center gap-6">
-                    <div className="glass border-electric-cyan/10 rounded-full px-8 py-4 flex items-center space-x-8 text-[10px] font-bold uppercase tracking-[0.2em] text-dusty-rose/60">
+                    <div className="glass border-electric-cyan/10 rounded-full px-8 py-4 flex items-center space-x-8 text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">
                         <div className="flex items-center space-x-3 group">
                             <Target className="h-4 w-4 text-electric-cyan group-hover:scale-125 transition-transform" />
                             <span>Extreme Consistency</span>

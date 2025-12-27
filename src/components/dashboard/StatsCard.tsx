@@ -43,10 +43,10 @@ export function StatsCard({
                     )}
                 </div>
                 <div>
-                    <p className="text-xs font-medium text-dusty-rose mb-1 uppercase tracking-wider">{title}</p>
+                    <p className="text-xs font-medium text-white/40 uppercase tracking-wider mb-1">{title}</p>
                     <h3 className="text-3xl font-display text-white">{value}</h3>
                     {description && (
-                        <p className="text-xs text-dusty-rose mt-2 leading-relaxed">{description}</p>
+                        <p className="text-xs text-white/60 mt-2 leading-relaxed">{description}</p>
                     )}
                 </div>
             </CardContent>

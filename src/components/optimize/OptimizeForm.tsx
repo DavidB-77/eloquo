@@ -107,7 +107,7 @@ export function OptimizeForm({
                         <span className="font-display text-4xl text-white tracking-widest uppercase glow-md">Eloquo</span>
                         <div className="h-px flex-1 bg-gradient-to-r from-electric-cyan/50 to-transparent" />
                     </div>
-                    <p className="text-dusty-rose text-sm font-medium tracking-wide">
+                    <p className="text-white/60 text-sm font-medium tracking-wide">
                         ENTER YOUR PROMPT BELOW FOR BIOLUMINESCENT OPTIMIZATION
                     </p>
                 </div>
@@ -119,7 +119,7 @@ export function OptimizeForm({
                             <label className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em]">
                                 Input Prompt <span className="text-terracotta">*</span>
                             </label>
-                            <span className="text-[10px] text-dusty-rose/60 flex items-center gap-1.5 uppercase tracking-wider">
+                            <span className="text-[10px] text-white/40 flex items-center gap-1.5 uppercase tracking-wider">
                                 <Globe className="h-3 w-3" />
                                 Multilingual Engine Active
                             </span>
@@ -131,10 +131,10 @@ export function OptimizeForm({
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
                                 rows={8}
-                                className="resize-none bg-midnight border-electric-cyan/20 focus:border-electric-cyan focus:ring-4 focus:ring-electric-cyan/5 text-white placeholder:text-dusty-rose/30 rounded-xl transition-all duration-300 py-4 px-5 text-lg leading-relaxed shadow-inner"
+                                className="resize-none bg-midnight border-electric-cyan/20 focus:border-electric-cyan focus:ring-4 focus:ring-electric-cyan/5 text-white placeholder:text-white/20 rounded-xl transition-all duration-300 py-4 px-5 text-lg leading-relaxed shadow-inner"
                             />
                             <div className="absolute bottom-4 right-4 flex items-center space-x-4">
-                                <span className="text-[10px] font-mono text-dusty-rose/40 uppercase tracking-tighter">
+                                <span className="text-[10px] font-mono text-white/40 uppercase tracking-tighter">
                                     {prompt.length} CHR / ~{Math.ceil(prompt.length / 4)} TOK
                                 </span>
                             </div>
@@ -174,7 +174,7 @@ export function OptimizeForm({
                                         onClick={() => setStrength(option.value)}
                                         className={`flex-1 rounded-lg text-xs font-bold uppercase tracking-widest transition-all duration-300 ${strength === option.value
                                             ? "bg-electric-cyan text-midnight shadow-[0_0_15px_rgba(9,183,180,0.4)]"
-                                            : "text-dusty-rose hover:text-white"
+                                            : "text-white/60 hover:text-white"
                                             }`}
                                     >
                                         {option.label}
@@ -195,7 +195,7 @@ export function OptimizeForm({
                                 value={context}
                                 onChange={(e) => setContext(e.target.value)}
                                 rows={3}
-                                className="resize-none bg-deep-teal/10 border-electric-cyan/10 focus:border-electric-cyan/30 text-white placeholder:text-dusty-rose/20 rounded-xl transition-all"
+                                className="resize-none bg-deep-teal/10 border-electric-cyan/10 focus:border-electric-cyan/30 text-white placeholder:text-white/10 rounded-xl transition-all"
                             />
                         </div>
                         <div className="space-y-4">
@@ -212,7 +212,7 @@ export function OptimizeForm({
                     {/* Energy Bar Progress Animation */}
                     <div className={cn(
                         "transition-all duration-500 overflow-hidden",
-                        isLoading || progressStage > 0 ? "h-12 opacity-100" : "h-0 opacity-0"
+                        isLoading || progressStage > 0 ? "h-16 opacity-100" : "h-0 opacity-0"
                     )}>
                         <div className="space-y-2">
                             <div className="flex justify-between items-center px-1">
@@ -245,7 +245,7 @@ export function OptimizeForm({
                     {/* Footer & Submit */}
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-4 border-t border-electric-cyan/10">
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-bold text-dusty-rose uppercase tracking-[0.1em]">Cost Structure</span>
+                            <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.1em]">Cost Structure</span>
                             <div className="flex items-center mt-1">
                                 {useOrchestration ? (
                                     <span className="flex items-center text-xs text-electric-cyan font-bold">

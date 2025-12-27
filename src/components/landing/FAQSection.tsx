@@ -86,7 +86,7 @@ export function FAQSection() {
                         <h2 className="text-4xl md:text-6xl font-normal font-display tracking-tight mb-6 text-white uppercase glow-sm">
                             Knowledge <span className="text-electric-cyan italic">Base</span>
                         </h2>
-                        <p className="text-dusty-rose text-lg max-w-xl mx-auto font-medium tracking-wide">
+                        <p className="text-white/60 text-lg max-w-xl mx-auto font-medium tracking-wide">
                             Everything you need to know about the Eloquo protocol and neuro-optimization.
                         </p>
                     </div>

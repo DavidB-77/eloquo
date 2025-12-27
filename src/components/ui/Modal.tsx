@@ -58,7 +58,7 @@ export function Modal({
                             <h2 className="text-xl font-normal font-display text-white uppercase tracking-widest glow-sm">{title}</h2>
                         )}
                         {description && (
-                            <p className="text-sm text-dusty-rose/60 font-medium leading-relaxed">{description}</p>
+                            <p className="text-sm text-white/60 font-medium leading-relaxed">{description}</p>
                         )}
                     </div>
                     <Button
@@ -67,7 +67,7 @@ export function Modal({
                         onClick={onClose}
                         className="h-10 w-10 rounded-xl hover:bg-white/5 group"
                     >
-                        <X className="h-5 w-5 text-dusty-rose group-hover:text-white transition-colors" />
+                        <X className="h-5 w-5 text-white/40 group-hover:text-white transition-colors" />
                         <span className="sr-only">Close</span>
                     </Button>
                 </div>

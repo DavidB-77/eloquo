@@ -166,12 +166,12 @@ export function PricingSection() {
                     <h2 className="text-4xl md:text-6xl font-normal font-display tracking-tight mb-6 text-white uppercase glow-sm">
                         Neural <span className="text-sunset-orange italic">Credits</span> Matrix
                     </h2>
-                    <p className="text-dusty-rose text-lg max-w-2xl mx-auto mb-10 font-medium tracking-wide">
+                    <p className="text-white/60 text-lg max-w-2xl mx-auto mb-10 font-medium tracking-wide">
                         Choose the protocol that fits your frequency. Save 17% with annual initialization.
                     </p>
 
                     <div className="flex items-center justify-center space-x-6">
-                        <span className={cn("text-xs font-bold uppercase tracking-widest transition-colors", !isAnnual ? "text-white" : "text-dusty-rose/40")}>Standard</span>
+                        <span className={cn("text-xs font-bold uppercase tracking-widest transition-colors", !isAnnual ? "text-white" : "text-white/20")}>Standard</span>
                         <button
                             onClick={() => setIsAnnual(!isAnnual)}
                             className="relative h-7 w-14 rounded-full bg-deep-teal/40 border border-electric-cyan/20 transition-all focus:outline-none focus:ring-2 focus:ring-electric-cyan p-1 group"
@@ -183,7 +183,7 @@ export function PricingSection() {
                                 )}
                             />
                         </button>
-                        <span className={cn("text-xs font-bold uppercase tracking-widest transition-colors flex items-center", isAnnual ? "text-white" : "text-dusty-rose/40")}>
+                        <span className={cn("text-xs font-bold uppercase tracking-widest transition-colors flex items-center", isAnnual ? "text-white" : "text-white/20")}>
                             Extended <Badge className="ml-2 px-2 py-0.5 text-[8px] bg-electric-cyan text-midnight font-bold border-none">SAVE 17%</Badge>
                         </span>
                     </div>
@@ -211,9 +211,9 @@ export function PricingSection() {
                                         <span className="text-6xl font-display text-white ml-1">
                                             {isAnnual ? Math.round(parseInt(plan.price) * 0.83) : plan.price}
                                         </span>
-                                        <span className="ml-2 text-xs font-bold text-dusty-rose/60 uppercase tracking-widest">/cycle</span>
+                                        <span className="ml-2 text-xs font-bold text-white/40 uppercase tracking-widest">/cycle</span>
                                     </div>
-                                    <p className="mt-6 text-dusty-rose/80 text-sm font-medium leading-relaxed">
+                                    <p className="mt-6 text-white/60 text-sm font-medium leading-relaxed">
                                         {plan.description}
                                     </p>
                                 </CardHeader>
@@ -224,7 +224,7 @@ export function PricingSection() {
                                                 <div className="mr-3 mt-1 h-3 w-3 rounded-sm border border-electric-cyan/40 flex items-center justify-center group-hover/item:border-electric-cyan transition-colors">
                                                     <Check className="h-2 w-2 text-electric-cyan opacity-0 group-hover/item:opacity-100 transition-opacity" />
                                                 </div>
-                                                <span className="text-dusty-rose/80 font-medium group-hover/item:text-white transition-colors">{feature}</span>
+                                                <span className="text-white/60 font-medium group-hover/item:text-white transition-colors">{feature}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -261,7 +261,7 @@ export function PricingSection() {
                                     </div>
                                     <div>
                                         <h3 className="text-3xl font-display text-white uppercase tracking-widest leading-none mb-4">{ENTERPRISE_PLAN.name} Protocol</h3>
-                                        <p className="text-dusty-rose text-lg font-medium">{ENTERPRISE_PLAN.description}</p>
+                                        <p className="text-white/60 text-lg font-medium">{ENTERPRISE_PLAN.description}</p>
                                     </div>
                                 </div>
                                 <div className="flex flex-col md:flex-row items-center gap-8">
@@ -269,7 +269,7 @@ export function PricingSection() {
                                         <div className="text-4xl font-display text-white mb-1">
                                             <span className="text-2xl text-electric-cyan">$</span>
                                             {isAnnual ? Math.round(249 * 0.83) : 249}
-                                            <span className="text-xs font-bold text-dusty-rose/60 uppercase tracking-widest ml-2">/cycle</span>
+                                            <span className="text-xs font-bold text-white/40 uppercase tracking-widest ml-2">/cycle</span>
                                         </div>
                                         <p className="text-[10px] font-bold text-electric-cyan uppercase tracking-widest">Base Initialization</p>
                                     </div>
@@ -287,7 +287,7 @@ export function PricingSection() {
                                 {ENTERPRISE_PLAN.features.map((feature) => (
                                     <div key={feature} className="flex items-center text-sm group/item">
                                         <Check className="mr-3 h-4 w-4 text-electric-cyan" />
-                                        <span className="text-dusty-rose/80 font-medium group-hover:text-white transition-colors">{feature}</span>
+                                        <span className="text-white/60 font-medium group-hover:text-white transition-colors">{feature}</span>
                                     </div>
                                 ))}
                             </div>
@@ -296,7 +296,7 @@ export function PricingSection() {
                 </div>
 
                 <div className="mt-20 text-center">
-                    <div className="inline-flex items-center space-x-3 text-dusty-rose/40 text-[10px] font-bold tracking-[0.3em] uppercase">
+                    <div className="inline-flex items-center space-x-3 text-white/40 text-[10px] font-bold tracking-[0.3em] uppercase">
                         <Zap className="h-4 w-4 fill-current text-electric-cyan" />
                         <span>All operations secure & encrypted</span>
                     </div>

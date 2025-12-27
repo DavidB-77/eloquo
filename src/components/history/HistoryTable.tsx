@@ -81,12 +81,12 @@ export function HistoryTable({
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <CardTitle className="text-xl font-normal font-display text-white uppercase tracking-widest glow-sm">Optimization History</CardTitle>
                         <div className="relative max-w-xs group">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dusty-rose group-focus-within:text-electric-cyan transition-colors" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-electric-cyan transition-colors" />
                             <Input
                                 placeholder="SEARCH_HISTORY..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 bg-midnight/40 border-electric-cyan/10 focus-visible:ring-electric-cyan/30 text-white placeholder:text-dusty-rose/30 uppercase tracking-widest text-[10px] font-bold h-10 rounded-xl"
+                                className="pl-10 bg-midnight/40 border-electric-cyan/10 focus-visible:ring-electric-cyan/30 text-white placeholder:text-white/20 uppercase tracking-widest text-[10px] font-bold h-10 rounded-xl"
                             />
                         </div>
                     </div>
@@ -141,7 +141,7 @@ export function HistoryTable({
                                                     variant="ghost"
                                                     size="icon"
                                                     onClick={() => setSelectedOptimization(opt)}
-                                                    className="h-9 w-9 text-dusty-rose hover:text-white hover:bg-white/5 rounded-lg"
+                                                    className="h-9 w-9 text-white/40 hover:text-white hover:bg-white/5 rounded-lg"
                                                 >
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
@@ -193,11 +193,11 @@ export function HistoryTable({
                     <div className="space-y-8">
                         <div>
                             <div className="flex items-center justify-between mb-3">
-                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-dusty-rose">
+                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">
                                     SOURCE_INPUT
                                 </span>
                             </div>
-                            <div className="bg-midnight/60 border border-white/5 p-5 rounded-2xl text-xs leading-relaxed text-dusty-rose/60 font-mono whitespace-pre-wrap max-h-40 overflow-y-auto">
+                            <div className="bg-midnight/60 border border-white/5 p-5 rounded-2xl text-xs leading-relaxed text-white/40 font-mono whitespace-pre-wrap max-h-40 overflow-y-auto">
                                 {selectedOptimization.original_prompt}
                             </div>
                         </div>
@@ -211,7 +211,7 @@ export function HistoryTable({
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleCopy(selectedOptimization.optimized_prompt)}
-                                    className="h-8 text-[9px] font-bold uppercase tracking-widest text-dusty-rose hover:text-white"
+                                    className="h-8 text-[9px] font-bold uppercase tracking-widest text-white/60 hover:text-white"
                                 >
                                     {copied ? (
                                         <>
@@ -234,7 +234,7 @@ export function HistoryTable({
                         <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-white/5">
                             <Badge variant="outline" className="h-5">{selectedOptimization.target_model}</Badge>
                             <Badge variant="secondary" className="h-5">{selectedOptimization.strength}</Badge>
-                            <span className="text-[10px] font-bold text-dusty-rose/40 uppercase tracking-widest ml-auto">
+                            <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest ml-auto">
                                 {formatDate(selectedOptimization.created_at)}
                             </span>
                         </div>

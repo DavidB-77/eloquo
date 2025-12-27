@@ -72,7 +72,7 @@ export function HowItWorksSection() {
                     <h2 className="text-4xl md:text-6xl font-normal font-display tracking-tight mb-6 text-white uppercase glow-sm">
                         Neural <span className="text-electric-cyan italic">Transfer</span> Protocol
                     </h2>
-                    <p className="text-dusty-rose text-lg max-w-2xl mx-auto font-medium tracking-wide border-l-2 border-sunset-orange pl-6">
+                    <p className="text-white/60 text-lg max-w-2xl mx-auto font-medium tracking-wide border-l-2 border-sunset-orange pl-6">
                         Transforming your prompts is a simple three-step sequence that takes seconds.
                     </p>
                 </div>
@@ -95,7 +95,7 @@ export function HowItWorksSection() {
                                 </div>
                             </div>
                             <h3 className="text-xl font-display text-white mb-4 uppercase tracking-widest">{step.title}</h3>
-                            <p className="text-dusty-rose/80 max-w-xs leading-relaxed font-medium">
+                            <p className="text-white/60 max-w-xs leading-relaxed font-medium">
                                 {step.description}
                             </p>
                         </div>

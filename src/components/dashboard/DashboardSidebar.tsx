@@ -66,7 +66,7 @@ export function DashboardSidebar() {
                         variant="ghost"
                         size="icon"
                         onClick={() => setIsCollapsed(!isCollapsed)}
-                        className={cn("hidden lg:flex hover:bg-electric-cyan/10 text-dusty-rose", isCollapsed ? "mx-auto" : "")}
+                        className={cn("hidden lg:flex hover:bg-electric-cyan/10 text-white/40 hover:text-white", isCollapsed ? "mx-auto" : "")}
                     >
                         {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
                     </Button>
@@ -129,7 +129,7 @@ export function DashboardSidebar() {
                                 </p>
                                 <button
                                     onClick={signOut}
-                                    className="text-xs text-dusty-rose hover:text-terracotta flex items-center mt-0.5 transition-colors"
+                                    className="text-xs text-white/40 hover:text-terracotta flex items-center mt-0.5 transition-colors"
                                 >
                                     <LogOut className="h-3 w-3 mr-1" /> Sign Out
                                 </button>
@@ -138,6 +138,6 @@ export function DashboardSidebar() {
                     </div>
                 </div>
             </div>
-        </aside>
+        </aside >
     );
 }

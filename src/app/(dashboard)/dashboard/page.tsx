@@ -23,7 +23,7 @@ export default function DashboardPage() {
             {/* Welcome Header */}
             <div>
                 <h1 className="text-4xl font-display text-white glow-sm">Dashboard Overview</h1>
-                <p className="text-dusty-rose mt-2 font-medium tracking-wide border-l-2 border-electric-cyan pl-4">
+                <p className="text-white/60 mt-2 font-medium tracking-wide border-l-2 border-electric-cyan pl-4">
                     WELCOME BACK, OPERATIVE. SYSTEM STATUS: <span className="text-electric-cyan animate-pulse">OPTIMIZED</span>
                 </p>
             </div>
@@ -76,10 +76,10 @@ export default function DashboardPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow className="hover:bg-transparent border-electric-cyan/10">
-                                    <TableHead className="text-dusty-rose uppercase text-[10px] font-bold tracking-widest pl-6">Title</TableHead>
-                                    <TableHead className="text-dusty-rose uppercase text-[10px] font-bold tracking-widest">Engine</TableHead>
-                                    <TableHead className="text-dusty-rose uppercase text-[10px] font-bold tracking-widest">Status</TableHead>
-                                    <TableHead className="text-right text-dusty-rose uppercase text-[10px] font-bold tracking-widest pr-6">Timestamp</TableHead>
+                                    <TableHead className="text-white/40 uppercase text-[10px] font-bold tracking-widest pl-6">Title</TableHead>
+                                    <TableHead className="text-white/40 uppercase text-[10px] font-bold tracking-widest">Engine</TableHead>
+                                    <TableHead className="text-white/40 uppercase text-[10px] font-bold tracking-widest">Status</TableHead>
+                                    <TableHead className="text-right text-white/40 uppercase text-[10px] font-bold tracking-widest pr-6">Timestamp</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -103,7 +103,7 @@ export default function DashboardPage() {
                                                 {prompt.status}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-right text-xs text-dusty-rose pr-6 font-mono opacity-60 group-hover:opacity-100 transition-opacity">
+                                        <TableCell className="text-right text-xs text-white/40 pr-6 font-mono opacity-60 group-hover:opacity-100 transition-opacity">
                                             {prompt.date}
                                         </TableCell>
                                     </TableRow>
@@ -125,7 +125,7 @@ export default function DashboardPage() {
                                     <Zap className="h-8 w-8 text-white fill-current" />
                                 </div>
                                 <h3 className="text-2xl font-display text-white mb-2 uppercase tracking-widest glow-sm">Ignite Base</h3>
-                                <p className="text-dusty-rose text-xs font-bold leading-relaxed mb-8 max-w-[200px] uppercase tracking-tighter">
+                                <p className="text-white/40 text-xs font-bold leading-relaxed mb-8 max-w-[200px] uppercase tracking-tighter">
                                     INITIALIZE NEW PROMPT TRANSFORM SEQUENCE
                                 </p>
                                 <div className="flex items-center text-electric-cyan text-[10px] font-bold tracking-[0.3em] uppercase group-hover:gap-4 transition-all">
@@ -146,7 +146,7 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-xs font-bold text-white uppercase tracking-wider">Prompt Codex</p>
-                                    <p className="text-[10px] text-dusty-rose uppercase tracking-tighter opacity-60">Architectural guidelines</p>
+                                    <p className="text-[10px] text-white/20 uppercase tracking-tighter opacity-60">Architectural guidelines</p>
                                 </div>
                                 <ArrowRight className="h-3 w-3 text-electric-cyan opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                             </div>
@@ -156,7 +156,7 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-xs font-bold text-white uppercase tracking-wider">Engine Matrix</p>
-                                    <p className="text-[10px] text-dusty-rose uppercase tracking-tighter opacity-60">Cross-model comparison</p>
+                                    <p className="text-[10px] text-white/20 uppercase tracking-tighter opacity-60">Cross-model comparison</p>
                                 </div>
                                 <ArrowRight className="h-3 w-3 text-electric-cyan opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                             </div>

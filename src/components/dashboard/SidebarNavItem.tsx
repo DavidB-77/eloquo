@@ -23,10 +23,10 @@ export function SidebarNavItem({ href, icon: Icon, label, isCollapsed }: Sidebar
                 "flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-300 group relative",
                 isActive
                     ? "bg-electric-cyan/10 text-electric-cyan shadow-[0_0_15px_rgba(9,183,180,0.2)] border border-electric-cyan/20"
-                    : "text-dusty-rose hover:text-white hover:bg-electric-cyan/5"
+                    : "text-white/60 hover:text-white hover:bg-electric-cyan/5"
             )}
         >
-            <Icon className={cn("h-5 w-5 shrink-0 transition-all duration-300", isActive ? "text-white glow-sm" : "text-dusty-rose group-hover:text-white")} />
+            <Icon className={cn("h-5 w-5 shrink-0 transition-all duration-300", isActive ? "text-white glow-sm" : "text-white/40 group-hover:text-white")} />
             {!isCollapsed && (
                 <span className="font-display text-[11px] font-bold uppercase tracking-[0.2em] transition-opacity duration-300">
                     {label}

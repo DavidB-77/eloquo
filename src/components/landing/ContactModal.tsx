@@ -68,17 +68,17 @@ export function ContactModal({
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-2 gap-6">
                         <FormField label="First Name" required className="text-white">
-                            <Input placeholder="John" required className="bg-deep-teal/20 border-white/10 text-white placeholder:text-dusty-rose/20" />
+                            <Input placeholder="John" required className="bg-deep-teal/20 border-white/10 text-white placeholder:text-white/20" />
                         </FormField>
                         <FormField label="Last Name" required className="text-white">
-                            <Input placeholder="Doe" required className="bg-deep-teal/20 border-white/10 text-white placeholder:text-dusty-rose/20" />
+                            <Input placeholder="Doe" required className="bg-deep-teal/20 border-white/10 text-white placeholder:text-white/20" />
                         </FormField>
                     </div>
                     <FormField label="Identity Link (Email)" required className="text-white">
-                        <Input type="email" placeholder="john@company.com" required className="bg-deep-teal/20 border-white/10 text-white placeholder:text-dusty-rose/20" />
+                        <Input type="email" placeholder="john@company.com" required className="bg-deep-teal/20 border-white/10 text-white placeholder:text-white/20" />
                     </FormField>
                     <FormField label="Organization" required className="text-white">
-                        <Input placeholder="Acme Inc." required className="bg-deep-teal/20 border-white/10 text-white placeholder:text-dusty-rose/20" />
+                        <Input placeholder="Acme Inc." required className="bg-deep-teal/20 border-white/10 text-white placeholder:text-white/20" />
                     </FormField>
                     <FormField label="Protocol Subject" required className="text-white">
                         <Select required className="bg-deep-teal/20 border-white/10 text-white">
@@ -92,7 +92,7 @@ export function ContactModal({
                     <FormField label="Transmission Message" required className="text-white">
                         <Textarea
                             placeholder="Describe your requirements..."
-                            className="min-h-[120px] bg-deep-teal/20 border-white/10 text-white placeholder:text-dusty-rose/20"
+                            className="min-h-[120px] bg-deep-teal/20 border-white/10 text-white placeholder:text-white/20"
                             required
                         />
                     </FormField>

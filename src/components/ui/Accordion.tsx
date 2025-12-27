@@ -26,7 +26,7 @@ const AccordionTrigger = ({
     <button
         type="button"
         className={cn(
-            "flex w-full items-center justify-between py-6 font-display text-sm uppercase tracking-[0.2em] text-dusty-rose transition-all hover:text-white group",
+            "flex w-full items-center justify-between py-6 font-display text-sm uppercase tracking-[0.2em] text-white/60 transition-all hover:text-white group",
             isOpen && "text-white",
             className
         )}
@@ -54,7 +54,7 @@ const AccordionContent = ({
             className
         )}
     >
-        <div className="text-dusty-rose/60 font-medium leading-relaxed max-w-2xl">
+        <div className="text-white/40 font-medium leading-relaxed max-w-2xl">
             {children}
         </div>
     </div>

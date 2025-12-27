@@ -121,7 +121,7 @@ export default function HistoryPage() {
         <div className="space-y-8">
             <div>
                 <h1 className="text-3xl font-bold font-display tracking-tight">Optimization History</h1>
-                <p className="text-muted-foreground mt-1">
+                <p className="text-white/60 mt-1">
                     View your past optimizations and track token savings.
                 </p>
             </div>
@@ -132,17 +132,17 @@ export default function HistoryPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Card>
                         <CardContent className="p-4">
-                            <p className="text-sm text-muted-foreground">Total Optimizations</p>
+                            <p className="text-sm text-white/40">Total Optimizations</p>
                             <p className="text-2xl font-bold">{stats.total_optimizations}</p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardContent className="p-4">
-                            <p className="text-sm text-muted-foreground">Total Processed Tokens</p>
+                            <p className="text-sm text-white/40">Total Processed Tokens</p>
                             <p className="text-2xl font-bold">
                                 {(stats.total_optimizations * 150).toLocaleString()} {/* Estimated */}
                             </p>
-                            <p className="text-xs text-muted-foreground mt-1">Across all optimizations</p>
+                            <p className="text-xs text-white/40 mt-1">Across all optimizations</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -152,8 +152,8 @@ export default function HistoryPage() {
             {history.length === 0 ? (
                 <Card className="glass border-electric-cyan/10">
                     <CardContent className="p-8 text-center">
-                        <p className="text-dusty-rose">No optimization history yet.</p>
-                        <p className="text-sm text-dusty-rose/60 mt-1">
+                        <p className="text-white/60">No optimization history yet.</p>
+                        <p className="text-sm text-white/40 mt-1">
                             Your optimizations will appear here after you use the optimizer.
                         </p>
                     </CardContent>
@@ -172,7 +172,7 @@ export default function HistoryPage() {
                                         <p className="text-sm font-medium text-white truncate group-hover:text-electric-cyan transition-colors">
                                             {truncate(item.original_prompt)}
                                         </p>
-                                        <p className="text-xs text-dusty-rose mt-1">
+                                        <p className="text-xs text-white/40 mt-1">
                                             {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
                                         </p>
                                     </div>
@@ -180,7 +180,7 @@ export default function HistoryPage() {
                                         <Badge variant="outline" className="text-xs border-electric-cyan/20 text-electric-cyan bg-electric-cyan/5">
                                             {item.target_model}
                                         </Badge>
-                                        <span className="text-xs text-dusty-rose/60 whitespace-nowrap">
+                                        <span className="text-xs text-white/40 whitespace-nowrap">
                                             {item.tokens_optimized} tokens
                                         </span>
                                         {item.metrics?.qualityScore && (
@@ -208,8 +208,8 @@ export default function HistoryPage() {
                             {/* Original Prompt */}
                             <div>
                                 <div className="flex justify-between items-center mb-2">
-                                    <h4 className="text-xs font-bold uppercase tracking-widest text-dusty-rose">Original Prompt</h4>
-                                    <span className="text-[10px] text-dusty-rose/60 font-mono">
+                                    <h4 className="text-xs font-bold uppercase tracking-widest text-white/60">Original Prompt</h4>
+                                    <span className="text-[10px] text-white/40 font-mono">
                                         {selectedItem.tokens_original} tokens
                                     </span>
                                 </div>
@@ -224,7 +224,7 @@ export default function HistoryPage() {
                                     <h4 className="text-xs font-bold uppercase tracking-widest text-electric-cyan">Optimized Prompt</h4>
                                     <button
                                         onClick={() => copyToClipboard(selectedItem.optimized_prompt)}
-                                        className="text-xs text-dusty-rose hover:text-white transition-colors flex items-center gap-1.5"
+                                        className="text-xs text-white/60 hover:text-white transition-colors flex items-center gap-1.5"
                                     >
                                         {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                                         <span className="uppercase tracking-tighter font-bold">{copied ? 'Copied!' : 'Copy'}</span>
@@ -238,17 +238,17 @@ export default function HistoryPage() {
                             {/* Stats */}
                             <div className="grid grid-cols-3 gap-4 text-center pt-6 border-t border-electric-cyan/10">
                                 <div>
-                                    <p className="text-[10px] text-dusty-rose uppercase tracking-widest font-bold">Optimized Tokens</p>
+                                    <p className="text-[10px] text-white/60 uppercase tracking-widest font-bold">Optimized Tokens</p>
                                     <p className="text-xl font-display text-white mt-1">{selectedItem.tokens_optimized}</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-dusty-rose uppercase tracking-widest font-bold">Quality Score</p>
+                                    <p className="text-[10px] text-white/60 uppercase tracking-widest font-bold">Quality Score</p>
                                     <p className="text-xl font-display text-sunset-orange mt-1">
                                         {selectedItem.metrics?.qualityScore ? `${selectedItem.metrics.qualityScore}/5` : 'N/A'}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-dusty-rose uppercase tracking-widest font-bold">Engine</p>
+                                    <p className="text-[10px] text-white/60 uppercase tracking-widest font-bold">Engine</p>
                                     <p className="text-xl font-display text-white mt-1 uppercase tracking-tighter">{selectedItem.target_model}</p>
                                 </div>
                             </div>
@@ -256,7 +256,7 @@ export default function HistoryPage() {
                             {/* Improvements */}
                             {selectedItem.improvements && selectedItem.improvements.length > 0 && (
                                 <div className="pt-6 border-t border-electric-cyan/10">
-                                    <h4 className="text-xs font-bold uppercase tracking-widest text-dusty-rose mb-3">Improvements Made</h4>
+                                    <h4 className="text-xs font-bold uppercase tracking-widest text-white/60 mb-3">Improvements Made</h4>
                                     <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                         {selectedItem.improvements.map((imp, i) => (
                                             <li key={i} className="flex items-start gap-2 text-xs text-white/80 bg-deep-teal/10 p-2 rounded-lg border border-electric-cyan/5">
@@ -269,7 +269,7 @@ export default function HistoryPage() {
                             )}
 
                             {/* Metadata */}
-                            <div className="pt-6 border-t border-electric-cyan/10 text-[10px] text-dusty-rose/60 flex justify-between uppercase tracking-widest font-bold">
+                            <div className="pt-6 border-t border-electric-cyan/10 text-[10px] text-white/40 flex justify-between uppercase tracking-widest font-bold">
                                 <span>Mode: {selectedItem.strength}</span>
                                 <span>{new Date(selectedItem.created_at).toLocaleString()}</span>
                             </div>

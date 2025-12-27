@@ -153,7 +153,7 @@ export function ResultsTabs({
                         variant="ghost"
                         size="sm"
                         onClick={onStartNew}
-                        className="text-dusty-rose hover:text-white hover:bg-white/5 uppercase tracking-[0.2em] font-bold"
+                        className="text-white/60 hover:text-white hover:bg-white/5 uppercase tracking-[0.2em] font-bold"
                     >
                         🔄 NEW_SEQ
                     </Button>
@@ -164,7 +164,7 @@ export function ResultsTabs({
                         {/* Token count with count-up */}
                         {metrics && (
                             <div className="flex flex-col">
-                                <span className="text-dusty-rose text-[10px] uppercase tracking-widest font-bold mb-1">Optimized Tokens</span>
+                                <span className="text-white/60 text-[10px] uppercase tracking-widest font-bold mb-1">Optimized Tokens</span>
                                 <div className="flex items-center gap-2">
                                     <motion.span
                                         initial={{ opacity: 0 }}
@@ -183,14 +183,14 @@ export function ResultsTabs({
                         {/* Quality score */}
                         {validation && (
                             <div className="flex flex-col">
-                                <span className="text-dusty-rose text-[10px] uppercase tracking-widest font-bold mb-1">Quality Score</span>
+                                <span className="text-white/60 text-[10px] uppercase tracking-widest font-bold mb-1">Quality Score</span>
                                 <div className="flex items-center gap-2">
                                     <motion.span
                                         className="font-display text-2xl text-electric-cyan glow-sm"
                                     >
                                         {validation.score.toFixed(1)}
                                     </motion.span>
-                                    <span className="text-dusty-rose/40 text-xs font-bold">/ 5.0</span>
+                                    <span className="text-white/40 text-xs font-bold">/ 5.0</span>
                                 </div>
                             </div>
                         )}
@@ -199,7 +199,7 @@ export function ResultsTabs({
 
                         {/* Model */}
                         <div className="flex flex-col">
-                            <span className="text-dusty-rose text-[10px] uppercase tracking-widest font-bold mb-1">Engine</span>
+                            <span className="text-white/60 text-[10px] uppercase tracking-widest font-bold mb-1">Engine</span>
                             <span className="font-bold text-white uppercase text-xs tracking-wider">{targetModel}</span>
                         </div>
                     </div>
@@ -217,7 +217,7 @@ export function ResultsTabs({
                                 "flex-1 py-3 px-4 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300",
                                 activeTab === tab
                                     ? "bg-electric-cyan text-white shadow-[0_0_20px_rgba(9,183,180,0.4)] glow-sm"
-                                    : "text-dusty-rose hover:text-white hover:bg-white/5"
+                                    : "text-white/60 hover:text-white hover:bg-white/5"
                             )}
                         >
                             {TAB_CONFIG[tab].label}
@@ -271,7 +271,7 @@ export function ResultsTabs({
                                         {improvements.map((improvement, i) => (
                                             <div key={i} className="flex items-start gap-3">
                                                 <div className="h-1.5 w-1.5 rounded-full bg-electric-cyan mt-1.5 shrink-0 shadow-[0_0_5px_rgba(9,183,180,0.8)]" />
-                                                <span className="text-xs text-dusty-rose leading-relaxed">{improvement}</span>
+                                                <span className="text-xs text-white/60 leading-relaxed">{improvement}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -323,7 +323,7 @@ export function ResultsTabs({
                                     <button
                                         key={format}
                                         onClick={() => handleDownload(format)}
-                                        className="w-full text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-dusty-rose hover:text-white hover:bg-electric-cyan/10 flex items-center gap-3 transition-colors"
+                                        className="w-full text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white hover:bg-electric-cyan/10 flex items-center gap-3 transition-colors"
                                     >
                                         <Icon className="h-4 w-4 text-electric-cyan" />
                                         {label}

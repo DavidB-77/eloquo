@@ -62,7 +62,7 @@ export function ProblemSection() {
                     <h2 className="text-4xl md:text-6xl font-normal font-display tracking-tight mb-6 text-white uppercase glow-sm">
                         Neural Friction <span className="text-terracotta italic">&</span> Dead Tokens
                     </h2>
-                    <p className="text-dusty-rose text-lg max-w-2xl mx-auto font-medium tracking-wide border-l-2 border-electric-cyan pl-6">
+                    <p className="text-white/60 text-lg max-w-2xl mx-auto font-medium tracking-wide border-l-2 border-electric-cyan pl-6">
                         Using AI shouldn&apos;t be a guessing game. Eloquo solves the primary hurdles in LLM communication.
                     </p>
                 </div>
@@ -76,7 +76,7 @@ export function ProblemSection() {
                                         {point.icon}
                                     </div>
                                     <h3 className="text-xl font-display text-white mb-4 uppercase tracking-widest">{point.title}</h3>
-                                    <p className="text-dusty-rose/80 leading-relaxed font-medium">
+                                    <p className="text-white/60 leading-relaxed font-medium">
                                         {point.description}
                                     </p>
                                 </CardContent>

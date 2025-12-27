@@ -65,7 +65,7 @@ export function TestimonialsSection() {
                     <h2 className="text-4xl md:text-6xl font-normal font-display tracking-tight mb-6 text-white uppercase glow-sm">
                         Neural <span className="text-sunset-orange italic">Feedback</span> Loop
                     </h2>
-                    <p className="text-dusty-rose text-lg max-w-2xl mx-auto font-medium tracking-wide">
+                    <p className="text-white/60 text-lg max-w-2xl mx-auto font-medium tracking-wide">
                         See why elite operators trust Eloquo to maximize their AI potential.
                     </p>
                 </div>
@@ -89,7 +89,7 @@ export function TestimonialsSection() {
                                         </div>
                                         <div>
                                             <div className="font-display text-xs uppercase tracking-widest text-white mb-1">{t.name}</div>
-                                            <div className="text-[10px] font-bold text-dusty-rose/60 uppercase tracking-[0.2em]">{t.title}, {t.company}</div>
+                                            <div className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">{t.title}, {t.company}</div>
                                         </div>
                                     </div>
                                 </CardContent>

@@ -54,7 +54,7 @@ export function CTASection() {
                         <h2 className="text-4xl md:text-7xl font-normal font-display tracking-tight mb-10 text-white uppercase glow-sm">
                             Initialize Your <span className="text-electric-cyan italic">Success</span> Sequence
                         </h2>
-                        <p className="text-xl text-dusty-rose mb-12 max-w-2xl mx-auto font-medium leading-relaxed tracking-wide border-t border-b border-white/5 py-8">
+                        <p className="text-xl text-white/60 mb-12 max-w-2xl mx-auto font-medium leading-relaxed tracking-wide border-t border-b border-white/5 py-8">
                             Join 1,000+ elite operators optimizing their AI workflows with Eloquo. Start for free today and see the results instantly.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center space-y-6 sm:space-y-0 sm:space-x-8">
@@ -64,7 +64,7 @@ export function CTASection() {
                                 </Link>
                             </Button>
                         </div>
-                        <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-[10px] font-bold text-dusty-rose/40 uppercase tracking-[0.2em]">
+                        <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">
                             <div className="flex items-center space-x-2">
                                 <Zap className="h-3 w-3 text-electric-cyan" />
                                 <span>No Terminal Login Required</span>
