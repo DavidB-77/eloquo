@@ -9,7 +9,6 @@ import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { BeforeAfterSection } from "@/components/landing/BeforeAfterSection";
-import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
 import { FAQSection } from "@/components/landing/FAQSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { Footer } from "@/components/landing/Footer";
@@ -39,7 +38,6 @@ export default function LandingPage() {
         <HowItWorksSection />
         <FeaturesSection />
         <BeforeAfterSection />
-        <TestimonialsSection />
         <PricingSection />
         <FAQSection />
         <CTASection />

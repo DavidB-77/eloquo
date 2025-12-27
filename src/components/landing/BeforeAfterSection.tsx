@@ -64,10 +64,10 @@ export function BeforeAfterSection() {
             <Container>
                 <div className="compare-header text-center mb-24">
                     <h2 className="text-4xl md:text-6xl font-normal font-display tracking-tight mb-6 text-white uppercase glow-sm">
-                        Protocol <span className="text-electric-cyan italic">Comparison</span>
+                        Optimization <span className="text-electric-cyan italic">Comparison</span>
                     </h2>
                     <p className="text-white/60 text-lg max-w-2xl mx-auto font-medium tracking-wide">
-                        Compare a standard prompt with an Eloquo-optimized sequence. Precision is the ultimate leverage.
+                        Compare a standard raw prompt with an Eloquo-optimized sequence. Precision and quality are the ultimate leverages.
                     </p>
                 </div>
 

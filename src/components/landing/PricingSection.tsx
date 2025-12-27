@@ -7,7 +7,7 @@ import { Container } from "@/components/layout/Container";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Check, Sparkles, Users, Building2, Zap } from "lucide-react";
+import { Check, Sparkles, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -46,40 +46,8 @@ const PRICING_PLANS = [
         variant: "default",
         popular: true,
     },
-    {
-        id: "team",
-        name: "Team",
-        price: "99",
-        description: "Best for collaborative teams.",
-        icon: Users,
-        features: [
-            "5,000 optimizations / month",
-            "500 premium credits",
-            "Everything in Pro",
-            "Up to 10 team members",
-            "Shared prompt library",
-            "Dedicated support",
-        ],
-        cta: "Get Team",
-        variant: "outline",
-    },
 ];
 
-const ENTERPRISE_PLAN = {
-    id: "enterprise",
-    name: "Enterprise",
-    price: "249",
-    description: "Unlimited access for large organizations.",
-    icon: Building2,
-    features: [
-        "Unlimited optimizations",
-        "Unlimited premium credits",
-        "Custom AI model routing",
-        "SSO & advanced security",
-        "Dedicated account manager",
-        "Custom integrations",
-    ],
-};
 
 export function PricingSection() {
     const router = useRouter();
@@ -157,16 +125,6 @@ export function PricingSection() {
             ease: "sine.inOut"
         });
 
-        gsap.from(".enterprise-card", {
-            scrollTrigger: {
-                trigger: ".enterprise-card",
-                start: "top 90%",
-            },
-            y: 30,
-            opacity: 0,
-            duration: 1,
-            ease: "power2.out"
-        });
     }, { scope: sectionRef });
 
     return (
@@ -199,7 +157,7 @@ export function PricingSection() {
                     </div>
                 </div>
 
-                <div className="pricing-grid grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                <div className="pricing-grid grid grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto gap-8 mb-16">
                     {PRICING_PLANS.map((plan) => (
                         <div
                             key={plan.name}
@@ -257,53 +215,6 @@ export function PricingSection() {
                     ))}
                 </div>
 
-                {/* Enterprise Section */}
-                <div className="enterprise-card group">
-                    <Card className="glass bg-gradient-to-r from-deep-teal/20 to-midnight border-electric-cyan/20 overflow-hidden relative">
-                        <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Building2 className="h-48 w-48 text-electric-cyan" />
-                        </div>
-                        <CardContent className="py-12 px-10 relative z-10">
-                            <div className="flex flex-col md:flex-row items-center justify-between gap-10">
-                                <div className="flex items-center space-x-6">
-                                    <div className="h-20 w-20 rounded-2xl bg-deep-teal/40 border border-electric-cyan/20 text-electric-cyan flex items-center justify-center shadow-[0_0_30px_rgba(9,183,180,0.2)]">
-                                        <Building2 className="h-10 w-10" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-3xl font-display text-white uppercase tracking-widest leading-none mb-4">{ENTERPRISE_PLAN.name} Protocol</h3>
-                                        <p className="text-white/60 text-lg font-medium">{ENTERPRISE_PLAN.description}</p>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col md:flex-row items-center gap-8">
-                                    <div className="text-center md:text-right">
-                                        <div className="text-4xl font-display text-white mb-1">
-                                            <span className="text-2xl text-electric-cyan">$</span>
-                                            {isAnnual ? Math.round(249 * 0.83) : 249}
-                                            <span className="text-xs font-bold text-white/40 uppercase tracking-widest ml-2">/cycle</span>
-                                        </div>
-                                        <p className="text-[10px] font-bold text-electric-cyan uppercase tracking-widest">Base Initialization</p>
-                                    </div>
-                                    <Button
-                                        size="lg"
-                                        className="h-14 px-10 rounded-xl btn-gradient text-xs font-bold uppercase tracking-[0.2em] glow-sm hover:glow-md transition-all"
-                                        onClick={() => handleCheckout("enterprise")}
-                                        isLoading={loadingPlan === "enterprise"}
-                                    >
-                                        Initialize Link
-                                    </Button>
-                                </div>
-                            </div>
-                            <div className="mt-12 grid grid-cols-2 md:grid-cols-3 gap-6 pt-10 border-t border-electric-cyan/10">
-                                {ENTERPRISE_PLAN.features.map((feature) => (
-                                    <div key={feature} className="flex items-center text-sm group/item">
-                                        <Check className="mr-3 h-4 w-4 text-electric-cyan" />
-                                        <span className="text-white/60 font-medium group-hover:text-white transition-colors">{feature}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
 
                 <div className="mt-20 text-center">
                     <div className="inline-flex items-center space-x-3 text-white/40 text-[10px] font-bold tracking-[0.3em] uppercase">
