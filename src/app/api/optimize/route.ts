@@ -94,7 +94,8 @@ export async function POST(request: Request) {
 
         // If successful, track usage and save to history
         if ('success' in result && result.success && 'results' in result) {
-            const creditsUsed = result.usage?.creditsUsed || 1;
+            // Count as 1 optimization regardless of output versions
+            const creditsUsed = 1;
             await incrementUsage(user.id, creditsUsed, 0);
 
             // Update comprehensive credits if used

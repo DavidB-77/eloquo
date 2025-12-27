@@ -39,8 +39,8 @@ export function InputSummary({
     files,
     onEdit,
 }: InputSummaryProps) {
-    // Truncate long prompts for display
-    const truncatedPrompt = prompt.length > 200 ? prompt.substring(0, 200) + "..." : prompt;
+    // Show full prompt as requested
+    // const truncatedPrompt = prompt.length > 200 ? prompt.substring(0, 200) + "..." : prompt;
 
     return (
         <Card className="h-full animate-in fade-in duration-300">
@@ -53,9 +53,9 @@ export function InputSummary({
 
             <CardContent className="space-y-4">
                 {/* Prompt Display */}
-                <div className="bg-muted/30 border rounded-lg p-4">
+                <div className="bg-muted/30 border rounded-lg p-4 max-h-60 overflow-y-auto">
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                        "{truncatedPrompt}"
+                        "{prompt}"
                     </p>
                 </div>
 
