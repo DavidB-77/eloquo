@@ -100,7 +100,7 @@ export function DashboardSidebar() {
                             <UsageBar
                                 used={userData.optimizationsUsed}
                                 limit={userData.optimizationsLimit}
-                                label="Protocol Cycles"
+                                label="Active Cycles"
                                 showNumbers={true}
                             />
                             <div className="mt-6">

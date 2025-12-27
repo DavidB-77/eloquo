@@ -29,7 +29,7 @@ const MOCK_API_KEYS = [
 
 const PLAN_DETAILS = {
     free: { name: "Free", price: "$0/mo", color: "bg-muted text-muted-foreground" },
-    pro: { name: "Pro", price: "$29/mo", color: "bg-primary text-primary-foreground" },
+    pro: { name: "Pro", price: "$9/mo", color: "bg-primary text-primary-foreground" },
     team: { name: "Team", price: "$99/mo", color: "bg-accent text-accent-foreground" },
     enterprise: { name: "Enterprise", price: "$249/mo", color: "bg-gradient-to-r from-primary to-accent text-white" },
 };
@@ -187,7 +187,7 @@ function SettingsContent() {
                                 <UsageBar
                                     used={usage.optimizationsUsed}
                                     limit={usage.optimizationsLimit}
-                                    label="Optimizations"
+                                    label="Protocol Cycles"
                                     showNumbers
                                 />
                             </div>
@@ -222,7 +222,7 @@ function SettingsContent() {
                         </CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {(["free", "pro", "team"] as const).map((tier) => {
+                                {(["free", "pro"] as const).map((tier) => {
                                     const tierPlan = PLAN_DETAILS[tier];
                                     const isCurrentPlan = usage.tier === tier;
                                     return (
@@ -238,15 +238,15 @@ function SettingsContent() {
                                             <ul className="space-y-2 text-sm text-muted-foreground">
                                                 <li className="flex items-center">
                                                     <Check className="h-4 w-4 text-success mr-2" />
-                                                    {tier === "free" ? "10" : tier === "pro" ? "1,000" : "5,000"} optimizations
+                                                    {tier === "free" ? "25" : "200"} protocol cycles
                                                 </li>
                                                 <li className="flex items-center">
                                                     <Check className="h-4 w-4 text-success mr-2" />
-                                                    {tier === "free" ? "No" : tier === "pro" ? "100" : "500"} premium credits
+                                                    {tier === "free" ? "Limited" : "Full"} model access
                                                 </li>
                                                 <li className="flex items-center">
                                                     <Check className={`h-4 w-4 mr-2 ${tier === "free" ? "text-muted" : "text-success"}`} />
-                                                    MCP/IDE integration
+                                                    Neural Archive access
                                                 </li>
                                             </ul>
                                         </div>

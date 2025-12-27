@@ -7,8 +7,8 @@ import { createClient } from '@/lib/supabase/server';
 
 // Tier limits
 export const TIER_LIMITS = {
-    free: { optimizations: 10, premiumCredits: 0, hasMcpAccess: false },
-    pro: { optimizations: 1000, premiumCredits: 100, hasMcpAccess: true },
+    free: { optimizations: 25, premiumCredits: 0, hasMcpAccess: false },
+    pro: { optimizations: 200, premiumCredits: 100, hasMcpAccess: true },
     team: { optimizations: 5000, premiumCredits: 500, hasMcpAccess: true },
     enterprise: { optimizations: Infinity, premiumCredits: Infinity, hasMcpAccess: true },
 } as const;
@@ -69,32 +69,46 @@ async function getOrCreateUsageRecord(userId: string) {
 export async function getUserUsage(userId: string): Promise<UsageStats> {
     const supabase = await createClient();
 
-    // Get user's profile for tier
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('subscription_tier, comprehensive_credits_remaining')
-        .eq('id', userId)
-        .single();
+    // Use RPC to get all limits and usage in one call
+    const { data, error } = await supabase.rpc('get_user_tier_limits', {
+        p_user_id: userId
+    });
 
-    const tier = (profile?.subscription_tier as SubscriptionTier) || 'free';
-    const limits = TIER_LIMITS[tier];
+    if (error || !data) {
+        console.error('Failed to fetch user tier limits:', error);
+        // Fallback to basic free tier if RPC fails
+        return {
+            tier: 'free',
+            optimizationsUsed: 0,
+            optimizationsLimit: 25,
+            premiumCreditsUsed: 0,
+            premiumCreditsLimit: 0,
+            canOptimize: true,
+            canOrchestrate: false,
+            hasMcpAccess: false,
+            comprehensiveCreditsRemaining: 3,
+        };
+    }
 
-    // Get current month usage
-    const usage = await getOrCreateUsageRecord(userId);
+    // Handle both array and single object returns from RPC
+    const stats = Array.isArray(data) ? data[0] : data;
 
-    const optimizationsRemaining = limits.optimizations - usage.optimizations_used;
-    const premiumCreditsRemaining = limits.premiumCredits - usage.premium_credits_used;
+    const tier = stats.subscription_tier as SubscriptionTier || 'free';
+    const optimizationsUsed = stats.optimizations_used || 0;
+    const optimizationsLimit = stats.optimizations_limit || 25;
+    const premiumCreditsUsed = stats.premium_credits_used || 0;
+    const premiumCreditsLimit = stats.premium_credits_limit || 0;
 
     return {
         tier,
-        optimizationsUsed: usage.optimizations_used,
-        optimizationsLimit: limits.optimizations,
-        premiumCreditsUsed: usage.premium_credits_used,
-        premiumCreditsLimit: limits.premiumCredits,
-        canOptimize: optimizationsRemaining > 0,
-        canOrchestrate: premiumCreditsRemaining > 0 || tier === 'enterprise',
-        hasMcpAccess: limits.hasMcpAccess,
-        comprehensiveCreditsRemaining: profile?.comprehensive_credits_remaining ?? 3,
+        optimizationsUsed,
+        optimizationsLimit,
+        premiumCreditsUsed,
+        premiumCreditsLimit,
+        canOptimize: optimizationsUsed < optimizationsLimit || optimizationsLimit === -1, // -1 or Infinity
+        canOrchestrate: tier === 'enterprise' || (premiumCreditsUsed < premiumCreditsLimit),
+        hasMcpAccess: stats.has_mcp_access || tier !== 'free',
+        comprehensiveCreditsRemaining: stats.comprehensive_credits_remaining ?? 3,
     };
 }
 

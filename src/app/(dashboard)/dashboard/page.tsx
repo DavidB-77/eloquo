@@ -1,7 +1,16 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Zap, Activity, Users, DollarSign, History, ArrowRight } from "lucide-react";
+import * as React from "react";
+import {
+    Zap,
+    Activity,
+    Users,
+    Clock,
+    History,
+    ArrowRight,
+    Settings,
+    LayoutDashboard
+} from "lucide-react";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -9,22 +18,50 @@ import { Badge } from "@/components/ui/Badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-
-const RECENT_PROMPTS = [
-    { id: "1", title: "Marketing Blog Post", model: "GPT-4", status: "optimized", date: "2 mins ago" },
-    { id: "2", title: "Customer Support Email", model: "Claude 3", status: "optimized", date: "15 mins ago" },
-    { id: "3", title: "Product Description", model: "Gemini Pro", status: "optimized", date: "1 hour ago" },
-    { id: "4", title: "Sales Script", model: "GPT-4", status: "processing", date: "Just now" },
-];
+import { useUser } from "@/providers/UserProvider";
+import { formatDistanceToNow } from "date-fns";
 
 export default function DashboardPage() {
+    const { userData } = useUser();
+    const [historyData, setHistoryData] = React.useState<any>(null);
+    const [isLoading, setIsLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        const fetchHistory = async () => {
+            try {
+                const res = await fetch("/api/history?limit=5");
+                const data = await res.json();
+                if (data.success) {
+                    setHistoryData(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch dashboard history:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchHistory();
+    }, []);
+
+    const stats = historyData?.stats || {
+        total_optimizations: 0,
+        total_tokens_saved: 0,
+        avg_savings_percent: 0,
+    };
+
+    const recentPrompts = historyData?.history || [];
+
+    // Time saved estimate: 10 mins per optimization
+    const timeSavedHours = (stats.total_optimizations * 10) / 60;
+
     return (
         <div className="space-y-8">
             {/* Welcome Header */}
             <div>
-                <h1 className="text-4xl font-display text-white glow-sm">Dashboard Overview</h1>
+                <h1 className="text-4xl font-display text-white glow-sm tracking-tighter">OPERATIONAL NEXUS</h1>
                 <p className="text-white/60 mt-2 font-medium tracking-wide border-l-2 border-electric-cyan pl-4">
-                    WELCOME BACK, OPERATIVE. SYSTEM STATUS: <span className="text-electric-cyan animate-pulse">OPTIMIZED</span>
+                    AUTHENTICATED. STATUS: <span className="text-electric-cyan animate-pulse">ACTIVE</span>
                 </p>
             </div>
 
@@ -32,30 +69,27 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatsCard
                     title="Total Optimizations"
-                    value="154"
+                    value={stats.total_optimizations.toLocaleString()}
                     icon={Zap}
-                    trend={{ value: "12%", isPositive: true }}
-                    description="Across all models"
+                    description="Total protocol cycles"
                 />
                 <StatsCard
                     title="Tokens Saved"
-                    value="45.2K"
+                    value={`${(stats.total_tokens_saved / 1000).toFixed(1)}K`}
                     icon={Activity}
-                    trend={{ value: "24%", isPositive: true }}
-                    description="Avg. 32% per prompt"
+                    description={`Avg. ${Math.round(stats.avg_savings_percent)}% per prompt`}
                 />
                 <StatsCard
                     title="Active Models"
-                    value="3"
+                    value={userData ? "6+" : "0"}
                     icon={Users}
-                    description="GPT-4, Claude, Gemini"
+                    description="Multi-model support active"
                 />
                 <StatsCard
-                    title="Cost Reduction"
-                    value="$128.40"
-                    icon={DollarSign}
-                    trend={{ value: "8%", isPositive: true }}
-                    description="This month"
+                    title="Time Saved"
+                    value={`${timeSavedHours.toFixed(1)}h`}
+                    icon={Clock}
+                    description="Protocol efficiency gain"
                 />
             </div>
 
@@ -83,31 +117,40 @@ export default function DashboardPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {RECENT_PROMPTS.map((prompt) => (
-                                    <TableRow key={prompt.id} className="hover:bg-electric-cyan/5 border-electric-cyan/5 transition-colors group">
-                                        <TableCell className="font-bold text-white pl-6">{prompt.title}</TableCell>
-                                        <TableCell>
-                                            <Badge className="bg-deep-teal text-electric-cyan border-electric-cyan/20 px-2 py-0 text-[10px] uppercase font-bold tracking-wider">
-                                                {prompt.model}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                className={cn(
-                                                    "px-2 py-0 text-[10px] uppercase font-bold tracking-wider",
-                                                    prompt.status === "optimized"
-                                                        ? "bg-electric-cyan/10 text-electric-cyan border-electric-cyan/20"
-                                                        : "bg-sunset-orange/10 text-sunset-orange border-sunset-orange/20"
-                                                )}
-                                            >
-                                                {prompt.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right text-xs text-white/40 pr-6 font-mono opacity-60 group-hover:opacity-100 transition-opacity">
-                                            {prompt.date}
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="text-center py-12 text-white/20 italic">
+                                            Scanning neural archive...
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                ) : recentPrompts.length > 0 ? (
+                                    recentPrompts.map((prompt: any) => (
+                                        <TableRow key={prompt.id} className="hover:bg-electric-cyan/5 border-electric-cyan/5 transition-colors group">
+                                            <TableCell className="font-bold text-white pl-6 max-w-[200px] truncate">
+                                                {prompt.original_prompt.substring(0, 50)}...
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge className="bg-deep-teal text-electric-cyan border-electric-cyan/20 px-2 py-0 text-[10px] uppercase font-bold tracking-wider">
+                                                    {prompt.target_model}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge className="bg-electric-cyan/10 text-electric-cyan border-electric-cyan/20 px-2 py-0 text-[10px] uppercase font-bold tracking-wider">
+                                                    OPTIMIZED
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right text-xs text-white/40 pr-6 font-mono opacity-60 group-hover:opacity-100 transition-opacity">
+                                                {formatDistanceToNow(new Date(prompt.created_at), { addSuffix: true })}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="text-center py-12 text-white/20 italic">
+                                            No optimizations found in archive. Initialize your first protocol.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>
@@ -137,29 +180,29 @@ export default function DashboardPage() {
 
                     <Card className="glass border-electric-cyan/10">
                         <CardHeader className="pb-4">
-                            <CardTitle className="text-sm font-display uppercase tracking-[0.2em] text-white">Neural Hub</CardTitle>
+                            <CardTitle className="text-sm font-display uppercase tracking-[0.2em] text-white">System Nodes</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            <div className="flex items-center p-3 rounded-xl border border-electric-cyan/5 bg-deep-teal/10 hover:bg-electric-cyan/5 hover:border-electric-cyan/20 transition-all cursor-pointer group">
+                            <Link href="/dashboard/history" className="flex items-center p-4 rounded-xl border border-electric-cyan/5 bg-deep-teal/10 hover:bg-electric-cyan/5 hover:border-electric-cyan/20 transition-all cursor-pointer group">
                                 <div className="h-8 w-8 rounded-lg bg-sunset-orange/10 flex items-center justify-center mr-3 border border-sunset-orange/20">
                                     <History className="h-4 w-4 text-sunset-orange" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-xs font-bold text-white uppercase tracking-wider">Prompt Codex</p>
-                                    <p className="text-[10px] text-white/20 uppercase tracking-tighter opacity-60">Architectural guidelines</p>
+                                    <p className="text-xs font-bold text-white uppercase tracking-wider">Neural Archive</p>
+                                    <p className="text-[10px] text-white/20 uppercase tracking-tighter opacity-60">View all optimization history</p>
                                 </div>
                                 <ArrowRight className="h-3 w-3 text-electric-cyan opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
-                            </div>
-                            <div className="flex items-center p-3 rounded-xl border border-electric-cyan/5 bg-deep-teal/10 hover:bg-electric-cyan/5 hover:border-electric-cyan/20 transition-all cursor-pointer group">
+                            </Link>
+                            <Link href="/dashboard/settings" className="flex items-center p-4 rounded-xl border border-electric-cyan/5 bg-deep-teal/10 hover:bg-electric-cyan/5 hover:border-electric-cyan/20 transition-all cursor-pointer group">
                                 <div className="h-8 w-8 rounded-lg bg-electric-cyan/10 flex items-center justify-center mr-3 border border-electric-cyan/20">
-                                    <Zap className="h-4 w-4 text-electric-cyan" />
+                                    <Settings className="h-4 w-4 text-electric-cyan" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-xs font-bold text-white uppercase tracking-wider">Engine Matrix</p>
-                                    <p className="text-[10px] text-white/20 uppercase tracking-tighter opacity-60">Cross-model comparison</p>
+                                    <p className="text-xs font-bold text-white uppercase tracking-wider">Protocol Config</p>
+                                    <p className="text-[10px] text-white/20 uppercase tracking-tighter opacity-60">Manage account settings</p>
                                 </div>
                                 <ArrowRight className="h-3 w-3 text-electric-cyan opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
-                            </div>
+                            </Link>
                         </CardContent>
                     </Card>
                 </div>

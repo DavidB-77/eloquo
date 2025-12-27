@@ -37,16 +37,20 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Failed to fetch history' }, { status: 500 });
         }
 
-        // Get user stats
+        // Get user dashboard stats
         const { data: stats, error: statsError } = await supabase.rpc(
-            'get_user_optimization_stats',
+            'get_user_dashboard_stats',
             { p_user_id: user.id }
         );
+
+        if (statsError) {
+            console.error('Stats fetch error:', statsError);
+        }
 
         return NextResponse.json({
             success: true,
             history: history || [],
-            stats: stats?.[0] || {
+            stats: stats?.[0] || stats || {
                 total_optimizations: 0,
                 total_tokens_saved: 0,
                 avg_savings_percent: 0,
