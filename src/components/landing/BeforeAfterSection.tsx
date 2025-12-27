@@ -53,19 +53,27 @@ export function BeforeAfterSection() {
             setInputText("");
 
             for (let i = 0; i <= currentScenario.input.length; i++) {
-                await new Promise(r => setTimeout(r, 20)); // Typing speed
+                await new Promise(r => {
+                    timeoutId = setTimeout(r, 20);
+                }); // Typing speed
                 setInputText(currentScenario.input.slice(0, i));
             }
 
-            await new Promise(r => setTimeout(r, 800)); // Pause before click
+            await new Promise(r => {
+                timeoutId = setTimeout(r, 800);
+            }); // Pause before click
 
             // PHASE 2: PROCESSING (3s)
             setPhase("processing");
-            await new Promise(r => setTimeout(r, 2500));
+            await new Promise(r => {
+                timeoutId = setTimeout(r, 2500);
+            });
 
             // PHASE 3: RESULTS (6s)
             setPhase("results");
-            await new Promise(r => setTimeout(r, 6000));
+            await new Promise(r => {
+                timeoutId = setTimeout(r, 6000);
+            });
 
             // RESET
             setScenarioIndex(prev => (prev + 1) % DEMO_SCENARIO.length);
