@@ -107,24 +107,19 @@ export async function POST(request: Request) {
                     .eq('id', user.id);
             }
 
+            // Calculate tokens (used for both DB and frontend response)
+            const originalPrompt = prompt;
+            const optimizedPrompt = result.results.full;
+
+            const tokenData = calculateTokenSavings(
+                prompt,
+                optimizedPrompt || '',
+                targetModel
+            );
+
             // Save to history using updated RPC
             try {
-                // Debug: Log what we're calculating
-                const originalPrompt = prompt; // The user's input
-                const optimizedPrompt = result.results.full;
 
-                console.log('Token calculation debug:', {
-                    originalPromptLength: originalPrompt?.length,
-                    optimizedPromptLength: optimizedPrompt?.length,
-                    optimizedPromptPreview: optimizedPrompt?.substring(0, 100),
-                });
-
-                // Calculate tokens
-                const tokenData = calculateTokenSavings(
-                    prompt,
-                    optimizedPrompt || '',
-                    targetModel
-                );
 
                 console.log('Token counts:', {
                     tokensOriginal: tokenData.original,
@@ -169,7 +164,27 @@ export async function POST(request: Request) {
             } catch (saveError) {
                 console.error('Error saving optimization:', saveError);
             }
+
+            // Inject server-calculated metrics into the result object for the frontend
+            // This ensures the frontend displays exactly what was saved to the DB
+            if (!result.metrics) {
+                result.metrics = {
+                    originalTokens: 0,
+                    optimizedTokens: 0,
+                    processingTimeMs: 0,
+                    creditsUsed: 1,
+                    outputMode: 'standard',
+                    tokensSaved: 0
+                };
+            }
+
+            result.metrics.originalTokens = tokenData.original;
+            result.metrics.optimizedTokens = tokenData.optimized;
+            result.metrics.tokensSaved = tokenData.saved;
+            result.metrics.qualityScore = result.validation?.score || 0;
         }
+
+
 
         // 8. Return result
         return NextResponse.json(result);

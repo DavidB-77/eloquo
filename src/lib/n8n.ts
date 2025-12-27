@@ -51,6 +51,8 @@ export interface OptimizeSuccessResponse {
         processingTimeMs: number;
         creditsUsed: number;
         outputMode: 'standard' | 'comprehensive';
+        tokensSaved: number;
+        qualityScore?: number;
     };
     classification: {
         complexity: 'simple' | 'moderate' | 'complex';

@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Copy, Check, ChevronDown, FileText, FileCode, FileJson, File, Lightbulb, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { calculateTokenSavings } from "@/lib/tokenizer";
 import { TokenInfoTooltip } from "./TokenInfoTooltip";
 
 type TabType = "full" | "quickRef" | "snippet";
@@ -20,10 +19,10 @@ interface ResultsTabsProps {
     metrics?: {
         originalTokens: number;
         optimizedTokens: number;
-        tokensSaved: number;
-        percentageSaved: number;
+        tokensSaved?: number;
+        percentageSaved?: number;
         accuracy?: number;
-        qualityScore?: number; // Ensure this is supported
+        qualityScore?: number;
     };
     targetModel: string;
     onStartNew: () => void;

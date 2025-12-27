@@ -31,9 +31,11 @@ interface SuccessResult {
     metrics: {
         originalTokens: number;
         optimizedTokens: number;
+        tokensSaved: number;
         processingTimeMs: number;
         creditsUsed: number;
         outputMode: string;
+        qualityScore: number;
     };
     validation?: {
         approved: boolean;
@@ -186,12 +188,8 @@ export default function OptimizePage() {
 
     // Calculate metrics for display
     const getMetrics = () => {
-        if (!result || !submittedData) return null;
-        const originalTokens = result.metrics?.originalTokens || Math.ceil(submittedData.prompt.length / 4);
-        const optimizedTokens = result.metrics?.optimizedTokens || Math.ceil(result.results.full.length / 4);
-        const tokensSaved = originalTokens - optimizedTokens;
-        const percentageSaved = Math.round((tokensSaved / originalTokens) * 100);
-        return { originalTokens, optimizedTokens, tokensSaved, percentageSaved };
+        if (!result) return undefined;
+        return result.metrics;
     };
 
     return (

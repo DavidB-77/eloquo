@@ -169,31 +169,22 @@ export function OptimizeForm({
                     {/* Orchestration Toggle */}
                     {canOrchestrate && (
                         <div
-                            className={`p-4 rounded-lg border cursor-pointer transition-all ${useOrchestration
-                                ? "bg-primary/5 border-primary"
-                                : "bg-muted/30 border-input hover:border-muted-foreground"
-                                }`}
-                            onClick={() => setUseOrchestration(!useOrchestration)}
+                            className={`p-4 rounded-lg border cursor-not-allowed transition-all opacity-60 bg-muted/30 border-input`}
                         >
                             <div className="flex items-start space-x-3">
                                 <div
-                                    className={`h-5 w-5 rounded border-2 flex items-center justify-center mt-0.5 ${useOrchestration ? "bg-primary border-primary" : "border-input"
-                                        }`}
+                                    className={`h-5 w-5 rounded border-2 flex items-center justify-center mt-0.5 border-input`}
                                 >
-                                    {useOrchestration && (
-                                        <svg className="h-3 w-3 text-primary-foreground" fill="currentColor" viewBox="0 0 12 12">
-                                            <path d="M10.28 2.28L3.989 8.575 1.695 6.28A1 1 0 00.28 7.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 2.28z" />
-                                        </svg>
-                                    )}
+                                    {/* Unchecked state for disabled */}
                                 </div>
                                 <div className="flex-1">
                                     <div className="flex items-center space-x-2">
-                                        <Layers className="h-4 w-4 text-primary" />
-                                        <span className="font-medium text-sm">Use Orchestration</span>
-                                        <Badge variant="secondary" className="text-[10px]">Premium</Badge>
+                                        <Layers className="h-4 w-4 text-muted-foreground" />
+                                        <span className="font-medium text-sm text-muted-foreground">Use Orchestration</span>
+                                        <Badge variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/20">Coming Soon</Badge>
                                     </div>
                                     <p className="text-xs text-muted-foreground mt-1">
-                                        For complex tasks. Breaks your request into multiple targeted prompts.
+                                        For complex tasks. Breaks your request into multiple targeted prompts. (Premium Feature)
                                     </p>
                                 </div>
                             </div>
