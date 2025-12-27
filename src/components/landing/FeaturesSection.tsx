@@ -70,14 +70,13 @@ export function FeaturesSection() {
         gsap.from(".feature-card", {
             scrollTrigger: {
                 trigger: ".features-grid",
-                start: "top 80%",
+                start: "top 85%",
             },
-            y: 40,
-            scale: 0.98,
+            y: 100,
             opacity: 0,
-            duration: 1,
-            stagger: 0.1,
-            ease: "back.out(1.2)"
+            duration: 0.8,
+            stagger: 0.15,
+            ease: "power3.out"
         });
     }, { scope: sectionRef });
 

@@ -54,7 +54,7 @@ export function DashboardSidebar() {
                             <div className="h-8 w-8 btn-gradient rounded-lg flex items-center justify-center">
                                 <Zap className="h-5 w-5 text-white fill-current" />
                             </div>
-                            <span className="font-display text-2xl tracking-tight text-white glow-sm">Eloquo</span>
+                            <span className="font-display text-2xl tracking-widest text-white glow-sm uppercase">ELOQUO</span>
                         </Link>
                     )}
                     {isCollapsed && (

@@ -12,7 +12,7 @@ export function HeroSection() {
     const containerRef = React.useRef<HTMLDivElement>(null);
 
     useGSAP(() => {
-        const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
+        const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
 
         tl.from(".hero-badge", {
             y: 30,
@@ -21,32 +21,36 @@ export function HeroSection() {
             delay: 0.2
         })
             .from(".hero-title span", {
-                y: 100,
+                y: 80,
                 opacity: 0,
-                duration: 1.5,
+                duration: 1.2,
                 stagger: 0.1,
-            }, "-=0.8")
+                ease: "power3.out"
+            }, "-=0.6")
             .from(".hero-description", {
-                y: 20,
-                opacity: 0,
-                duration: 1,
-            }, "-=1")
-            .from(".hero-actions", {
-                y: 20,
+                y: 30,
                 opacity: 0,
                 duration: 1,
             }, "-=0.8")
+            .from(".hero-actions button, .hero-actions a", {
+                scale: 0.8,
+                opacity: 0,
+                duration: 0.8,
+                stagger: 0.15,
+                ease: "back.out(2)"
+            }, "-=0.6")
             .from(".hero-stats", {
                 opacity: 0,
-                duration: 1.5,
-            }, "-=0.5")
+                y: 20,
+                duration: 1.2,
+            }, "-=0.4")
             .from(".hero-mockup", {
-                y: 60,
-                scale: 0.95,
+                y: 100,
+                scale: 0.9,
                 opacity: 0,
                 duration: 2,
-                ease: "power4.out"
-            }, "-=1.2");
+                ease: "expo.out"
+            }, "-=1");
     }, { scope: containerRef });
 
     return (

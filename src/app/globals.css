@@ -31,8 +31,8 @@
   /* Brand Colors */
   --color-midnight: #00030A;
   --color-deep-teal: #143542;
-  --color-electric-cyan: #00E5E0;
-  --color-sunset-orange: #FF8A50;
+  --color-electric-cyan: #00FFFF;
+  --color-sunset-orange: #FF5722;
   --color-terracotta: #AC4B3E;
   --color-dusty-rose: #BC9891;
 
@@ -131,13 +131,13 @@
     --card-foreground: #F8FAFC;
     --popover: #143542;
     --popover-foreground: #F8FAFC;
-    --primary: #00E5E0;
+    --primary: #00FFFF;
     --primary-foreground: #F8FAFC;
     --secondary: #BC9891;
     --secondary-foreground: #00030A;
     --muted: #1e293b;
     --muted-foreground: rgba(255, 255, 255, 0.6);
-    --accent: #FF8A50;
+    --accent: #FF5722;
     --accent-foreground: #F8FAFC;
     --destructive: #AC4B3E;
     --destructive-foreground: #F8FAFC;
@@ -155,13 +155,13 @@
     --card-foreground: #F8FAFC;
     --popover: #143542;
     --popover-foreground: #F8FAFC;
-    --primary: #00E5E0;
+    --primary: #00FFFF;
     --primary-foreground: #F8FAFC;
     --secondary: #BC9891;
     --secondary-foreground: #00030A;
     --muted: #1e293b;
     --muted-foreground: rgba(255, 255, 255, 0.6);
-    --accent: #FF8A50;
+    --accent: #FF5722;
     --accent-foreground: #F8FAFC;
     --destructive: #AC4B3E;
     --destructive-foreground: #F8FAFC;

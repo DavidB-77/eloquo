@@ -104,7 +104,7 @@ export function OptimizeForm({
                 {/* Header */}
                 <div className="flex flex-col space-y-2">
                     <div className="flex items-center space-x-3">
-                        <span className="font-display text-4xl text-white tracking-widest uppercase glow-md">Eloquo</span>
+                        <span className="font-display text-4xl text-white tracking-widest uppercase glow-md">ELOQUO</span>
                         <div className="h-px flex-1 bg-gradient-to-r from-electric-cyan/50 to-transparent" />
                     </div>
                     <p className="text-white/60 text-sm font-medium tracking-wide">
@@ -211,8 +211,8 @@ export function OptimizeForm({
 
                     {/* Energy Bar Progress Animation */}
                     <div className={cn(
-                        "transition-all duration-500 overflow-hidden",
-                        isLoading || progressStage > 0 ? "h-16 opacity-100" : "h-0 opacity-0"
+                        "transition-all duration-700 ease-in-out",
+                        isLoading || progressStage > 0 ? "opacity-100 translate-y-0" : "opacity-30 pointer-events-none grayscale blur-[0.5px]"
                     )}>
                         <div className="space-y-2">
                             <div className="flex justify-between items-center px-1">
@@ -223,20 +223,27 @@ export function OptimizeForm({
                                     {isLoading ? "PHASE IN PROGRESS" : "COMPLETE"}
                                 </span>
                             </div>
-                            <div className="h-1.5 w-full bg-deep-teal rounded-full overflow-hidden relative">
+                            <div className="h-3 w-full bg-deep-teal/40 rounded-full overflow-hidden relative border border-electric-cyan/20 shadow-[0_0_15px_rgba(0,255,255,0.2)]">
                                 <div
-                                    className="absolute inset-0 bg-gradient-to-r from-electric-cyan via-sunset-orange to-electric-cyan bg-[length:50%_100%] animate-shimmer rounded-full"
+                                    className={cn(
+                                        "absolute inset-0 bg-gradient-to-r from-electric-cyan via-sunset-orange to-electric-cyan bg-[length:50%_100%] animate-shimmer rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(0,255,255,0.5)]",
+                                        !isLoading && progressStage === 0 ? "opacity-20" : "opacity-100"
+                                    )}
                                     style={{
-                                        width: isLoading ? '100%' : '100%',
-                                        left: isLoading ? '0' : '0'
+                                        width: '100%',
+                                        left: '0'
                                     }}
                                 />
                                 {isLoading && (
-                                    <div className="absolute inset-0 flex items-center justify-around opacity-40">
-                                        {[...Array(20)].map((_, i) => (
-                                            <div key={i} className="h-full w-0.5 bg-white/20 blur-[1px] animate-pulse" style={{ animationDelay: `${i * 0.1}s` }} />
-                                        ))}
-                                    </div>
+                                    <>
+                                        {/* Pulse effect */}
+                                        <div className="absolute inset-0 bg-electric-cyan/20 animate-pulse" />
+                                        <div className="absolute inset-0 flex items-center justify-around opacity-60">
+                                            {[...Array(15)].map((_, i) => (
+                                                <div key={i} className="h-full w-1 bg-white/30 blur-[2px] animate-pulse" style={{ animationDelay: `${i * 0.15}s` }} />
+                                            ))}
+                                        </div>
+                                    </>
                                 )}
                             </div>
                         </div>

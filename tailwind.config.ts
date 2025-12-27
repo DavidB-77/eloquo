@@ -11,8 +11,8 @@ const config: Config = {
             colors: {
                 midnight: '#00030A',
                 'deep-teal': '#143542',
-                'electric-cyan': '#00E5E0',
-                'sunset-orange': '#FF8A50',
+                'electric-cyan': '#00FFFF',
+                'sunset-orange': '#FF5722',
                 terracotta: '#AC4B3E',
                 'dusty-rose': '#BC9891',
                 border: "hsl(var(--border))",

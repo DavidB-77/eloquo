@@ -13,41 +13,50 @@ export function BeforeAfterSection() {
     const sectionRef = React.useRef<HTMLDivElement>(null);
 
     useGSAP(() => {
-        gsap.from(".compare-header > *", {
+        const tl = gsap.timeline({
             scrollTrigger: {
-                trigger: ".compare-header",
-                start: "top 85%",
-            },
-            y: 30,
-            opacity: 0,
-            duration: 1,
-            stagger: 0.2,
-            ease: "power3.out"
+                trigger: sectionRef.current,
+                start: "top 20%",
+                end: "bottom 20%",
+                scrub: 1,
+                pin: true,
+                anticipatePin: 1
+            }
         });
 
-        gsap.from(".compare-col", {
-            scrollTrigger: {
-                trigger: ".compare-grid",
-                start: "top 80%",
-            },
-            x: (i) => i === 0 ? -50 : 50,
+        tl.from(".compare-header", {
+            y: 50,
             opacity: 0,
-            duration: 1.5,
-            stagger: 0.2,
-            ease: "expo.out"
-        });
-
-        gsap.from(".compare-footer > *", {
-            scrollTrigger: {
-                trigger: ".compare-footer",
-                start: "top 90%",
-            },
-            scale: 0.95,
-            opacity: 0,
-            duration: 1,
-            stagger: 0.1,
-            ease: "back.out"
-        });
+            duration: 1
+        })
+            .from(".compare-grid", {
+                scale: 0.9,
+                opacity: 0,
+                duration: 1,
+                ease: "power2.out"
+            }, "-=0.5")
+            .from(".compare-col:first-child", {
+                x: -100,
+                opacity: 0,
+                duration: 1
+            }, "-=0.5")
+            .from(".compare-col:last-child", {
+                x: 100,
+                opacity: 0,
+                duration: 1
+            }, "-=1")
+            .from(".demo-line", {
+                opacity: 0,
+                y: 10,
+                stagger: 0.2,
+                duration: 0.8,
+                ease: "power2.out"
+            }, "-=0.5")
+            .from(".compare-footer", {
+                y: 30,
+                opacity: 0,
+                duration: 0.5
+            }, "-=0.5");
     }, { scope: sectionRef });
 
     return (
@@ -100,12 +109,12 @@ export function BeforeAfterSection() {
                                 <Badge className="text-[8px] bg-electric-cyan text-midnight font-bold uppercase tracking-widest border-none leading-none">Peak Output</Badge>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                <div className="bg-midnight/80 border border-electric-cyan/20 p-6 rounded-2xl font-mono text-xs leading-relaxed text-white/90 shadow-inner">
-                                    <span className="text-electric-cyan font-bold"># Role:</span> Expert Content Strategist<br />
-                                    <span className="text-electric-cyan font-bold"># Context:</span> B2B SaaS adoption trends<br />
-                                    <span className="text-electric-cyan font-bold"># Task:</span> Write a high-conversion 500-word blog post...<br />
-                                    <span className="text-electric-cyan font-bold"># Style:</span> Professional, analytical, authoritative<br />
-                                    <span className="text-electric-cyan font-bold"># Constraints:</span> Use semantic keywords [AI ROI, marketing automation]...
+                                <div className="bg-midnight/80 border border-electric-cyan/20 p-6 rounded-2xl font-mono text-xs leading-relaxed text-white/90 shadow-inner demo-text-wrapper">
+                                    <div className="demo-line"><span className="text-electric-cyan font-bold"># Role:</span> Expert Content Strategist</div>
+                                    <div className="demo-line"><span className="text-electric-cyan font-bold"># Context:</span> B2B SaaS adoption trends</div>
+                                    <div className="demo-line"><span className="text-electric-cyan font-bold"># Task:</span> Write a high-conversion 500-word blog post...</div>
+                                    <div className="demo-line"><span className="text-electric-cyan font-bold"># Style:</span> Professional, analytical, authoritative</div>
+                                    <div className="demo-line"><span className="text-electric-cyan font-bold"># Constraints:</span> Use semantic keywords [AI ROI, marketing automation]...</div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-6">
                                     <div className="p-4 border border-electric-cyan/10 bg-electric-cyan/5 rounded-xl">

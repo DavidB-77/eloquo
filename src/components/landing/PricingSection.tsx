@@ -138,13 +138,23 @@ export function PricingSection() {
         gsap.from(".pricing-card", {
             scrollTrigger: {
                 trigger: ".pricing-grid",
-                start: "top 80%",
+                start: "top 85%",
             },
-            y: 50,
+            y: 80,
             opacity: 0,
-            duration: 1.2,
-            stagger: 0.15,
-            ease: "expo.out"
+            duration: 1,
+            stagger: 0.2,
+            ease: "power3.out"
+        });
+
+        // Looping glow for popular card
+        gsap.to(".pricing-card .border-electric-cyan/40", {
+            borderColor: "rgba(0, 255, 255, 0.8)",
+            boxShadow: "0 0 20px rgba(0, 255, 255, 0.3)",
+            duration: 2,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut"
         });
 
         gsap.from(".enterprise-card", {
