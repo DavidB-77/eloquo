@@ -23,6 +23,7 @@ interface ResultsTabsProps {
         tokensSaved: number;
         percentageSaved: number;
         accuracy?: number;
+        qualityScore?: number; // Ensure this is supported
     };
     targetModel: string;
     onStartNew: () => void;
@@ -144,38 +145,37 @@ export function ResultsTabs({
                         🔄 New
                     </Button>
                 </div>
-                <div className="flex items-center justify-between">
-                    {metrics && (
-                        <div className="flex items-center gap-2">
-                            <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                <span className="text-green-600 font-medium">
-                                    Saved ~{metrics.tokensSaved} tokens ({metrics.percentageSaved}%)
-                                </span>
-                                {metrics.accuracy && (
-                                    <span className="text-xs text-gray-500">
-                                        ±{100 - metrics.accuracy}%
-                                    </span>
-                                )}
-                            </p>
-                            {/* Always show tooltip if we have metrics, regardless of accuracy value */}
-                            <TokenInfoTooltip
-                                targetModel={targetModel}
-                                accuracy={metrics.accuracy || 95}
-                            />
+                <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center gap-4 text-sm bg-muted/20 px-3 py-1.5 rounded-md border border-muted/20">
+                        {/* Token count */}
+                        {metrics && (
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-muted-foreground text-xs uppercase tracking-wide font-medium">Tokens</span>
+                                <span className="font-semibold text-foreground">{metrics.optimizedTokens}</span>
+                                <TokenInfoTooltip targetModel={targetModel} accuracy={metrics.accuracy || 95} />
+                            </div>
+                        )}
+
+                        <div className="w-px h-3 bg-border" />
+
+                        {/* Quality score */}
+                        {validation && (
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-muted-foreground text-xs uppercase tracking-wide font-medium">Quality</span>
+                                <Badge variant="outline" className="h-5 px-1.5 gap-1 font-semibold text-green-600 bg-green-500/5 border-green-500/20">
+                                    {validation.score}/5
+                                </Badge>
+                            </div>
+                        )}
+
+                        <div className="w-px h-3 bg-border" />
+
+                        {/* Target model */}
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-muted-foreground text-xs uppercase tracking-wide font-medium">Model</span>
+                            <span className="font-medium text-foreground">{targetModel}</span>
                         </div>
-                    )}
-                    {validation && (
-                        <Badge
-                            variant={validation.approved ? "default" : "secondary"}
-                            className={cn(
-                                "ml-2",
-                                validation.approved ? "bg-green-500/10 text-green-600 border-green-500/20" : ""
-                            )}
-                        >
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Quality: {validation.score}/5
-                        </Badge>
-                    )}
+                    </div>
                 </div>
             </CardHeader>
 
@@ -304,6 +304,6 @@ export function ResultsTabs({
                     </Button>
                 </div>
             </CardContent>
-        </Card>
+        </Card >
     );
 }
