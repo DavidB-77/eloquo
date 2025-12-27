@@ -36,7 +36,7 @@ export function Navbar() {
             <Container>
                 <div className="flex items-center justify-between">
                     <Link href="/" className="flex items-center space-x-3 group -ml-2">
-                        <span className="text-2xl font-display tracking-widest text-white glow-sm group-hover:glow-md transition-all uppercase" style={{ fontFamily: 'Comodo' }}>ELOQUO</span>
+                        <span className="text-3xl font-display font-medium tracking-widest text-white glow-sm group-hover:glow-md transition-all uppercase" style={{ fontFamily: 'Comodo', letterSpacing: '0.05em' }}>ELOQUO</span>
                     </Link>
 
                     {/* Desktop Nav */}

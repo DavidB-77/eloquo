@@ -205,19 +205,27 @@
     box-shadow: 0 0 25px rgba(0, 255, 255, 0.2) !important;
   }
 
-  h1,
+  h1 {
+    @apply font-display font-normal text-electric-cyan;
+    font-family: 'Comodo', ui-sans-serif, system-ui, sans-serif !important;
+    text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+    letter-spacing: 0.05em;
+  }
+
   h2,
-  h3,
+  h3 {
+    @apply font-display font-normal text-electric-cyan;
+    font-family: 'Comodo', ui-sans-serif, system-ui, sans-serif !important;
+    text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+    letter-spacing: 0.04em;
+  }
+
   h4,
   h5,
   h6 {
     @apply font-display font-normal text-electric-cyan;
     font-family: 'Comodo', ui-sans-serif, system-ui, sans-serif !important;
     text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
-    letter-spacing: 0.02em;
-  }
-
-  h1 {
     letter-spacing: 0.03em;
   }
 
