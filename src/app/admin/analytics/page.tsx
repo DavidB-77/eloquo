@@ -16,6 +16,8 @@ export default function AdminAnalyticsPage() {
     const [timeRange, setTimeRange] = React.useState("30d");
     const [loading, setLoading] = React.useState(true);
     const [updatingBalance, setUpdatingBalance] = React.useState(false);
+    const [syncingBalance, setSyncingBalance] = React.useState(false);
+    const [showManualUpdate, setShowManualUpdate] = React.useState(false);
 
     // Data states
     const [dashboardStats, setDashboardStats] = React.useState<any>(null);
@@ -24,6 +26,27 @@ export default function AdminAnalyticsPage() {
     const [modelStats, setModelStats] = React.useState<any[]>([]);
     const [balanceData, setBalanceData] = React.useState<any>(null);
     const [newBalance, setNewBalance] = React.useState("");
+
+    const syncBalance = React.useCallback(async () => {
+        setSyncingBalance(true);
+        try {
+            const res = await fetch('/api/admin/openrouter-balance');
+            const data = await res.json();
+            if (data.success) {
+                // Refresh balance data specifically
+                const balanceRes = await fetch('/api/admin/analytics?type=balance');
+                const balanceData = await balanceRes.json();
+                if (balanceData.success) {
+                    setBalanceData(balanceData.data);
+                    setNewBalance(balanceData.data.balance !== null ? balanceData.data.balance.toString() : "0");
+                }
+            }
+        } catch (error) {
+            console.error("Failed to sync balance:", error);
+        } finally {
+            setSyncingBalance(false);
+        }
+    }, []);
 
     const fetchData = React.useCallback(async () => {
         setLoading(true);
@@ -51,13 +74,20 @@ export default function AdminAnalyticsPage() {
             if (balance.success && balance.data) {
                 setBalanceData(balance.data);
                 setNewBalance(balance.data.balance !== null ? balance.data.balance.toString() : "0");
+
+                // If it hasn't been synced recently (e.g. over 1 hour), trigger an auto-sync
+                const lastChecked = balance.data.last_checked ? new Date(balance.data.last_checked).getTime() : 0;
+                const moreThanHourAgo = Date.now() - lastChecked > 3600000;
+                if (moreThanHourAgo) {
+                    syncBalance();
+                }
             }
         } catch (error) {
             console.error("Failed to fetch analytics data:", error);
         } finally {
             setLoading(false);
         }
-    }, [timeRange]);
+    }, [timeRange, syncBalance]);
 
     React.useEffect(() => {
         fetchData();
@@ -176,24 +206,53 @@ export default function AdminAnalyticsPage() {
                                 </div>
                                 <div className="h-10 w-px bg-white/10 hidden sm:block mx-2" />
                                 <div className="flex items-center gap-2">
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        value={newBalance}
-                                        onChange={(e) => setNewBalance(e.target.value)}
-                                        placeholder="Update balance..."
-                                        className="w-32 bg-midnight/50 border-white/10 text-white h-10"
-                                    />
                                     <Button
-                                        onClick={() => handleUpdateBalance()}
-                                        disabled={updatingBalance || !newBalance}
-                                        className="btn-gradient text-white text-xs font-bold uppercase h-10 px-4"
+                                        onClick={() => syncBalance()}
+                                        disabled={syncingBalance}
+                                        variant="outline"
+                                        className="border-white/10 text-white hover:bg-white/5 h-10 px-4"
                                     >
-                                        Update
+                                        <RefreshCw className={cn("h-4 w-4 mr-2", syncingBalance && "animate-spin")} />
+                                        Sync Now
+                                    </Button>
+                                    <Button
+                                        onClick={() => setShowManualUpdate(!showManualUpdate)}
+                                        variant="ghost"
+                                        className="text-white/40 hover:text-white h-10 px-2"
+                                    >
+                                        <Layers className="h-4 w-4" />
                                     </Button>
                                 </div>
                             </div>
                         </div>
+
+                        {showManualUpdate && (
+                            <div className="mt-6 flex items-center justify-end gap-2 animate-in slide-in-from-top-2 duration-300">
+                                <p className="text-[10px] text-white/40 uppercase font-bold mr-2">Manual Override:</p>
+                                <Input
+                                    type="number"
+                                    step="0.01"
+                                    value={newBalance}
+                                    onChange={(e) => setNewBalance(e.target.value)}
+                                    placeholder="Set balance..."
+                                    className="w-32 bg-midnight/50 border-white/10 text-white h-9"
+                                />
+                                <Button
+                                    onClick={() => handleUpdateBalance()}
+                                    disabled={updatingBalance || !newBalance}
+                                    className="bg-white/10 text-white hover:bg-white/20 text-[10px] font-bold uppercase h-9 px-4 border border-white/10"
+                                >
+                                    Force Update
+                                </Button>
+                                <Button
+                                    onClick={() => setShowManualUpdate(false)}
+                                    variant="ghost"
+                                    className="text-white/40 hover:text-white h-9 px-2 text-[10px] uppercase font-bold"
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
