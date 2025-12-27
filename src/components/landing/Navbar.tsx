@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Zap } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -27,19 +27,19 @@ export function Navbar() {
     return (
         <nav
             className={cn(
-                "fixed top-0 z-50 w-full transition-all duration-300",
+                "fixed top-0 z-50 w-full transition-all duration-500",
                 scrolled
-                    ? "bg-background/80 py-3 backdrop-blur-lg shadow-sm border-b"
-                    : "bg-transparent py-5"
+                    ? "glass py-3 rounded-none border-b border-electric-cyan/20 bg-midnight/80"
+                    : "bg-transparent py-6"
             )}
         >
             <Container>
                 <div className="flex items-center justify-between">
-                    <Link href="/" className="flex items-center space-x-2">
-                        <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                            <span className="text-primary-foreground font-bold text-lg">E</span>
+                    <Link href="/" className="flex items-center space-x-3 group">
+                        <div className="h-10 w-10 rounded-xl btn-gradient flex items-center justify-center shadow-[0_0_15px_rgba(9,183,180,0.3)] group-hover:shadow-[0_0_25px_rgba(9,183,180,0.5)] transition-all">
+                            <Zap className="h-6 w-6 text-white fill-current" />
                         </div>
-                        <span className="text-xl font-bold font-display tracking-tight">Eloquo</span>
+                        <span className="text-2xl font-display tracking-widest text-white glow-sm group-hover:glow-md transition-all uppercase">Eloquo</span>
                     </Link>
 
                     {/* Desktop Nav */}
@@ -48,17 +48,17 @@ export function Navbar() {
                             <Link
                                 key={link.name}
                                 href={link.href}
-                                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                                className="text-xs font-bold text-dusty-rose hover:text-white uppercase tracking-widest transition-colors"
                             >
                                 {link.name}
                             </Link>
                         ))}
-                        <div className="flex items-center space-x-3 ml-4">
-                            <Button variant="ghost" size="sm" asChild>
-                                <Link href="/login">Login</Link>
+                        <div className="flex items-center space-x-4 ml-6">
+                            <Button variant="ghost" size="sm" asChild className="text-xs font-bold uppercase tracking-widest text-white hover:bg-white/5">
+                                <Link href="/login">Access Hub</Link>
                             </Button>
-                            <Button size="sm" asChild className="shadow-lg">
-                                <Link href="/signup">Get Started</Link>
+                            <Button size="sm" asChild className="btn-gradient px-6 rounded-lg text-xs font-bold uppercase tracking-widest glow-sm hover:glow-md">
+                                <Link href="/signup">Initialize</Link>
                             </Button>
                         </div>
                     </div>

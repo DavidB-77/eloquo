@@ -213,7 +213,16 @@
   }
 
   .btn-gradient:hover {
-    box-shadow: 0 0 20px rgba(9, 183, 180, 0.4);
+    box-shadow: 0 0 30px rgba(9, 183, 180, 0.4);
     transform: scale(1.02);
+  }
+
+  .glow-sm {
+    text-shadow: 0 0 10px rgba(9, 183, 180, 0.6);
+  }
+
+  .glow-md {
+    text-shadow: 0 0 20px rgba(9, 183, 180, 0.8);
+    filter: drop-shadow(0 0 10px rgba(9, 183, 180, 0.4));
   }
 }

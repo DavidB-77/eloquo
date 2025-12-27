@@ -153,9 +153,9 @@ export function ResultsTabs({
                         variant="ghost"
                         size="sm"
                         onClick={onStartNew}
-                        className="text-dusty-rose hover:text-white hover:bg-electric-cyan/10"
+                        className="text-dusty-rose hover:text-white hover:bg-white/5 uppercase tracking-[0.2em] font-bold"
                     >
-                        🔄 New
+                        🔄 NEW_SEQ
                     </Button>
                 </div>
 
@@ -208,16 +208,16 @@ export function ResultsTabs({
 
             <CardContent className="flex-1 flex flex-col p-0">
                 {/* Tab Bar */}
-                <div className="flex bg-midnight/40 p-1.5 gap-1.5 border-b border-electric-cyan/10">
+                <div className="flex bg-midnight/60 p-2 gap-2 border-b border-electric-cyan/10">
                     {(Object.keys(TAB_CONFIG) as TabType[]).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={cn(
-                                "flex-1 py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-all duration-300",
+                                "flex-1 py-3 px-4 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300",
                                 activeTab === tab
-                                    ? "bg-electric-cyan text-midnight shadow-[0_0_15px_rgba(9,183,180,0.3)]"
-                                    : "text-dusty-rose hover:text-white hover:bg-electric-cyan/5"
+                                    ? "bg-electric-cyan text-white shadow-[0_0_20px_rgba(9,183,180,0.4)] glow-sm"
+                                    : "text-dusty-rose hover:text-white hover:bg-white/5"
                             )}
                         >
                             {TAB_CONFIG[tab].label}
@@ -305,11 +305,12 @@ export function ResultsTabs({
                     <div className="relative flex-1" ref={dropdownRef}>
                         <Button
                             size="lg"
+                            variant="gradient"
                             onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-                            className="w-full h-12 btn-gradient rounded-xl"
+                            className="w-full h-14 rounded-2xl"
                         >
-                            💾 Download
-                            <ChevronDown className="h-4 w-4 ml-2" />
+                            💾 TRANSMIT_FILE
+                            <ChevronDown className="h-4 w-4 ml-3" />
                         </Button>
 
                         {showDownloadMenu && (

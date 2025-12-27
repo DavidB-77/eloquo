@@ -1,10 +1,12 @@
-"use client";
-
-import { motion } from "framer-motion";
+import * as React from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Container } from "@/components/layout/Container";
 import { Card, CardContent } from "@/components/ui/Card";
-import { Avatar } from "@/components/ui/Avatar";
-import { Star } from "lucide-react";
+import { Star, Zap } from "lucide-react";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const TESTIMONIALS = [
     {
@@ -28,50 +30,79 @@ const TESTIMONIALS = [
 ];
 
 export function TestimonialsSection() {
+    const sectionRef = React.useRef<HTMLDivElement>(null);
+
+    useGSAP(() => {
+        gsap.from(".testi-header > *", {
+            scrollTrigger: {
+                trigger: ".testi-header",
+                start: "top 85%",
+            },
+            y: 30,
+            opacity: 0,
+            duration: 1,
+            stagger: 0.2,
+            ease: "power3.out"
+        });
+
+        gsap.from(".testi-card", {
+            scrollTrigger: {
+                trigger: ".testi-grid",
+                start: "top 80%",
+            },
+            y: 50,
+            opacity: 0,
+            duration: 1.2,
+            stagger: 0.15,
+            ease: "expo.out"
+        });
+    }, { scope: sectionRef });
+
     return (
-        <section className="py-24 bg-background">
+        <section ref={sectionRef} className="py-32 relative overflow-hidden">
             <Container>
-                <div className="text-center mb-16">
-                    <h2 className="text-3xl md:text-5xl font-bold font-display tracking-tight mb-4">
-                        Loved by AI-Powered Teams
+                <div className="testi-header text-center mb-24">
+                    <h2 className="text-4xl md:text-6xl font-normal font-display tracking-tight mb-6 text-white uppercase glow-sm">
+                        Neural <span className="text-sunset-orange italic">Feedback</span> Loop
                     </h2>
-                    <p className="text-muted-foreground text-lg italic">
-                        See why companies trust Eloquo to maximize their AI potential.
+                    <p className="text-dusty-rose text-lg max-w-2xl mx-auto font-medium tracking-wide">
+                        See why elite operators trust Eloquo to maximize their AI potential.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {TESTIMONIALS.map((t, index) => (
-                        <motion.div
-                            key={t.name}
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: index * 0.1 }}
-                        >
-                            <Card className="h-full border-muted/30 shadow-sm hover:shadow-md transition-shadow">
-                                <CardContent className="pt-8">
-                                    <div className="flex space-x-1 text-primary mb-6">
+                <div className="testi-grid grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {TESTIMONIALS.map((t) => (
+                        <div key={t.name} className="testi-card">
+                            <Card className="h-full glass border-electric-cyan/10 bg-deep-teal/5 transition-all duration-500 hover:border-electric-cyan/30 group">
+                                <CardContent className="pt-10 px-8 pb-10">
+                                    <div className="flex space-x-1.5 text-electric-cyan mb-8">
                                         {Array.from({ length: 5 }).map((_, i) => (
-                                            <Star key={i} className="h-4 w-4 fill-current" />
+                                            <Star key={i} className="h-3.5 w-3.5 fill-current shadow-[0_0_10px_rgba(9,183,180,0.4)]" />
                                         ))}
                                     </div>
-                                    <blockquote className="text-lg leading-relaxed mb-8 italic">
+                                    <blockquote className="text-lg leading-relaxed mb-10 text-white font-medium italic">
                                         &quot;{t.quote}&quot;
                                     </blockquote>
-                                    <div className="flex items-center space-x-4">
-                                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
+                                    <div className="flex items-center space-x-5 pt-6 border-t border-white/5">
+                                        <div className="h-12 w-12 rounded-xl btn-gradient flex items-center justify-center font-display text-lg text-white shadow-[0_0_20px_rgba(9,183,180,0.3)] group-hover:shadow-[0_0_30px_rgba(9,183,180,0.5)] transition-all">
                                             {t.name.charAt(0)}
                                         </div>
                                         <div>
-                                            <div className="font-bold text-sm">{t.name}</div>
-                                            <div className="text-xs text-muted-foreground">{t.title}, {t.company}</div>
+                                            <div className="font-display text-xs uppercase tracking-widest text-white mb-1">{t.name}</div>
+                                            <div className="text-[10px] font-bold text-dusty-rose/60 uppercase tracking-[0.2em]">{t.title}, {t.company}</div>
                                         </div>
                                     </div>
                                 </CardContent>
                             </Card>
-                        </motion.div>
+                        </div>
                     ))}
+                </div>
+
+                <div className="mt-20 text-center">
+                    <div className="inline-flex items-center space-x-3 text-electric-cyan/40 text-[10px] font-bold tracking-[0.3em] uppercase">
+                        <Zap className="h-4 w-4 fill-current text-electric-cyan" />
+                        <span>Verified Human Interaction</span>
+                    </div>
                 </div>
             </Container>
         </section>

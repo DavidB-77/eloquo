@@ -26,9 +26,9 @@ export function SidebarNavItem({ href, icon: Icon, label, isCollapsed }: Sidebar
                     : "text-dusty-rose hover:text-white hover:bg-electric-cyan/5"
             )}
         >
-            <Icon className={cn("h-5 w-5 shrink-0 transition-colors duration-300", isActive ? "text-electric-cyan" : "text-dusty-rose group-hover:text-white")} />
+            <Icon className={cn("h-5 w-5 shrink-0 transition-all duration-300", isActive ? "text-white glow-sm" : "text-dusty-rose group-hover:text-white")} />
             {!isCollapsed && (
-                <span className="font-medium text-sm transition-opacity duration-300">
+                <span className="font-display text-[11px] font-bold uppercase tracking-[0.2em] transition-opacity duration-300">
                     {label}
                 </span>
             )}

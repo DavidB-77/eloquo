@@ -76,17 +76,17 @@ export function HistoryTable({
 
     return (
         <>
-            <Card>
-                <CardHeader>
+            <Card className="glass border-electric-cyan/20 bg-deep-teal/5">
+                <CardHeader className="border-b border-electric-cyan/10 pb-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <CardTitle>Optimization History</CardTitle>
-                        <div className="relative max-w-xs">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-xl font-normal font-display text-white uppercase tracking-widest glow-sm">Optimization History</CardTitle>
+                        <div className="relative max-w-xs group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dusty-rose group-focus-within:text-electric-cyan transition-colors" />
                             <Input
-                                placeholder="Search prompts..."
+                                placeholder="SEARCH_HISTORY..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-9"
+                                className="pl-10 bg-midnight/40 border-electric-cyan/10 focus-visible:ring-electric-cyan/30 text-white placeholder:text-dusty-rose/30 uppercase tracking-widest text-[10px] font-bold h-10 rounded-xl"
                             />
                         </div>
                     </div>
@@ -139,8 +139,9 @@ export function HistoryTable({
                                             <TableCell className="text-right">
                                                 <Button
                                                     variant="ghost"
-                                                    size="sm"
+                                                    size="icon"
                                                     onClick={() => setSelectedOptimization(opt)}
+                                                    className="h-9 w-9 text-dusty-rose hover:text-white hover:bg-white/5 rounded-lg"
                                                 >
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
@@ -185,53 +186,57 @@ export function HistoryTable({
             <Modal
                 isOpen={!!selectedOptimization}
                 onClose={() => setSelectedOptimization(null)}
-                title="Optimization Details"
+                title="PROTOCOL_LOG: DETAIL"
+                description="Viewing historical data for optimization sequence"
             >
                 {selectedOptimization && (
-                    <div className="space-y-6">
+                    <div className="space-y-8">
                         <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                    Original Prompt
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-dusty-rose">
+                                    SOURCE_INPUT
                                 </span>
                             </div>
-                            <div className="bg-muted/50 p-4 rounded-lg text-sm whitespace-pre-wrap max-h-32 overflow-y-auto">
+                            <div className="bg-midnight/60 border border-white/5 p-5 rounded-2xl text-xs leading-relaxed text-dusty-rose/60 font-mono whitespace-pre-wrap max-h-40 overflow-y-auto">
                                 {selectedOptimization.original_prompt}
                             </div>
                         </div>
 
                         <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                    Optimized Prompt
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-electric-cyan glow-sm">
+                                    OPTIMIZED_OUTPUT
                                 </span>
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleCopy(selectedOptimization.optimized_prompt)}
+                                    className="h-8 text-[9px] font-bold uppercase tracking-widest text-dusty-rose hover:text-white"
                                 >
                                     {copied ? (
                                         <>
-                                            <Check className="h-3 w-3 mr-1 text-success" />
-                                            Copied
+                                            <Check className="h-3 w-3 mr-1.5 text-electric-cyan" />
+                                            COPIED
                                         </>
                                     ) : (
                                         <>
-                                            <Copy className="h-3 w-3 mr-1" />
-                                            Copy
+                                            <Copy className="h-3 w-3 mr-1.5" />
+                                            COPY_NODE
                                         </>
                                     )}
                                 </Button>
                             </div>
-                            <div className="bg-primary/5 border border-primary/20 p-4 rounded-lg text-sm whitespace-pre-wrap max-h-48 overflow-y-auto">
+                            <div className="bg-electric-cyan/5 border border-electric-cyan/20 p-6 rounded-2xl text-sm leading-relaxed text-white font-mono whitespace-pre-wrap max-h-60 overflow-y-auto selection:bg-electric-cyan/30">
                                 {selectedOptimization.optimized_prompt}
                             </div>
                         </div>
 
-                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                            <Badge variant="outline">{selectedOptimization.target_model}</Badge>
-                            <Badge variant="secondary">{selectedOptimization.strength}</Badge>
-                            <span>{formatDate(selectedOptimization.created_at)}</span>
+                        <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-white/5">
+                            <Badge variant="outline" className="h-5">{selectedOptimization.target_model}</Badge>
+                            <Badge variant="secondary" className="h-5">{selectedOptimization.strength}</Badge>
+                            <span className="text-[10px] font-bold text-dusty-rose/40 uppercase tracking-widest ml-auto">
+                                {formatDate(selectedOptimization.created_at)}
+                            </span>
                         </div>
                     </div>
                 )}

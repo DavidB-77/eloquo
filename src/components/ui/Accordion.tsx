@@ -10,7 +10,7 @@ const AccordionItem = ({
 }: {
     children: React.ReactNode;
     className?: string;
-}) => <div className={cn("border-b", className)}>{children}</div>;
+}) => <div className={cn("border-b border-electric-cyan/10 last:border-none", className)}>{children}</div>;
 
 const AccordionTrigger = ({
     children,
@@ -26,14 +26,15 @@ const AccordionTrigger = ({
     <button
         type="button"
         className={cn(
-            "flex w-full items-center justify-between py-4 font-medium transition-all hover:underline [&[data-state=open]>svg]:rotate-180",
+            "flex w-full items-center justify-between py-6 font-display text-sm uppercase tracking-[0.2em] text-dusty-rose transition-all hover:text-white group",
+            isOpen && "text-white",
             className
         )}
         onClick={onClick}
         data-state={isOpen ? "open" : "closed"}
     >
-        {children}
-        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+        <span className={cn("transition-all", isOpen && "glow-sm")}>{children}</span>
+        <ChevronDown className={cn("h-4 w-4 shrink-0 text-electric-cyan/40 transition-transform duration-300 group-hover:text-electric-cyan", isOpen && "rotate-180 text-electric-cyan")} />
     </button>
 );
 
@@ -48,12 +49,14 @@ const AccordionContent = ({
 }) => (
     <div
         className={cn(
-            "overflow-hidden text-sm transition-all duration-200",
-            isOpen ? "max-h-[1000px] py-4" : "max-h-0",
+            "overflow-hidden text-sm transition-all duration-300 ease-in-out",
+            isOpen ? "max-h-[1000px] pb-6" : "max-h-0",
             className
         )}
     >
-        {children}
+        <div className="text-dusty-rose/60 font-medium leading-relaxed max-w-2xl">
+            {children}
+        </div>
     </div>
 );
 
@@ -67,7 +70,7 @@ export function Accordion({
     const [openId, setOpenId] = React.useState<string | null>(null);
 
     return (
-        <div className={cn("w-full", className)}>
+        <div className={cn("w-full px-8 glass border-electric-cyan/20 bg-deep-teal/5", className)}>
             {items.map((item) => (
                 <AccordionItem key={item.id}>
                     <AccordionTrigger

@@ -41,39 +41,39 @@ export function Modal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
             <div
-                className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity"
+                className="fixed inset-0 bg-midnight/80 backdrop-blur-md transition-opacity"
                 onClick={onClose}
             />
             <div
                 className={cn(
-                    "relative z-50 w-full max-w-lg rounded-xl border bg-card p-6 shadow-lg animate-in fade-in zoom-in duration-200",
+                    "relative z-[110] w-full max-w-lg glass border-electric-cyan/30 p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in duration-300",
                     className
                 )}
             >
-                <div className="flex items-center justify-between mb-4">
-                    <div>
+                <div className="flex items-start justify-between mb-8">
+                    <div className="space-y-1">
                         {title && (
-                            <h2 className="text-lg font-semibold font-display">{title}</h2>
+                            <h2 className="text-xl font-normal font-display text-white uppercase tracking-widest glow-sm">{title}</h2>
                         )}
                         {description && (
-                            <p className="text-sm text-muted-foreground">{description}</p>
+                            <p className="text-sm text-dusty-rose/60 font-medium leading-relaxed">{description}</p>
                         )}
                     </div>
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={onClose}
-                        className="h-8 w-8 rounded-full"
+                        className="h-10 w-10 rounded-xl hover:bg-white/5 group"
                     >
-                        <X className="h-4 w-4" />
+                        <X className="h-5 w-5 text-dusty-rose group-hover:text-white transition-colors" />
                         <span className="sr-only">Close</span>
                     </Button>
                 </div>
-                <div className="py-2">{children}</div>
+                <div className="relative">{children}</div>
                 {footer && (
-                    <div className="mt-6 flex items-center justify-end space-x-2">
+                    <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-end space-x-4">
                         {footer}
                     </div>
                 )}

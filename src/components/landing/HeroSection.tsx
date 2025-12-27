@@ -1,92 +1,141 @@
 "use client";
 
-import { motion } from "framer-motion";
+import * as React from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, Zap } from "lucide-react";
 
 export function HeroSection() {
-    return (
-        <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
-            {/* Background Glows */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full -z-10 pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px]" />
-                <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] bg-accent/10 rounded-full blur-[100px]" />
-            </div>
+    const containerRef = React.useRef<HTMLDivElement>(null);
 
+    useGSAP(() => {
+        const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
+
+        tl.from(".hero-badge", {
+            y: 30,
+            opacity: 0,
+            duration: 1,
+            delay: 0.2
+        })
+            .from(".hero-title span", {
+                y: 100,
+                opacity: 0,
+                duration: 1.5,
+                stagger: 0.1,
+            }, "-=0.8")
+            .from(".hero-description", {
+                y: 20,
+                opacity: 0,
+                duration: 1,
+            }, "-=1")
+            .from(".hero-actions", {
+                y: 20,
+                opacity: 0,
+                duration: 1,
+            }, "-=0.8")
+            .from(".hero-stats", {
+                opacity: 0,
+                duration: 1.5,
+            }, "-=0.5")
+            .from(".hero-mockup", {
+                y: 60,
+                scale: 0.95,
+                opacity: 0,
+                duration: 2,
+                ease: "power4.out"
+            }, "-=1.2");
+    }, { scope: containerRef });
+
+    return (
+        <section ref={containerRef} className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
             <Container className="relative">
                 <div className="text-center max-w-4xl mx-auto">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5 }}
-                    >
-                        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold mb-6">
+                    <div>
+                        <div className="hero-badge inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-electric-cyan/10 border border-electric-cyan/20 text-electric-cyan text-xs font-bold mb-6 uppercase tracking-widest">
                             <Sparkles className="h-3 w-3" />
                             <span>Transform Your AI Workflow</span>
                         </div>
 
-                        <h1 className="text-5xl md:text-7xl font-bold font-display tracking-tight mb-8">
-                            Transform Your AI Prompts Into <span className="text-primary italic">Powerful</span> Results
+                        <h1 className="hero-title text-5xl md:text-8xl font-normal font-display tracking-tight mb-8 text-white leading-[1.1]">
+                            <span className="inline-block">Transform</span> <span className="inline-block">Your</span> <span className="inline-block">AI</span> <span className="inline-block">Prompts</span> <span className="inline-block">Into</span> <br />
+                            <span className="inline-block text-electric-cyan glow-sm italic">Powerful</span> <span className="inline-block">Results</span>
                         </h1>
 
-                        <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+                        <p className="hero-description text-xl text-dusty-rose mb-10 max-w-2xl mx-auto font-medium leading-relaxed">
                             Eloquo optimizes your raw prompts for ChatGPT, Claude, and Gemini. Get higher quality responses while reducing API token costs by up to 40%.
                         </p>
 
-                        <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-                            <Button size="lg" className="w-full sm:w-auto text-base px-8 h-12 shadow-xl" asChild>
+                        <div className="hero-actions flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+                            <Button size="lg" className="w-full sm:w-auto h-14 px-10 rounded-xl btn-gradient text-lg tracking-widest uppercase glow-sm hover:glow-md transition-all group" asChild>
                                 <Link href="/signup">
-                                    Start Optimizing Free <ArrowRight className="ml-2 h-4 w-4" />
+                                    Start Optimizing <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                                 </Link>
                             </Button>
-                            <Button variant="outline" size="lg" className="w-full sm:w-auto text-base px-8 h-12" asChild>
-                                <Link href="#how-it-works">See How It Works</Link>
+                            <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-10 rounded-xl border-electric-cyan/20 bg-deep-teal/10 text-white hover:bg-electric-cyan/5 text-lg tracking-widest uppercase transition-all" asChild>
+                                <Link href="#how-it-works">Watch Sequence</Link>
                             </Button>
                         </div>
 
-                        <div className="mt-12 flex items-center justify-center space-x-8 text-sm text-muted-foreground">
-                            <div className="flex items-center space-x-1">
-                                <span className="font-bold text-foreground">10+</span>
+                        <div className="hero-stats mt-16 flex items-center justify-center space-x-8 text-[10px] font-bold text-dusty-rose/60 uppercase tracking-[0.2em]">
+                            <div className="flex items-center space-x-2">
+                                <span className="text-white">10+</span>
                                 <span>Optimizations Free</span>
                             </div>
-                            <div className="w-px h-4 bg-border" />
-                            <div className="flex items-center space-x-1">
-                                <span className="font-bold text-foreground">Multi-Model</span>
-                                <span>Support</span>
+                            <div className="w-px h-4 bg-electric-cyan/10" />
+                            <div className="flex items-center space-x-2">
+                                <span className="text-white">Multi-Model</span>
+                                <span>Matrix</span>
                             </div>
-                            <div className="w-px h-4 bg-border" />
-                            <div className="flex items-center space-x-1">
-                                <span className="font-bold text-foreground">30%</span>
-                                <span>Cost Savings</span>
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
-
-                {/* Dashboard Preview Mockup */}
-                <motion.div
-                    initial={{ opacity: 0, y: 40 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.7, delay: 0.2 }}
-                    className="mt-20 relative"
-                >
-                    <div className="rounded-2xl border bg-card p-2 shadow-2xl overflow-hidden">
-                        <div className="rounded-xl overflow-hidden border bg-muted/50 aspect-[16/9] relative">
-                            {/* This would be an image or a complex UI mockup */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="text-center">
-                                    <div className="text-muted-foreground mb-2">Dashboard Preview Mockup</div>
-                                    <div className="h-1 w-24 bg-primary/20 rounded-full mx-auto" />
-                                </div>
+                            <div className="w-px h-4 bg-electric-cyan/10" />
+                            <div className="flex items-center space-x-2">
+                                <span className="text-white">30%</span>
+                                <span>Cost Reduction</span>
                             </div>
                         </div>
                     </div>
-                    {/* Floating Elements */}
-                    <div className="absolute -top-6 -right-6 h-24 w-24 bg-primary/10 rounded-full blur-2xl animate-pulse" />
-                    <div className="absolute -bottom-8 -left-8 h-32 w-32 bg-accent/10 rounded-full blur-32 animate-pulse" />
-                </motion.div>
+                </div>
+
+                {/* Dashboard Preview Mockup */}
+                <div className="hero-mockup mt-24 relative max-w-6xl mx-auto">
+                    <div className="rounded-3xl p-1.5 glass border-electric-cyan/20 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden relative">
+                        <div className="absolute inset-0 bg-gradient-to-br from-electric-cyan/10 to-sunset-orange/5" />
+                        <div className="rounded-2xl overflow-hidden border border-electric-cyan/10 bg-midnight/80 aspect-[16/10] relative group/mockup">
+                            {/* Dashboard Mockup Content */}
+                            <div className="absolute inset-0 p-8 flex flex-col">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div className="flex items-center space-x-4">
+                                        <div className="h-3 w-3 rounded-full bg-terracotta/40" />
+                                        <div className="h-3 w-3 rounded-full bg-sunset-orange/40" />
+                                        <div className="h-3 w-3 rounded-full bg-electric-cyan/40" />
+                                    </div>
+                                    <div className="h-6 w-48 bg-deep-teal/40 rounded-full border border-electric-cyan/10" />
+                                </div>
+                                <div className="grid grid-cols-3 gap-6 mb-8">
+                                    {[...Array(3)].map((_, i) => (
+                                        <div key={i} className="h-24 glass border-electric-cyan/10 bg-deep-teal/20" />
+                                    ))}
+                                </div>
+                                <div className="flex-1 glass border-electric-cyan/10 bg-deep-teal/10 p-6">
+                                    <div className="space-y-4">
+                                        <div className="h-4 w-3/4 bg-electric-cyan/20 rounded-full animate-pulse" />
+                                        <div className="h-4 w-1/2 bg-dusty-rose/20 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                                        <div className="h-4 w-2/3 bg-electric-cyan/20 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Overlay Glow */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-midnight via-transparent to-transparent opacity-60" />
+                        </div>
+                    </div>
+
+                    {/* Decorative Elements */}
+                    <div className="absolute -top-12 -right-12 h-64 w-64 bg-electric-cyan/10 rounded-full blur-[100px] animate-pulse" />
+                    <div className="absolute -bottom-16 -left-16 h-80 w-80 bg-sunset-orange/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+                </div>
             </Container>
         </section>
     );

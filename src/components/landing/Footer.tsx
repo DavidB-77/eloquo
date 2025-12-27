@@ -1,70 +1,70 @@
 import Link from "next/link";
 import { Container } from "@/components/layout/Container";
-import { Twitter, Linkedin, Github } from "lucide-react";
+import { Twitter, Linkedin, Github, Zap } from "lucide-react";
 
 export function Footer() {
     return (
-        <footer className="bg-background border-t py-12 md:py-24">
+        <footer className="py-24 border-t border-electric-cyan/10 bg-transparent relative overflow-hidden">
             <Container>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-20">
                     {/* Logo Column */}
                     <div className="col-span-2 lg:col-span-2">
-                        <Link href="/" className="flex items-center space-x-2 mb-6">
-                            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                                <span className="text-primary-foreground font-bold text-lg">E</span>
+                        <Link href="/" className="flex items-center space-x-3 mb-8 group">
+                            <div className="h-10 w-10 rounded-xl btn-gradient flex items-center justify-center shadow-[0_0_15px_rgba(9,183,180,0.3)] group-hover:shadow-[0_0_25px_rgba(9,183,180,0.5)] transition-all">
+                                <Zap className="h-6 w-6 text-white fill-current" />
                             </div>
-                            <span className="text-2xl font-bold font-display tracking-tight text-foreground">Eloquo</span>
+                            <span className="text-2xl font-display tracking-widest text-white uppercase glow-sm">Eloquo</span>
                         </Link>
-                        <p className="text-muted-foreground text-sm max-w-xs mb-6">
-                            Empowering businesses to master AI communication through expert prompt optimization and cost analysis.
+                        <p className="text-dusty-rose/60 text-sm max-w-xs mb-8 font-medium leading-relaxed">
+                            Empowering elite operators to master neuro-optimization through expert prompt protocols and cost-efficient scaling.
                         </p>
-                        <div className="flex space-x-4">
-                            <Link href="#" className="text-muted-foreground hover:text-primary"><Twitter className="h-5 w-5" /></Link>
-                            <Link href="#" className="text-muted-foreground hover:text-primary"><Linkedin className="h-5 w-5" /></Link>
-                            <Link href="#" className="text-muted-foreground hover:text-primary"><Github className="h-5 w-5" /></Link>
+                        <div className="flex space-x-6">
+                            <Link href="#" className="text-dusty-rose/40 hover:text-electric-cyan transition-colors"><Twitter className="h-5 w-5" /></Link>
+                            <Link href="#" className="text-dusty-rose/40 hover:text-electric-cyan transition-colors"><Linkedin className="h-5 w-5" /></Link>
+                            <Link href="#" className="text-dusty-rose/40 hover:text-electric-cyan transition-colors"><Github className="h-5 w-5" /></Link>
                         </div>
                     </div>
 
                     {/* Product Links */}
                     <div>
-                        <h4 className="font-bold mb-6">Product</h4>
-                        <ul className="space-y-4 text-sm">
-                            <li><Link href="#features" className="text-muted-foreground hover:text-primary transition-colors">Features</Link></li>
-                            <li><Link href="#how-it-works" className="text-muted-foreground hover:text-primary transition-colors">How It Works</Link></li>
-                            <li><Link href="#pricing" className="text-muted-foreground hover:text-primary transition-colors">Pricing</Link></li>
-                            <li><Link href="/dashboard" className="text-muted-foreground hover:text-primary transition-colors">Dashboard</Link></li>
+                        <h4 className="font-display text-[10px] uppercase tracking-[0.3em] text-white mb-8">Protocol</h4>
+                        <ul className="space-y-4 text-[11px] font-bold uppercase tracking-widest">
+                            <li><Link href="#features" className="text-dusty-rose/60 hover:text-white transition-colors">Modules</Link></li>
+                            <li><Link href="#how-it-works" className="text-dusty-rose/60 hover:text-white transition-colors">Sequence</Link></li>
+                            <li><Link href="#pricing" className="text-dusty-rose/60 hover:text-white transition-colors">Credits</Link></li>
+                            <li><Link href="/dashboard" className="text-dusty-rose/60 hover:text-white transition-colors">Terminal</Link></li>
                         </ul>
                     </div>
 
                     {/* Company Links */}
                     <div>
-                        <h4 className="font-bold mb-6">Company</h4>
-                        <ul className="space-y-4 text-sm">
-                            <li><Link href="#" className="text-muted-foreground hover:text-primary transition-colors">About Us</Link></li>
-                            <li><Link href="#" className="text-muted-foreground hover:text-primary transition-colors">Contact Sales</Link></li>
-                            <li><Link href="#" className="text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link></li>
-                            <li><Link href="#" className="text-muted-foreground hover:text-primary transition-colors">Terms of Service</Link></li>
+                        <h4 className="font-display text-[10px] uppercase tracking-[0.3em] text-white mb-8">Entity</h4>
+                        <ul className="space-y-4 text-[11px] font-bold uppercase tracking-widest">
+                            <li><Link href="#" className="text-dusty-rose/60 hover:text-white transition-colors">Mission</Link></li>
+                            <li><Link href="#" className="text-dusty-rose/60 hover:text-white transition-colors">Contact</Link></li>
+                            <li><Link href="#" className="text-dusty-rose/60 hover:text-white transition-colors">Privacy</Link></li>
+                            <li><Link href="#" className="text-dusty-rose/60 hover:text-white transition-colors">Terms</Link></li>
                         </ul>
                     </div>
 
                     {/* Resources Links */}
                     <div>
-                        <h4 className="font-bold mb-6">Resources</h4>
-                        <ul className="space-y-4 text-sm">
-                            <li><Link href="#" className="text-muted-foreground hover:text-primary transition-colors">Blog</Link></li>
-                            <li><Link href="#" className="text-muted-foreground hover:text-primary transition-colors">Docs</Link></li>
-                            <li><Link href="#" className="text-muted-foreground hover:text-primary transition-colors">Prompt Guides</Link></li>
-                            <li><Link href="#faq" className="text-muted-foreground hover:text-primary transition-colors">Support</Link></li>
+                        <h4 className="font-display text-[10px] uppercase tracking-[0.3em] text-white mb-8">Intel</h4>
+                        <ul className="space-y-4 text-[11px] font-bold uppercase tracking-widest">
+                            <li><Link href="#" className="text-dusty-rose/60 hover:text-white transition-colors">Log</Link></li>
+                            <li><Link href="#" className="text-dusty-rose/60 hover:text-white transition-colors">Docs</Link></li>
+                            <li><Link href="#" className="text-dusty-rose/60 hover:text-white transition-colors">Guides</Link></li>
+                            <li><Link href="#faq" className="text-dusty-rose/60 hover:text-white transition-colors">Support</Link></li>
                         </ul>
                     </div>
                 </div>
 
-                <div className="pt-8 border-t flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                    <p className="text-xs text-muted-foreground">
-                        © {new Date().getFullYear()} Eloquo. All rights reserved.
+                <div className="pt-10 border-t border-electric-cyan/10 flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
+                    <p className="text-[10px] font-bold text-dusty-rose/40 uppercase tracking-[0.2em]">
+                        © {new Date().getFullYear()} ELOQUO NEURAL SYSTEMS. ALL RIGHTS RESERVED.
                     </p>
-                    <div className="flex space-x-6 text-xs text-muted-foreground">
-                        <Link href="mailto:hello@eloquo.io" className="hover:text-primary transition-colors">hello@eloquo.io</Link>
+                    <div className="flex space-x-8 text-[10px] font-bold text-dusty-rose/40 uppercase tracking-[0.2em]">
+                        <Link href="mailto:hello@eloquo.io" className="hover:text-electric-cyan transition-colors">LINK_STABLIZED: hello@eloquo.io</Link>
                     </div>
                 </div>
             </Container>

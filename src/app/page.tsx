@@ -14,6 +14,7 @@ import { FAQSection } from "@/components/landing/FAQSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { Footer } from "@/components/landing/Footer";
 import { ContactModal } from "@/components/landing/ContactModal";
+import { ParticlesBackground } from "@/components/landing/ParticlesBackground";
 
 export default function LandingPage() {
   const [isContactOpen, setIsContactOpen] = React.useState(false);
@@ -29,6 +30,7 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <ParticlesBackground />
       <Navbar />
       <main>
         <HeroSection />

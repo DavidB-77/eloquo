@@ -42,7 +42,7 @@ export function DashboardSidebar() {
     return (
         <aside
             className={cn(
-                "fixed left-0 top-0 z-40 h-full transition-all duration-300 ease-in-out glass rounded-none border-r border-electric-cyan/20",
+                "fixed left-0 top-0 z-40 h-full transition-all duration-300 ease-in-out glass rounded-none border-r border-electric-cyan/20 bg-midnight/60",
                 isCollapsed ? "w-16" : "w-64"
             )}
         >
@@ -87,19 +87,26 @@ export function DashboardSidebar() {
 
                 {/* Usage Display (Hidden when collapsed) */}
                 {!isCollapsed && userData && (
-                    <div className="px-4 py-6">
-                        <div className="bg-deep-teal/40 border border-electric-cyan/20 rounded-xl p-4 glass">
-                            <div className="text-[10px] font-bold text-electric-cyan uppercase tracking-wider mb-2">Current Plan</div>
-                            <div className="font-display text-sm mb-3 capitalize text-white">{userData.tier} Individual</div>
+                    <div className="px-5 py-8">
+                        <div className="glass bg-deep-teal/20 border-electric-cyan/20 p-5 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <Zap className="h-12 w-12 text-electric-cyan" />
+                            </div>
+                            <div className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em] mb-4">Neural Tier</div>
+                            <div className="font-display text-md mb-4 capitalize text-white flex items-center gap-2">
+                                {userData.tier}
+                                <Badge variant="pro" className="py-0 px-1.5 h-4">Active</Badge>
+                            </div>
                             <UsageBar
                                 used={userData.optimizationsUsed}
                                 limit={userData.optimizationsLimit}
-                                label="Optimizations"
+                                label="Protocol Cycles"
                                 showNumbers={true}
                             />
-                            <div className="mt-4">
-                                <Link href="/dashboard/settings?tab=subscription" className="text-xs text-sunset-orange font-bold hover:glow-sm transition-all">
-                                    Upgrade Plan
+                            <div className="mt-6">
+                                <Link href="/dashboard/settings?tab=subscription" className="text-[10px] font-bold text-sunset-orange uppercase tracking-[0.2em] hover:text-white transition-colors flex items-center gap-1">
+                                    <span>Expand Protocol</span>
+                                    <ChevronRight className="h-3 w-3" />
                                 </Link>
                             </div>
                         </div>

@@ -1,7 +1,11 @@
-"use client";
-
+import * as React from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Container } from "@/components/layout/Container";
 import { Accordion } from "@/components/ui/Accordion";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const FAQS = [
     {
@@ -47,20 +51,49 @@ const FAQS = [
 ];
 
 export function FAQSection() {
+    const sectionRef = React.useRef<HTMLDivElement>(null);
+
+    useGSAP(() => {
+        gsap.from(".faq-header > *", {
+            scrollTrigger: {
+                trigger: ".faq-header",
+                start: "top 85%",
+            },
+            y: 30,
+            opacity: 0,
+            duration: 1,
+            stagger: 0.2,
+            ease: "power3.out"
+        });
+
+        gsap.from(".faq-content", {
+            scrollTrigger: {
+                trigger: ".faq-content",
+                start: "top 80%",
+            },
+            y: 40,
+            opacity: 0,
+            duration: 1,
+            ease: "expo.out"
+        });
+    }, { scope: sectionRef });
+
     return (
-        <section id="faq" className="py-24 bg-muted/30 scroll-mt-20">
+        <section id="faq" ref={sectionRef} className="py-32 relative scroll-mt-20 overflow-hidden">
             <Container>
-                <div className="max-w-3xl mx-auto">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-5xl font-bold font-display tracking-tight mb-4">
-                            Frequently Asked Questions
+                <div className="max-w-4xl mx-auto">
+                    <div className="faq-header text-center mb-24">
+                        <h2 className="text-4xl md:text-6xl font-normal font-display tracking-tight mb-6 text-white uppercase glow-sm">
+                            Knowledge <span className="text-electric-cyan italic">Base</span>
                         </h2>
-                        <p className="text-muted-foreground text-lg italic">
-                            Everything you need to know about Eloquo.
+                        <p className="text-dusty-rose text-lg max-w-xl mx-auto font-medium tracking-wide">
+                            Everything you need to know about the Eloquo protocol and neuro-optimization.
                         </p>
                     </div>
 
-                    <Accordion items={FAQS} className="bg-background rounded-xl p-2 border shadow-sm" />
+                    <div className="faq-content">
+                        <Accordion items={FAQS} className="rounded-3xl p-4 overflow-hidden" />
+                    </div>
                 </div>
             </Container>
         </section>

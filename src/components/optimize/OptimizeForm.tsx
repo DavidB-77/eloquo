@@ -98,7 +98,7 @@ export function OptimizeForm({
     return (
         <Card className="relative p-0.5 overflow-hidden glass rounded-[20px] shadow-2xl group/card">
             {/* Animated Gradient Border Layer */}
-            <div className="absolute inset-0 bg-gradient-to-r from-electric-cyan via-sunset-orange to-electric-cyan bg-[length:200%_auto] animate-[gradient_4s_linear_infinite] opacity-30 group-hover/card:opacity-60 transition-opacity duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-r from-electric-cyan via-sunset-orange to-electric-cyan bg-[length:200%_auto] animate-gradient opacity-40 group-hover/card:opacity-70 transition-opacity duration-500" />
 
             <CardContent className="relative bg-midnight/90 rounded-[18px] p-6 md:p-8 space-y-8">
                 {/* Header */}
@@ -225,7 +225,7 @@ export function OptimizeForm({
                             </div>
                             <div className="h-1.5 w-full bg-deep-teal rounded-full overflow-hidden relative">
                                 <div
-                                    className="absolute inset-0 bg-gradient-to-r from-electric-cyan via-sunset-orange to-electric-cyan bg-[length:50%_100%] animate-[shimmer_1.5s_linear_infinite] rounded-full"
+                                    className="absolute inset-0 bg-gradient-to-r from-electric-cyan via-sunset-orange to-electric-cyan bg-[length:50%_100%] animate-shimmer rounded-full"
                                     style={{
                                         width: isLoading ? '100%' : '100%',
                                         left: isLoading ? '0' : '0'
