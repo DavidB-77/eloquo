@@ -60,7 +60,7 @@ export function HeroSection() {
                                 </Link>
                             </Button>
                             <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-10 rounded-xl border-electric-cyan text-electric-cyan hover:bg-electric-cyan/10 text-lg font-bold tracking-widest uppercase transition-all shadow-[0_0_15px_rgba(0,255,255,0.2)] hover:shadow-[0_0_25px_rgba(0,255,255,0.4)]" asChild>
-                                <Link href="#how-it-works">Watch Sequence</Link>
+                                <Link href="#optimization-comparison">Watch Sequence</Link>
                             </Button>
                         </div>
 
