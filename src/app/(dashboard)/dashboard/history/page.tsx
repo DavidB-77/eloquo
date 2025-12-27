@@ -150,10 +150,10 @@ export default function HistoryPage() {
 
             {/* History List */}
             {history.length === 0 ? (
-                <Card>
+                <Card className="glass border-electric-cyan/10">
                     <CardContent className="p-8 text-center">
-                        <p className="text-gray-500">No optimization history yet.</p>
-                        <p className="text-sm text-gray-400 mt-1">
+                        <p className="text-dusty-rose">No optimization history yet.</p>
+                        <p className="text-sm text-dusty-rose/60 mt-1">
                             Your optimizations will appear here after you use the optimizer.
                         </p>
                     </CardContent>
@@ -163,28 +163,28 @@ export default function HistoryPage() {
                     {history.map((item) => (
                         <Card
                             key={item.id}
-                            className="cursor-pointer hover:shadow-md transition-shadow"
+                            className="glass border-electric-cyan/10 cursor-pointer hover:border-electric-cyan/30 transition-all group"
                             onClick={() => setSelectedItem(item)}
                         >
                             <CardContent className="p-4">
                                 <div className="flex justify-between items-start gap-4">
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium truncate">
+                                        <p className="text-sm font-medium text-white truncate group-hover:text-electric-cyan transition-colors">
                                             {truncate(item.original_prompt)}
                                         </p>
-                                        <p className="text-xs text-gray-500 mt-1">
+                                        <p className="text-xs text-dusty-rose mt-1">
                                             {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-2 flex-shrink-0">
-                                        <Badge variant="outline" className="text-xs">
+                                        <Badge variant="outline" className="text-xs border-electric-cyan/20 text-electric-cyan bg-electric-cyan/5">
                                             {item.target_model}
                                         </Badge>
-                                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                        <span className="text-xs text-dusty-rose/60 whitespace-nowrap">
                                             {item.tokens_optimized} tokens
                                         </span>
                                         {item.metrics?.qualityScore && (
-                                            <Badge variant="secondary" className="text-xs bg-green-50 text-green-700 border-green-200">
+                                            <Badge variant="secondary" className="text-xs bg-electric-cyan/10 text-electric-cyan border-electric-cyan/20">
                                                 ★ {item.metrics.qualityScore}
                                             </Badge>
                                         )}
@@ -198,69 +198,69 @@ export default function HistoryPage() {
 
             {/* Detail Modal */}
             <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
-                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto glass bg-midnight border-electric-cyan/20 text-white">
                     <DialogHeader>
-                        <DialogTitle>Optimization Details</DialogTitle>
+                        <DialogTitle className="font-display uppercase tracking-widest text-lg text-white">Optimization Details</DialogTitle>
                     </DialogHeader>
 
                     {selectedItem && (
-                        <div className="space-y-4">
+                        <div className="space-y-6 pt-4">
                             {/* Original Prompt */}
                             <div>
                                 <div className="flex justify-between items-center mb-2">
-                                    <h4 className="font-medium">Original Prompt</h4>
-                                    <span className="text-xs text-gray-500">
+                                    <h4 className="text-xs font-bold uppercase tracking-widest text-dusty-rose">Original Prompt</h4>
+                                    <span className="text-[10px] text-dusty-rose/60 font-mono">
                                         {selectedItem.tokens_original} tokens
                                     </span>
                                 </div>
-                                <p className="text-sm bg-gray-50 p-3 rounded whitespace-pre-wrap max-h-40 overflow-y-auto">
+                                <div className="text-sm bg-deep-teal/20 border border-electric-cyan/10 p-4 rounded-xl whitespace-pre-wrap max-h-40 overflow-y-auto text-white/90 font-mono">
                                     {selectedItem.original_prompt}
-                                </p>
+                                </div>
                             </div>
 
                             {/* Optimized Prompt */}
                             <div>
                                 <div className="flex justify-between items-center mb-2">
-                                    <h4 className="font-medium">Optimized Prompt</h4>
+                                    <h4 className="text-xs font-bold uppercase tracking-widest text-electric-cyan">Optimized Prompt</h4>
                                     <button
                                         onClick={() => copyToClipboard(selectedItem.optimized_prompt)}
-                                        className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
+                                        className="text-xs text-dusty-rose hover:text-white transition-colors flex items-center gap-1.5"
                                     >
                                         {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                                        {copied ? 'Copied!' : 'Copy'}
+                                        <span className="uppercase tracking-tighter font-bold">{copied ? 'Copied!' : 'Copy'}</span>
                                     </button>
                                 </div>
-                                <p className="text-sm bg-green-50 p-3 rounded whitespace-pre-wrap max-h-40 overflow-y-auto">
+                                <div className="text-sm bg-electric-cyan/5 border border-electric-cyan/20 p-4 rounded-xl whitespace-pre-wrap max-h-40 overflow-y-auto text-white font-mono shadow-inner shadow-electric-cyan/5">
                                     {selectedItem.optimized_prompt}
-                                </p>
+                                </div>
                             </div>
 
                             {/* Stats */}
-                            <div className="grid grid-cols-3 gap-4 text-center pt-2 border-t text-sm">
+                            <div className="grid grid-cols-3 gap-4 text-center pt-6 border-t border-electric-cyan/10">
                                 <div>
-                                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Optimized Tokens</p>
-                                    <p className="font-semibold text-foreground mt-1">{selectedItem.tokens_optimized}</p>
+                                    <p className="text-[10px] text-dusty-rose uppercase tracking-widest font-bold">Optimized Tokens</p>
+                                    <p className="text-xl font-display text-white mt-1">{selectedItem.tokens_optimized}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Quality Score</p>
-                                    <p className="font-semibold text-green-600 mt-1">
+                                    <p className="text-[10px] text-dusty-rose uppercase tracking-widest font-bold">Quality Score</p>
+                                    <p className="text-xl font-display text-sunset-orange mt-1">
                                         {selectedItem.metrics?.qualityScore ? `${selectedItem.metrics.qualityScore}/5` : 'N/A'}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Model</p>
-                                    <p className="font-semibold text-foreground mt-1">{selectedItem.target_model}</p>
+                                    <p className="text-[10px] text-dusty-rose uppercase tracking-widest font-bold">Engine</p>
+                                    <p className="text-xl font-display text-white mt-1 uppercase tracking-tighter">{selectedItem.target_model}</p>
                                 </div>
                             </div>
 
                             {/* Improvements */}
                             {selectedItem.improvements && selectedItem.improvements.length > 0 && (
-                                <div className="pt-2 border-t">
-                                    <h4 className="font-medium mb-2 text-sm">Improvements Made</h4>
-                                    <ul className="text-xs text-gray-600 space-y-1">
+                                <div className="pt-6 border-t border-electric-cyan/10">
+                                    <h4 className="text-xs font-bold uppercase tracking-widest text-dusty-rose mb-3">Improvements Made</h4>
+                                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                         {selectedItem.improvements.map((imp, i) => (
-                                            <li key={i} className="flex items-start gap-2">
-                                                <span className="text-green-500">✓</span>
+                                            <li key={i} className="flex items-start gap-2 text-xs text-white/80 bg-deep-teal/10 p-2 rounded-lg border border-electric-cyan/5">
+                                                <span className="text-electric-cyan">✓</span>
                                                 {imp}
                                             </li>
                                         ))}
@@ -269,12 +269,9 @@ export default function HistoryPage() {
                             )}
 
                             {/* Metadata */}
-                            <div className="pt-2 border-t text-xs text-gray-500 flex gap-4">
-                                <span>Model: {selectedItem.target_model}</span>
-                                <span>Strength: {selectedItem.strength}</span>
-                                <span>
-                                    {new Date(selectedItem.created_at).toLocaleString()}
-                                </span>
+                            <div className="pt-6 border-t border-electric-cyan/10 text-[10px] text-dusty-rose/60 flex justify-between uppercase tracking-widest font-bold">
+                                <span>Mode: {selectedItem.strength}</span>
+                                <span>{new Date(selectedItem.created_at).toLocaleString()}</span>
                             </div>
                         </div>
                     )}
