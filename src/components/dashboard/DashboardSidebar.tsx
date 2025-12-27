@@ -49,11 +49,8 @@ export function DashboardSidebar() {
                 {/* Header/Logo */}
                 <div className="h-16 flex items-center justify-between px-4 border-b border-electric-cyan/10">
                     {!isCollapsed && (
-                        <Link href="/dashboard" className="flex items-center space-x-2">
-                            <div className="h-8 w-8 btn-gradient rounded-lg flex items-center justify-center">
-                                <Zap className="h-5 w-5 text-white fill-current" />
-                            </div>
-                            <span className="font-display text-2xl tracking-widest text-white glow-sm uppercase">ELOQUO</span>
+                        <Link href="/dashboard" className="flex items-center space-x-2 pl-2">
+                            <span className="font-display text-2xl tracking-widest text-white glow-sm uppercase" style={{ fontFamily: 'Comodo', letterSpacing: '0.05em' }}>ELOQUO</span>
                         </Link>
                     )}
                     {isCollapsed && (

@@ -133,7 +133,7 @@ export function PricingSection() {
         <section id="pricing" ref={sectionRef} className="py-32 relative scroll-mt-20 overflow-hidden">
             <Container>
                 <div className="pricing-header text-center mb-20">
-                    <h2 className="text-4xl md:text-6xl font-normal font-display tracking-tight mb-6 text-white uppercase glow-sm">
+                    <h2 className="text-4xl md:text-6xl font-normal font-display mb-6 text-white uppercase glow-sm">
                         Neural <span className="text-sunset-orange italic">Credits</span> Matrix
                     </h2>
                     <p className="text-white/60 text-lg max-w-2xl mx-auto mb-10 font-medium tracking-wide">

@@ -12,11 +12,8 @@ export function Footer() {
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-20">
                     {/* Logo Column */}
                     <div className="col-span-2 lg:col-span-2">
-                        <Link href="/" className="flex items-center space-x-3 mb-8 group">
-                            <div className="h-10 w-10 rounded-xl btn-gradient flex items-center justify-center shadow-[0_0_15px_rgba(9,183,180,0.3)] group-hover:shadow-[0_0_25px_rgba(9,183,180,0.5)] transition-all">
-                                <Zap className="h-6 w-6 text-white fill-current" />
-                            </div>
-                            <span className="text-2xl font-display tracking-widest text-white uppercase glow-sm">Eloquo</span>
+                        <Link href="/" className="flex items-center space-x-3 mb-8 group -ml-2">
+                            <span className="text-3xl font-display font-medium tracking-widest text-white uppercase glow-sm" style={{ fontFamily: 'Comodo', letterSpacing: '0.05em' }}>Eloquo</span>
                         </Link>
                         <p className="text-white/60 text-sm max-w-xs mb-8 font-medium leading-relaxed">
                             Empowering elite operators to master neuro-optimization through expert prompt protocols and cost-efficient scaling.

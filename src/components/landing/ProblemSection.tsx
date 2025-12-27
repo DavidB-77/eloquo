@@ -61,7 +61,7 @@ export function ProblemSection() {
         <section ref={sectionRef} className="py-32 relative overflow-hidden">
             <Container>
                 <div className="problem-header text-center mb-20">
-                    <h2 className="text-4xl md:text-6xl font-normal font-display tracking-tight mb-6 text-white uppercase glow-sm">
+                    <h2 className="text-4xl md:text-6xl font-normal font-display mb-6 text-white uppercase glow-sm">
                         Neural Friction <span className="text-terracotta italic">&</span> Dead Tokens
                     </h2>
                     <p className="text-white/60 text-lg max-w-2xl mx-auto font-medium tracking-wide border-l-2 border-electric-cyan pl-6">

@@ -42,7 +42,7 @@ export function HeroSection() {
                             <span>Transform Your AI Workflow</span>
                         </div>
 
-                        <h1 className="hero-title text-5xl md:text-7xl lg:text-8xl font-normal font-display tracking-tight mb-8 text-white leading-[1.05] drop-shadow-lg">
+                        <h1 className="hero-title text-5xl md:text-7xl lg:text-8xl font-normal font-display mb-8 text-white leading-[1.05] drop-shadow-lg">
                             Transform <span className="text-electric-cyan glow-sm italic">Prompts</span> Into <br />
                             <span className="text-white">Power</span>
                         </h1>
