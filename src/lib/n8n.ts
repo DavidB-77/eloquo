@@ -9,11 +9,24 @@ const N8N_ORCHESTRATE_WEBHOOK = process.env.N8N_ORCHESTRATE_WEBHOOK || `${N8N_BA
 const N8N_ANALYZE_WEBHOOK = process.env.N8N_ANALYZE_WEBHOOK || `${N8N_BASE_URL}/webhook/analyze`;
 
 // Types for n8n requests and responses
+export interface ContextFile {
+    name: string;
+    mimeType: string;
+    base64: string;
+}
+
 export interface OptimizeRequest {
     prompt: string;
     targetModel: 'chatgpt' | 'claude' | 'gemini' | 'cursor' | 'universal';
     strength: 'light' | 'medium' | 'aggressive';
-    context?: string;
+    additionalContext?: string;
+    // New fields for n8n v2
+    userId?: string;
+    userTier?: 'free' | 'pro' | 'team' | 'enterprise';
+    contextFiles?: ContextFile[];
+    contextAnswers?: Record<string, string> | null;
+    comprehensiveCreditsRemaining?: number;
+    forceStandard?: boolean;
 }
 
 export interface OrchestrationRequest extends OptimizeRequest {
@@ -23,19 +36,77 @@ export interface OrchestrationRequest extends OptimizeRequest {
     };
 }
 
-export interface OptimizeResponse {
-    success: boolean;
-    data?: {
-        optimizedPrompt: string;
-        improvements: string[];
-        metrics: {
-            originalTokens: number;
-            optimizedTokens: number;
-            complexityScore: number;
-        };
+// Response types - all three possible responses from n8n
+export interface OptimizeSuccessResponse {
+    success: true;
+    results: {
+        full: string;
+        quickRef: string;
+        snippet: string;
     };
-    error?: string;
+    improvements: string[];
+    metrics: {
+        originalTokens: number;
+        optimizedTokens: number;
+        processingTimeMs: number;
+        creditsUsed: number;
+        outputMode: 'standard' | 'comprehensive';
+    };
+    classification: {
+        complexity: 'simple' | 'moderate' | 'complex';
+        domain: string;
+    };
+    validation?: {
+        approved: boolean;
+        score: number;
+    };
+    usage: {
+        creditsUsed: number;
+        comprehensiveRemaining: number;
+    };
 }
+
+export interface ClarificationQuestion {
+    id: string;
+    question: string;
+    type: 'select' | 'text';
+    options?: Array<{ value: string; label: string }>;
+}
+
+export interface NeedsClarificationResponse {
+    status: 'needs_clarification';
+    message: string;
+    questions: ClarificationQuestion[];
+    originalPrompt: string;
+    classification: {
+        domain: string;
+        complexity: string;
+    };
+    creditsWillUse: number;
+}
+
+export interface UpgradeRequiredResponse {
+    status: 'upgrade_required';
+    message: string;
+    comprehensiveRemaining: number;
+    options: Array<{
+        action: 'upgrade' | 'standard';
+        label: string;
+        url?: string;
+    }>;
+    originalPrompt: string;
+}
+
+export interface ErrorResponse {
+    success: false;
+    error: string;
+}
+
+export type OptimizeResponse =
+    | OptimizeSuccessResponse
+    | NeedsClarificationResponse
+    | UpgradeRequiredResponse
+    | ErrorResponse;
 
 export interface OrchestrationSegment {
     order: number;
@@ -70,14 +141,25 @@ export interface AnalyzeResponse {
 }
 
 /**
- * Call n8n optimize webhook
+ * Call n8n optimize webhook with full payload
  */
 export async function callOptimize(request: OptimizeRequest): Promise<OptimizeResponse> {
     try {
         const response = await fetch(N8N_OPTIMIZE_WEBHOOK, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(request),
+            body: JSON.stringify({
+                prompt: request.prompt,
+                targetModel: request.targetModel || 'universal',
+                strength: request.strength || 'medium',
+                additionalContext: request.additionalContext || '',
+                userId: request.userId || 'anonymous',
+                userTier: request.userTier || 'free',
+                contextFiles: request.contextFiles || [],
+                contextAnswers: request.contextAnswers || null,
+                comprehensiveCreditsRemaining: request.comprehensiveCreditsRemaining ?? 3,
+                forceStandard: request.forceStandard || false,
+            }),
         });
 
         if (!response.ok) {

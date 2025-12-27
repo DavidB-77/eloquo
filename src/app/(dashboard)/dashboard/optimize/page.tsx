@@ -1,52 +1,111 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { OptimizeForm, type OptimizeFormData, type ContextFile } from "@/components/optimize/OptimizeForm";
 import { ResultsTabs } from "@/components/optimize/ResultsTabs";
 import { InputSummary } from "@/components/optimize/InputSummary";
+import { QuestionsForm, type ClarificationQuestion } from "@/components/optimize/QuestionsForm";
+import { UpgradeModal, type UpgradeOption } from "@/components/optimize/UpgradeModal";
 import { OrchestrationResults } from "@/components/optimize/OrchestrationResults";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { Button } from "@/components/ui/Button";
-import { AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
+import { AlertCircle, Zap, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
-type ViewState = "form" | "results";
+type ViewState = "form" | "questions" | "results";
 
-interface OptimizeResult {
-    optimizedPrompt: string;
-    quickRefPrompt?: string;
-    snippetPrompt?: string;
+// Response types from n8n
+interface SuccessResult {
+    success: true;
+    results: {
+        full: string;
+        quickRef: string;
+        snippet: string;
+    };
     improvements: string[];
     metrics: {
         originalTokens: number;
         optimizedTokens: number;
+        processingTimeMs: number;
+        creditsUsed: number;
+        outputMode: string;
     };
-    targetModel: string;
+    validation?: {
+        approved: boolean;
+        score: number;
+    };
 }
 
-interface OrchestrationResult {
-    summary: string;
-    segments: any[];
-    premiumCreditsUsed: number;
+interface ClarificationData {
+    status: "needs_clarification";
+    message: string;
+    questions: ClarificationQuestion[];
+    originalPrompt: string;
+    classification: { domain: string; complexity: string };
+    creditsWillUse: number;
 }
 
-type ResultType =
-    | { type: "optimize"; data: OptimizeResult }
-    | { type: "orchestrate"; data: OrchestrationResult }
-    | null;
+interface UpgradeData {
+    status: "upgrade_required";
+    message: string;
+    comprehensiveRemaining: number;
+    options: UpgradeOption[];
+    originalPrompt: string;
+}
 
 export default function OptimizePage() {
     const [viewState, setViewState] = React.useState<ViewState>("form");
     const [isLoading, setIsLoading] = React.useState(false);
-    const [result, setResult] = React.useState<ResultType>(null);
+    const [result, setResult] = React.useState<SuccessResult | null>(null);
     const [error, setError] = React.useState<string | null>(null);
     const [submittedData, setSubmittedData] = React.useState<OptimizeFormData | null>(null);
 
-    const handleSubmit = async (data: OptimizeFormData) => {
+    // Questions flow state
+    const [clarificationData, setClarificationData] = React.useState<ClarificationData | null>(null);
+
+    // Upgrade flow state
+    const [showUpgradeModal, setShowUpgradeModal] = React.useState(false);
+    const [upgradeData, setUpgradeData] = React.useState<UpgradeData | null>(null);
+
+    // Pending request for re-submission
+    const [pendingRequest, setPendingRequest] = React.useState<OptimizeFormData | null>(null);
+
+    // User tier and credits
+    const [userTier, setUserTier] = React.useState<string>("free");
+    const [comprehensiveCredits, setComprehensiveCredits] = React.useState<number | null>(null);
+
+    // Fetch user tier and credits on mount
+    React.useEffect(() => {
+        async function fetchUserData() {
+            try {
+                const supabase = createClient();
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+
+                const { data: profile } = await supabase
+                    .from("profiles")
+                    .select("subscription_tier, comprehensive_credits_remaining")
+                    .eq("id", user.id)
+                    .single();
+
+                if (profile) {
+                    setUserTier(profile.subscription_tier || "free");
+                    setComprehensiveCredits(profile.comprehensive_credits_remaining ?? 3);
+                }
+            } catch (err) {
+                console.error("Failed to fetch user data:", err);
+            }
+        }
+        fetchUserData();
+    }, []);
+
+    const handleSubmit = async (data: OptimizeFormData, contextAnswers?: Record<string, string>, forceStandard?: boolean) => {
         setIsLoading(true);
         setError(null);
-        setResult(null);
         setSubmittedData(data);
 
         try {
@@ -65,39 +124,72 @@ export default function OptimizePage() {
                         mimeType: f.mimeType,
                         base64: f.base64,
                     })),
+                    contextAnswers: contextAnswers || null,
+                    forceStandard: forceStandard || false,
                 }),
             });
 
             const apiResult = await response.json();
 
-            if (!apiResult.success) {
-                setError(apiResult.error || "Optimization failed");
+            // Handle: Needs Clarification
+            if (apiResult.status === "needs_clarification") {
+                setPendingRequest(data);
+                setClarificationData(apiResult);
+                setViewState("questions");
                 return;
             }
 
-            // Generate all three versions from response or derive them
-            const optimizedPrompt = apiResult.data.optimizedPrompt;
-            const quickRefPrompt = apiResult.data.quickRefPrompt || generateQuickRef(optimizedPrompt);
-            const snippetPrompt = apiResult.data.snippetPrompt || generateSnippet(optimizedPrompt);
+            // Handle: Upgrade Required
+            if (apiResult.status === "upgrade_required") {
+                setPendingRequest(data);
+                setUpgradeData(apiResult);
+                setShowUpgradeModal(true);
+                return;
+            }
 
-            setResult({
-                type: data.useOrchestration ? "orchestrate" : "optimize",
-                data: data.useOrchestration
-                    ? apiResult.data
-                    : {
-                        ...apiResult.data,
-                        optimizedPrompt,
-                        quickRefPrompt,
-                        snippetPrompt,
-                    },
-            });
+            // Handle: Success
+            if (apiResult.success) {
+                setResult(apiResult);
+                setViewState("results");
+                setClarificationData(null);
+                setUpgradeData(null);
+                // Update credits display
+                if (apiResult.usage?.comprehensiveRemaining !== undefined) {
+                    setComprehensiveCredits(apiResult.usage.comprehensiveRemaining);
+                }
+                return;
+            }
 
-            setViewState("results");
+            // Handle: Error
+            setError(apiResult.error || "Optimization failed");
         } catch (err) {
             setError("Failed to connect to optimization service");
         } finally {
             setIsLoading(false);
         }
+    };
+
+    // Handle questions submit
+    const handleQuestionsSubmit = async (answers: Record<string, string>) => {
+        if (!pendingRequest) return;
+        await handleSubmit(pendingRequest, answers);
+    };
+
+    const handleQuestionsCancel = () => {
+        setViewState("form");
+        setClarificationData(null);
+        setPendingRequest(null);
+    };
+
+    // Handle upgrade modal
+    const handleUpgrade = () => {
+        setShowUpgradeModal(false);
+    };
+
+    const handleContinueStandard = async () => {
+        if (!pendingRequest) return;
+        setShowUpgradeModal(false);
+        await handleSubmit(pendingRequest, undefined, true);
     };
 
     const handleEdit = () => {
@@ -109,31 +201,16 @@ export default function OptimizePage() {
         setResult(null);
         setError(null);
         setSubmittedData(null);
+        setClarificationData(null);
+        setUpgradeData(null);
+        setPendingRequest(null);
     };
 
-    // Generate a condensed version (strip verbose instructions, keep core)
-    const generateQuickRef = (prompt: string): string => {
-        // Simple heuristic: take first 60% of content, remove filler phrases
-        const lines = prompt.split("\n").filter((l) => l.trim());
-        const keepCount = Math.max(3, Math.ceil(lines.length * 0.6));
-        return lines.slice(0, keepCount).join("\n");
-    };
-
-    // Generate ultra-short snippet
-    const generateSnippet = (prompt: string): string => {
-        // Take first meaningful sentence or 100 chars
-        const firstSentence = prompt.split(/[.!?]/)[0];
-        if (firstSentence.length < 150) {
-            return firstSentence + ".";
-        }
-        return prompt.substring(0, 100).trim() + "...";
-    };
-
-    // Calculate metrics
+    // Calculate metrics for display
     const getMetrics = () => {
-        if (!result || result.type !== "optimize" || !submittedData) return null;
-        const originalTokens = Math.ceil(submittedData.prompt.length / 4);
-        const optimizedTokens = Math.ceil(result.data.optimizedPrompt.length / 4);
+        if (!result || !submittedData) return null;
+        const originalTokens = result.metrics?.originalTokens || Math.ceil(submittedData.prompt.length / 4);
+        const optimizedTokens = result.metrics?.optimizedTokens || Math.ceil(result.results.full.length / 4);
         const tokensSaved = originalTokens - optimizedTokens;
         const percentageSaved = Math.round((tokensSaved / originalTokens) * 100);
         return { originalTokens, optimizedTokens, tokensSaved, percentageSaved };
@@ -141,16 +218,57 @@ export default function OptimizePage() {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold font-display tracking-tight">Optimize</h1>
-                <p className="text-muted-foreground mt-1">
-                    Transform your prompts for maximum effectiveness across any AI model.
-                </p>
+            {/* Header with Tier Display */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold font-display tracking-tight">Optimize</h1>
+                    <p className="text-muted-foreground mt-1">
+                        Transform your prompts for maximum effectiveness across any AI model.
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <Badge
+                        variant={userTier === "free" ? "secondary" : "default"}
+                        className={cn(
+                            "capitalize",
+                            userTier !== "free" && "bg-primary/10 text-primary border-primary/20"
+                        )}
+                    >
+                        <Crown className="h-3 w-3 mr-1" />
+                        {userTier} Plan
+                    </Badge>
+
+                    {comprehensiveCredits !== null && (
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <Zap className="h-4 w-4 text-primary" />
+                            <span>{comprehensiveCredits} comprehensive credits</span>
+                        </div>
+                    )}
+
+                    {userTier === "free" && (
+                        <Button variant="outline" size="sm" asChild>
+                            <Link href="/pricing">Upgrade</Link>
+                        </Button>
+                    )}
+                </div>
             </div>
 
+            {/* Upgrade Modal */}
+            {upgradeData && (
+                <UpgradeModal
+                    isOpen={showUpgradeModal}
+                    message={upgradeData.message}
+                    comprehensiveRemaining={upgradeData.comprehensiveRemaining}
+                    options={upgradeData.options}
+                    onUpgrade={handleUpgrade}
+                    onContinueStandard={handleContinueStandard}
+                    onClose={() => setShowUpgradeModal(false)}
+                />
+            )}
+
             {/* Error State */}
-            {error && !isLoading && (
+            {error && !isLoading && viewState === "form" && (
                 <Card className="border-destructive bg-destructive/5">
                     <CardContent className="py-6">
                         <div className="flex items-start space-x-3">
@@ -185,14 +303,29 @@ export default function OptimizePage() {
                 </Card>
             )}
 
+            {/* Questions View */}
+            {viewState === "questions" && clarificationData && !isLoading && (
+                <div className="max-w-3xl mx-auto">
+                    <QuestionsForm
+                        questions={clarificationData.questions}
+                        originalPrompt={clarificationData.originalPrompt}
+                        creditsWillUse={clarificationData.creditsWillUse}
+                        classification={clarificationData.classification}
+                        onSubmit={handleQuestionsSubmit}
+                        onCancel={handleQuestionsCancel}
+                        isSubmitting={isLoading}
+                    />
+                </div>
+            )}
+
             {/* Form View (centered) */}
             {viewState === "form" && !isLoading && (
                 <div className="max-w-3xl mx-auto">
                     <OptimizeForm
-                        onSubmit={handleSubmit}
+                        onSubmit={(data) => handleSubmit(data)}
                         isLoading={isLoading}
                         canOptimize={true}
-                        canOrchestrate={true}
+                        canOrchestrate={userTier !== "free"}
                         initialData={submittedData || undefined}
                     />
                 </div>
@@ -219,33 +352,16 @@ export default function OptimizePage() {
                     )}
 
                     {/* Right: Results */}
-                    {result.type === "optimize" && (
+                    <div className="space-y-4">
                         <ResultsTabs
-                            results={{
-                                full: result.data.optimizedPrompt,
-                                quickRef: result.data.quickRefPrompt || "",
-                                snippet: result.data.snippetPrompt || "",
-                            }}
+                            results={result.results}
                             metrics={getMetrics() || undefined}
                             targetModel={submittedData?.targetModel || "universal"}
                             onStartNew={handleStartNew}
+                            improvements={result.improvements}
+                            validation={result.validation}
                         />
-                    )}
-
-                    {result.type === "orchestrate" && (
-                        <div className="lg:col-span-2">
-                            <OrchestrationResults
-                                summary={result.data.summary}
-                                segments={result.data.segments}
-                                premiumCreditsUsed={result.data.premiumCreditsUsed}
-                            />
-                            <div className="text-center mt-4">
-                                <Button variant="ghost" onClick={handleStartNew}>
-                                    🔄 Start New Optimization
-                                </Button>
-                            </div>
-                        </div>
-                    )}
+                    </div>
                 </div>
             )}
         </div>

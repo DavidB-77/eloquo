@@ -51,22 +51,24 @@ export async function POST(request: Request) {
             prompt: body.prompt,
             targetModel: body.targetModel || "universal",
             strength: body.strength || "medium",
-            context: body.context,
+            additionalContext: body.context,
+            userId: keyData.userId,
+            userTier: keyData.tier,
         });
 
         // 5. Track usage and save to history
-        if (result.success && result.data) {
+        if ('success' in result && result.success && 'results' in result) {
             await incrementUsage(keyData.userId, 1, 0);
             await saveToHistory(
                 keyData.userId,
                 body.prompt,
-                result.data.optimizedPrompt,
+                result.results.full,
                 body.targetModel || "universal",
                 body.strength || "medium",
                 false,
                 null,
-                result.data.improvements,
-                result.data.metrics
+                result.improvements,
+                result.metrics
             );
         }
 

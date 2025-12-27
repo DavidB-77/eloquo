@@ -32,7 +32,7 @@ export async function POST(request: Request) {
             prompt,
             targetModel: targetModel || 'universal',
             strength: strength || 'medium',
-            context,
+            additionalContext: context,
             orchestration: { enabled: true, maxSegments },
         });
 

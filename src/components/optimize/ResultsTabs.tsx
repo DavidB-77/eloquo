@@ -4,7 +4,7 @@ import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Copy, Check, ChevronDown, FileText, FileCode, FileJson, File } from "lucide-react";
+import { Copy, Check, ChevronDown, FileText, FileCode, FileJson, File, Lightbulb, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type TabType = "full" | "quickRef" | "snippet";
@@ -23,6 +23,11 @@ interface ResultsTabsProps {
     };
     targetModel: string;
     onStartNew: () => void;
+    improvements?: string[];
+    validation?: {
+        approved: boolean;
+        score: number;
+    };
 }
 
 const TAB_CONFIG = {
@@ -45,10 +50,13 @@ export function ResultsTabs({
     metrics,
     targetModel,
     onStartNew,
+    improvements,
+    validation,
 }: ResultsTabsProps) {
     const [activeTab, setActiveTab] = React.useState<TabType>("full");
     const [showDownloadMenu, setShowDownloadMenu] = React.useState(false);
     const [copied, setCopied] = React.useState(false);
+    const [showImprovements, setShowImprovements] = React.useState(false);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
 
     const currentContent = results[activeTab];
@@ -83,7 +91,6 @@ export function ResultsTabs({
                 downloadFile(currentContent, generateFilename("md"), "text/markdown");
                 break;
             case "txt":
-                // Strip basic markdown
                 const plainText = currentContent
                     .replace(/#{1,6}\s/g, "")
                     .replace(/\*\*(.*?)\*\*/g, "$1")
@@ -99,6 +106,7 @@ export function ResultsTabs({
                         version: activeTab,
                         createdAt: new Date().toISOString(),
                         metrics,
+                        improvements,
                     },
                     null,
                     2
@@ -106,7 +114,6 @@ export function ResultsTabs({
                 downloadFile(jsonContent, generateFilename("json"), "application/json");
                 break;
             case "pdf":
-                // TODO: Call n8n endpoint for PDF generation
                 alert("PDF download coming soon!");
                 break;
         }
@@ -134,12 +141,26 @@ export function ResultsTabs({
                         🔄 New
                     </Button>
                 </div>
-                {metrics && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                        Saved {metrics.tokensSaved} tokens ({metrics.percentageSaved}%)
-                        <Check className="h-3.5 w-3.5 text-primary" />
-                    </p>
-                )}
+                <div className="flex items-center justify-between">
+                    {metrics && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            Saved {metrics.tokensSaved} tokens ({metrics.percentageSaved}%)
+                            <Check className="h-3.5 w-3.5 text-primary" />
+                        </p>
+                    )}
+                    {validation && (
+                        <Badge
+                            variant={validation.approved ? "default" : "secondary"}
+                            className={cn(
+                                "ml-2",
+                                validation.approved ? "bg-green-500/10 text-green-600 border-green-500/20" : ""
+                            )}
+                        >
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Quality: {validation.score}/5
+                        </Badge>
+                    )}
+                </div>
             </CardHeader>
 
             <CardContent className="flex-1 flex flex-col p-0">
@@ -170,6 +191,37 @@ export function ResultsTabs({
                         {currentContent}
                     </div>
                 </div>
+
+                {/* Improvements Section */}
+                {improvements && improvements.length > 0 && (
+                    <div className="px-4 pb-4">
+                        <button
+                            onClick={() => setShowImprovements(!showImprovements)}
+                            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            <Lightbulb className="h-4 w-4 text-primary" />
+                            <span>View {improvements.length} improvements made</span>
+                            <ChevronDown
+                                className={cn(
+                                    "h-4 w-4 transition-transform",
+                                    showImprovements && "rotate-180"
+                                )}
+                            />
+                        </button>
+                        {showImprovements && (
+                            <div className="mt-3 p-4 bg-primary/5 border border-primary/10 rounded-lg animate-in slide-in-from-top-2 duration-200">
+                                <ul className="space-y-2 text-sm">
+                                    {improvements.map((improvement, i) => (
+                                        <li key={i} className="flex items-start gap-2">
+                                            <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                                            <span className="text-foreground">{improvement}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex gap-3 p-4 border-t">

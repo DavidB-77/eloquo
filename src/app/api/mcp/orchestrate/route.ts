@@ -41,7 +41,7 @@ export async function POST(request: Request) {
             prompt: body.prompt,
             targetModel: body.targetModel || "universal",
             strength: body.strength || "medium",
-            context: body.context,
+            additionalContext: body.context,
             orchestration: {
                 enabled: true,
                 maxSegments: body.orchestration?.maxSegments || 6,
