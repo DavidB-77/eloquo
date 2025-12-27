@@ -118,7 +118,7 @@ export function PricingSection() {
         });
 
         // Looping glow for popular card
-        gsap.to(".pricing-card .border-electric-cyan/40", {
+        gsap.to(".pricing-card .popular-card-glow", {
             borderColor: "rgba(0, 255, 255, 0.8)",
             boxShadow: "0 0 20px rgba(0, 255, 255, 0.3)",
             duration: 2,
@@ -167,7 +167,7 @@ export function PricingSection() {
                         >
                             <Card className={cn(
                                 "relative flex flex-col h-full glass transition-all duration-500 border-electric-cyan/10 bg-deep-teal/5",
-                                plan.popular && "border-electric-cyan/40 bg-deep-teal/10 shadow-[0_0_50px_rgba(9,183,180,0.1)] scale-105 z-10"
+                                plan.popular && "popular-card-glow border-electric-cyan/40 bg-deep-teal/10 shadow-[0_0_50px_rgba(9,183,180,0.1)] scale-105 z-10"
                             )}>
                                 {plan.popular && (
                                     <div className="absolute -top-4 left-1/2 -translate-x-1/2">
