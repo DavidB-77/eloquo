@@ -1,3 +1,6 @@
+"use client";
+
+import * as React from "react";
 import Link from "next/link";
 import { Container } from "@/components/layout/Container";
 import { Twitter, Linkedin, Github, Zap } from "lucide-react";
@@ -61,7 +64,7 @@ export function Footer() {
 
                 <div className="pt-10 border-t border-electric-cyan/10 flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
                     <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">
-                        © {new Date().getFullYear()} ELOQUO NEURAL SYSTEMS. ALL RIGHTS RESERVED.
+                        © 2025 ELOQUO NEURAL SYSTEMS. ALL RIGHTS RESERVED.
                     </p>
                     <div className="flex space-x-8 text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">
                         <Link href="mailto:hello@eloquo.io" className="hover:text-electric-cyan transition-colors">LINK_STABLIZED: hello@eloquo.io</Link>

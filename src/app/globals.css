@@ -179,6 +179,26 @@
   body {
     @apply bg-midnight text-foreground font-sans;
     background-color: #00030A;
+    color: #F8FAFC;
+  }
+
+  /* Global fixes for unreadable dropdowns/selects */
+  select {
+    background-color: #00030A;
+    color: #F8FAFC;
+  }
+
+  option {
+    background-color: #00030A;
+    color: #F8FAFC;
+  }
+
+  /* Force Radix/Shadcn Popovers/Cards to be dark */
+  [data-radix-popper-content-wrapper],
+  [role="dialog"],
+  .glass {
+    background-color: rgba(20, 53, 66, 0.9) !important;
+    color: #F8FAFC !important;
   }
 
   h1,

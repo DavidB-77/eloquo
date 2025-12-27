@@ -28,7 +28,6 @@ const NAV_LINKS = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
     { href: "/dashboard/optimize", icon: Zap, label: "Optimize" },
     { href: "/dashboard/history", icon: History, label: "History" },
-    { href: "/dashboard/saved", icon: Bookmark, label: "Library" },
     { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 

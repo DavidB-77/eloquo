@@ -44,16 +44,19 @@ export default function DashboardPage() {
         fetchHistory();
     }, []);
 
-    const stats = historyData?.stats || {
-        total_optimizations: 0,
-        total_tokens_saved: 0,
-        avg_savings_percent: 0,
-    };
+    const stats = historyData?.stats || {};
+    const totalOptimizations = stats.total_optimizations || 0;
+    const tokensSaved = stats.tokens_saved || stats.total_tokens_saved || 0;
+    const tokensOriginalTotal = stats.tokens_original_total || 0;
+
+    const avgSavingsPercent = stats.avg_savings_percent || (tokensOriginalTotal > 0
+        ? (tokensSaved / tokensOriginalTotal) * 100
+        : 0);
 
     const recentPrompts = historyData?.history || [];
 
     // Time saved estimate: 10 mins per optimization
-    const timeSavedHours = (stats.total_optimizations * 10) / 60;
+    const timeSavedHours = (totalOptimizations * 10) / 60;
 
     return (
         <div className="space-y-8">
@@ -69,15 +72,15 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatsCard
                     title="Total Optimizations"
-                    value={stats.total_optimizations.toLocaleString()}
+                    value={totalOptimizations.toLocaleString()}
                     icon={Zap}
                     description="Total protocol cycles"
                 />
                 <StatsCard
                     title="Tokens Saved"
-                    value={`${(stats.total_tokens_saved / 1000).toFixed(1)}K`}
+                    value={`${(tokensSaved / 1000).toFixed(1)}K`}
                     icon={Activity}
-                    description={`Avg. ${Math.round(stats.avg_savings_percent)}% per prompt`}
+                    description={`Avg. ${Math.round(avgSavingsPercent)}% per prompt`}
                 />
                 <StatsCard
                     title="Active Models"
