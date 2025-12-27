@@ -36,8 +36,31 @@ export function DashboardSidebar() {
     const { user, signOut } = useAuth();
     const pathname = usePathname();
 
-    // TODO: Fetch real usage from API
-    const usageData = { optimizations: 4, limit: 10, tier: "Free" };
+    // Fetch real usage from API
+    const [usageData, setUsageData] = React.useState<{
+        optimizationsUsed: number;
+        optimizationsLimit: number;
+        tier: string;
+    } | null>(null);
+
+    React.useEffect(() => {
+        async function fetchUsage() {
+            try {
+                const res = await fetch("/api/usage");
+                const data = await res.json();
+                if (data.success && data.data) {
+                    setUsageData({
+                        optimizationsUsed: data.data.optimizationsUsed,
+                        optimizationsLimit: data.data.optimizationsLimit,
+                        tier: data.data.tier,
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to fetch usage:", error);
+            }
+        }
+        fetchUsage();
+    }, [pathname]); // Refresh on navigation
 
     return (
         <aside
@@ -86,14 +109,14 @@ export function DashboardSidebar() {
                 </nav>
 
                 {/* Usage Display (Hidden when collapsed) */}
-                {!isCollapsed && (
+                {!isCollapsed && usageData && (
                     <div className="px-4 py-6">
                         <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
                             <div className="text-xs font-bold text-primary uppercase tracking-wider mb-2">Current Plan</div>
-                            <div className="font-bold text-sm mb-3">{usageData.tier} Individual</div>
+                            <div className="font-bold text-sm mb-3 capitalize">{usageData.tier} Individual</div>
                             <UsageBar
-                                used={usageData.optimizations}
-                                limit={usageData.limit}
+                                used={usageData.optimizationsUsed}
+                                limit={usageData.optimizationsLimit}
                                 label="Optimizations"
                                 showNumbers={true}
                             />
