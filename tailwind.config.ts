@@ -9,10 +9,12 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
-                midnight: '#00030A',
+                midnight: '#0A0A0A',
                 'deep-teal': '#143542',
                 'electric-cyan': '#00FFFF',
-                'sunset-orange': '#FF5722',
+                'neon-orange': '#FF6600',
+                'neon-magenta': '#FF00FF',
+                'neon-green': '#00FF66',
                 terracotta: '#AC4B3E',
                 'dusty-rose': '#BC9891',
                 border: "hsl(var(--border))",

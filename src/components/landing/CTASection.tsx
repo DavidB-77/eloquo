@@ -69,15 +69,15 @@ export function CTASection() {
                         <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">
                             <div className="flex items-center space-x-2">
                                 <Zap className="h-3 w-3 text-electric-cyan" />
-                                <span>No Terminal Login Required</span>
+                                <span>No Credit Card Required</span>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <Zap className="h-3 w-3 text-electric-cyan" />
-                                <span>25 Free Cycles</span>
+                                <span>25 Free Optimizations</span>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <Zap className="h-3 w-3 text-electric-cyan" />
-                                <span>Multi-Agent Support</span>
+                                <span>Multi-Model Support</span>
                             </div>
                         </div>
                     </div>

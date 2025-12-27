@@ -48,13 +48,13 @@ export function Navbar() {
                             <Link
                                 key={link.name}
                                 href={link.href}
-                                className="text-xs font-bold text-white/60 hover:text-white uppercase tracking-widest transition-colors"
+                                className="text-xs font-bold text-white/60 hover:text-white hover:text-shadow-neon transition-all uppercase tracking-widest"
                             >
                                 {link.name}
                             </Link>
                         ))}
                         <div className="flex items-center space-x-4 ml-6">
-                            <Button variant="ghost" size="sm" asChild className="text-xs font-bold uppercase tracking-widest text-white hover:bg-white/5">
+                            <Button variant="ghost" size="sm" asChild className="text-xs font-bold uppercase tracking-widest text-white hover:bg-white/5 hover:text-neon-magenta transition-all">
                                 <Link href="/login">Access Hub</Link>
                             </Button>
                             <Button size="sm" asChild className="btn-gradient px-6 rounded-lg text-xs font-bold uppercase tracking-widest glow-sm hover:glow-md">

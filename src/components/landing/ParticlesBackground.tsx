@@ -36,21 +36,21 @@ export function ParticlesBackground() {
                     grab: {
                         distance: 200,
                         links: {
-                            opacity: 0.2,
-                            color: "#09B7B4",
+                            opacity: 0.3,
+                            color: "#00FFFF",
                         },
                     },
                 },
             },
             particles: {
                 color: {
-                    value: ["#09B7B4", "#E57844", "#BC9891"],
+                    value: ["#00FFFF", "#FF6600", "#FF00FF", "#00FF66"],
                 },
                 links: {
-                    color: "#09B7B4",
+                    color: "#00FFFF",
                     distance: 150,
                     enable: true,
-                    opacity: 0.1,
+                    opacity: 0.15,
                     width: 1,
                 },
                 move: {
@@ -60,20 +60,20 @@ export function ParticlesBackground() {
                         default: "out",
                     },
                     random: true,
-                    speed: 0.8,
+                    speed: 1.2,
                     straight: false,
                 },
                 number: {
                     density: {
                         enable: true,
                     },
-                    value: 60,
+                    value: 80,
                 },
                 opacity: {
-                    value: { min: 0.1, max: 0.4 },
+                    value: { min: 0.2, max: 0.5 },
                     animation: {
                         enable: true,
-                        speed: 0.5,
+                        speed: 0.8,
                         startValue: "random",
                     },
                 },
@@ -81,7 +81,7 @@ export function ParticlesBackground() {
                     type: "circle",
                 },
                 size: {
-                    value: { min: 1, max: 3 },
+                    value: { min: 1, max: 4 },
                 },
             },
             detectRetina: true,
@@ -98,8 +98,9 @@ export function ParticlesBackground() {
                     className="h-full w-full"
                 />
                 {/* Global Ambient Glows */}
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-electric-cyan/5 rounded-full blur-[120px]" />
-                <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] bg-sunset-orange/5 rounded-full blur-[100px]" />
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-electric-cyan/10 rounded-full blur-[150px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-neon-magenta/10 rounded-full blur-[150px]" />
+                <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-neon-orange/5 rounded-full blur-[120px]" />
             </div>
         );
     }

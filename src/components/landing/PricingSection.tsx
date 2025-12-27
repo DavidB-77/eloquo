@@ -166,8 +166,8 @@ export function PricingSection() {
                             className="pricing-card"
                         >
                             <Card className={cn(
-                                "relative flex flex-col h-full glass transition-all duration-500 border-electric-cyan/10 bg-deep-teal/5",
-                                plan.popular && "popular-card-glow border-electric-cyan/40 bg-deep-teal/10 shadow-[0_0_50px_rgba(9,183,180,0.1)] scale-105 z-10"
+                                "relative flex flex-col h-full glass transition-all duration-500 border-electric-cyan/10 bg-midnight/60",
+                                plan.popular && "popular-card-glow border-electric-cyan/40 bg-midnight/80 shadow-[0_0_60px_rgba(0,255,255,0.2)] scale-105 z-10"
                             )}>
                                 {plan.popular && (
                                     <div className="absolute -top-4 left-1/2 -translate-x-1/2">

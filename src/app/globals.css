@@ -29,10 +29,12 @@
   --color-accent-500: oklch(0.627 0.141 122.091);
 
   /* Brand Colors */
-  --color-midnight: #00030A;
+  --color-midnight: #0A0A0A;
   --color-deep-teal: #143542;
   --color-electric-cyan: #00FFFF;
-  --color-sunset-orange: #FF5722;
+  --color-neon-orange: #FF6600;
+  --color-neon-magenta: #FF00FF;
+  --color-neon-green: #00FF66;
   --color-terracotta: #AC4B3E;
   --color-dusty-rose: #BC9891;
 
@@ -125,49 +127,49 @@
 
 @layer base {
   :root {
-    --background: #00030A;
+    --background: #0A0A0A;
     --foreground: #F8FAFC;
     --card: #143542;
     --card-foreground: #F8FAFC;
     --popover: #143542;
     --popover-foreground: #F8FAFC;
     --primary: #00FFFF;
-    --primary-foreground: #F8FAFC;
-    --secondary: #BC9891;
-    --secondary-foreground: #00030A;
+    --primary-foreground: #0A0A0A;
+    --secondary: #FF6600;
+    --secondary-foreground: #0A0A0A;
     --muted: #1e293b;
     --muted-foreground: rgba(255, 255, 255, 0.6);
-    --accent: #FF5722;
+    --accent: #FF00FF;
     --accent-foreground: #F8FAFC;
     --destructive: #AC4B3E;
     --destructive-foreground: #F8FAFC;
-    --border: rgba(0, 229, 224, 0.2);
-    --input: rgba(0, 229, 224, 0.2);
-    --ring: #00E5E0;
+    --border: rgba(0, 255, 255, 0.3);
+    --input: rgba(0, 255, 255, 0.2);
+    --ring: #00FFFF;
     --radius: 1rem;
   }
 
   /* Force dark mode behavior as default for the midnight theme */
   .dark {
-    --background: #00030A;
+    --background: #0A0A0A;
     --foreground: #F8FAFC;
     --card: #143542;
     --card-foreground: #F8FAFC;
     --popover: #143542;
     --popover-foreground: #F8FAFC;
     --primary: #00FFFF;
-    --primary-foreground: #F8FAFC;
-    --secondary: #BC9891;
-    --secondary-foreground: #00030A;
+    --primary-foreground: #0A0A0A;
+    --secondary: #FF6600;
+    --secondary-foreground: #0A0A0A;
     --muted: #1e293b;
     --muted-foreground: rgba(255, 255, 255, 0.6);
-    --accent: #FF5722;
+    --accent: #FF00FF;
     --accent-foreground: #F8FAFC;
     --destructive: #AC4B3E;
     --destructive-foreground: #F8FAFC;
-    --border: rgba(0, 229, 224, 0.2);
-    --input: rgba(0, 229, 224, 0.2);
-    --ring: #00E5E0;
+    --border: rgba(0, 255, 255, 0.3);
+    --input: rgba(0, 255, 255, 0.2);
+    --ring: #00FFFF;
   }
 }
 
@@ -178,18 +180,18 @@
 
   body {
     @apply bg-midnight text-foreground font-sans;
-    background-color: #00030A;
+    background-color: #0A0A0A;
     color: #F8FAFC;
   }
 
   /* Global fixes for unreadable dropdowns/selects */
   select {
-    background-color: #00030A;
+    background-color: #0A0A0A;
     color: #F8FAFC;
   }
 
   option {
-    background-color: #00030A;
+    background-color: #0A0A0A;
     color: #F8FAFC;
   }
 
@@ -197,8 +199,10 @@
   [data-radix-popper-content-wrapper],
   [role="dialog"],
   .glass {
-    background-color: rgba(20, 53, 66, 0.9) !important;
+    background-color: rgba(10, 10, 10, 0.9) !important;
     color: #F8FAFC !important;
+    border: 1px solid rgba(0, 255, 255, 0.3) !important;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.1) !important;
   }
 
   h1,
@@ -207,35 +211,49 @@
   h4,
   h5,
   h6 {
-    @apply font-display font-normal;
+    @apply font-display font-normal text-electric-cyan;
+    text-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
   }
 
   .glass {
-    background: rgba(20, 53, 66, 0.6);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(9, 183, 180, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border-radius: 16px;
-    transition: all 0.3s ease;
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 255, 255, 0.4);
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
+    border-radius: 20px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .glass-hover:hover {
-    border-color: rgba(9, 183, 180, 0.5);
+    border-color: rgba(255, 0, 255, 0.5);
+    /* Magenta hover border */
     transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 40px rgba(255, 0, 255, 0.2);
+  }
+
+  .btn-gradient {
+    background: linear-gradient(135deg, #00FFFF 0%, #FF6600 100%);
+    border: none;
+    color: #0A0A0A;
+    font-weight: 800;
   }
 
   .btn-gradient:hover {
-    box-shadow: 0 0 30px rgba(0, 229, 224, 0.4);
-    transform: scale(1.02);
+    box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+    transform: scale(1.05);
+    filter: brightness(1.2);
   }
 
   .glow-sm {
-    text-shadow: 0 0 10px rgba(0, 229, 224, 0.6);
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
   }
 
   .glow-md {
-    text-shadow: 0 0 20px rgba(0, 229, 224, 0.8);
-    filter: drop-shadow(0 0 10px rgba(0, 229, 224, 0.4));
+    text-shadow: 0 0 25px rgba(0, 255, 255, 1);
+    filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.6));
+  }
+
+  .text-shadow-neon {
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.8), 0 0 20px rgba(0, 255, 255, 0.4);
   }
 }
