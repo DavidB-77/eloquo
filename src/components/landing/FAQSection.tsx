@@ -18,37 +18,22 @@ const FAQS = [
     {
         id: "faq-2",
         title: "How does prompt optimization work?",
-        content: "We use a multi-stage process powered by Gemini 2.0 Flash that analyzes your prompt's intent, constraints, and target model. It then applies proven engineering patterns to improve clarity, reduce token usage, and enhance the quality of the AI response.",
+        content: "We use a proprietary multi-stage analysis engine that examines your prompt's intent, structure, and target model. It applies proven prompt engineering patterns to improve clarity, consistency, and the quality of AI responses you receive.",
     },
     {
         id: "faq-3",
         title: "Is my data secure?",
-        content: "Yes. Your prompts are stored securely in Supabase with strict Row Level Security (RLS). We never use your prompts to train our internal models, and all interactions with external AI providers are encrypted.",
+        content: "Yes. Your prompts are stored securely with enterprise-grade encryption and strict access controls. We never use your prompts to train any models, and all data transmission is encrypted.",
     },
     {
         id: "faq-4",
         title: "Can I cancel my subscription anytime?",
-        content: "Absolutely. You can manage your subscription through our Lemon Squeezy customer portal. If you cancel, you will retain access to your plan until the end of your current billing period.",
+        content: "Absolutely. You can cancel your subscription anytime from your account settings. If you cancel, you'll retain access to your plan until the end of your current billing period.",
     },
     {
         id: "faq-5",
-        title: "Do you offer refunds?",
-        content: "We offer a 14-day refund policy for any yearly plans if you find the service isn't right for you. Monthly plans are non-refundable but can be cancelled at any time.",
-    },
-    {
-        id: "faq-6",
-        title: "How do team plans work?",
-        content: "Team plans allow you to invite up to 5 members to a shared workspace. You can collaborate on prompts, maintain a shared library, and manage billing centrally.",
-    },
-    {
-        id: "faq-7",
-        title: "Is there an API available?",
-        content: "Yes, Pro and Team users get access to our developer API, allowing you to integrate Eloquo's optimization engine directly into your own applications.",
-    },
-    {
-        id: "faq-8",
         title: "What payment methods do you accept?",
-        content: "We accept all major credit cards, Apple Pay, and Google Pay via Lemon Squeezy.",
+        content: "We accept all major credit cards, Apple Pay, and Google Pay.",
     },
 ];
 
