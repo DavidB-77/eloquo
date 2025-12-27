@@ -48,7 +48,7 @@ const TABS = [
     { id: "security", label: "Security", icon: Shield },
 ];
 
-export default function SettingsPage() {
+function SettingsContent() {
     const searchParams = useSearchParams();
     const initialTab = searchParams.get("tab") || "profile";
     const [activeTab, setActiveTab] = React.useState(initialTab);
@@ -97,8 +97,8 @@ export default function SettingsPage() {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center space-x-2 pb-3 border-b-2 transition-colors ${activeTab === tab.id
-                                    ? "border-primary text-foreground"
-                                    : "border-transparent text-muted-foreground hover:text-foreground"
+                                ? "border-primary text-foreground"
+                                : "border-transparent text-muted-foreground hover:text-foreground"
                                 }`}
                         >
                             <tab.icon className="h-4 w-4" />
@@ -308,5 +308,13 @@ export default function SettingsPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function SettingsPage() {
+    return (
+        <React.Suspense fallback={<div className="p-8 flex justify-center">Loading settings...</div>}>
+            <SettingsContent />
+        </React.Suspense>
     );
 }
