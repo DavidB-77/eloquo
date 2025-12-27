@@ -11,10 +11,9 @@ import {
     BarChart3,
     Wand2,
     Layers,
-    DollarSign,
     History,
-    Users,
-    Zap
+    Zap,
+    TrendingUp
 } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -36,20 +35,14 @@ const FEATURES = [
         icon: <Layers className="h-6 w-6" />,
     },
     {
-        title: "Cost Estimation",
-        description: "See exactly how many tokens you save and your projected ROI.",
-        icon: <DollarSign className="h-6 w-6" />,
+        title: "Efficiency Insights",
+        description: "Track your prompt improvements and see how much time you're saving with better-structured prompts.",
+        icon: <TrendingUp className="h-6 w-6" />,
     },
     {
         title: "History & Versioning",
         description: "Never lose a great prompt again. Track iterations and revert anytime.",
         icon: <History className="h-6 w-6" />,
-    },
-    {
-        title: "Team Library",
-        description: "Share your best-performing prompts with your entire organization.",
-        icon: <Users className="h-6 w-6" />,
-        comingSoon: true,
     },
 ];
 
@@ -94,7 +87,7 @@ export function FeaturesSection() {
                         Master AI Communication
                     </h2>
                     <p className="text-white/60 text-lg max-w-2xl mx-auto font-medium leading-relaxed tracking-wide">
-                        Powerful modules designed to make your AI interactions faster, more precise, and significantly cheaper.
+                        Powerful modules designed to make your AI interactions faster, more precise, and more consistent.
                     </p>
                 </div>
 
@@ -111,11 +104,8 @@ export function FeaturesSection() {
                                     <div className="h-14 w-14 rounded-xl bg-deep-teal/40 border border-electric-cyan/20 text-electric-cyan flex items-center justify-center mb-6 group-hover:bg-electric-cyan group-hover:text-midnight group-hover:shadow-[0_0_20px_rgba(9,183,180,0.4)] transition-all duration-500">
                                         {feature.icon}
                                     </div>
-                                    <CardTitle className="flex items-center justify-between text-white font-display uppercase tracking-widest text-lg">
+                                    <CardTitle className="text-white font-display uppercase tracking-widest text-lg">
                                         {feature.title}
-                                        {feature.comingSoon && (
-                                            <Badge variant="outline" className="font-bold text-[8px] uppercase tracking-[0.2em] border-sunset-orange/30 text-sunset-orange leading-none">Soon</Badge>
-                                        )}
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="relative z-10">
