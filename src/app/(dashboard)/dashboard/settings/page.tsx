@@ -12,16 +12,9 @@ import { ApiKeyManager } from "@/components/settings/ApiKeyManager";
 import { UsageBar } from "@/components/dashboard/UsageBar";
 import { User, CreditCard, Key, Shield, Check, ExternalLink } from "lucide-react";
 import { useAuth } from "@/providers/AuthProvider";
+import { useUser } from "@/providers/UserProvider";
 
-// Mock data - replace with actual API calls
-const MOCK_USAGE = {
-    tier: "free" as const,
-    optimizationsUsed: 4,
-    optimizationsLimit: 10,
-    premiumCreditsUsed: 0,
-    premiumCreditsLimit: 0,
-    hasMcpAccess: false,
-};
+
 
 const MOCK_API_KEYS = [
     {
@@ -58,7 +51,18 @@ function SettingsContent() {
     const [fullName, setFullName] = React.useState(user?.user_metadata?.full_name || "");
     const [isSaving, setIsSaving] = React.useState(false);
 
-    const usage = MOCK_USAGE;
+    const { userData, isLoading } = useUser();
+
+    // Default fallback if loading or no data
+    const usage = userData || {
+        tier: "free" as const,
+        optimizationsUsed: 0,
+        optimizationsLimit: 10,
+        premiumCreditsUsed: 0,
+        premiumCreditsLimit: 0,
+        hasMcpAccess: false,
+    };
+
     const plan = PLAN_DETAILS[usage.tier];
 
     const handleSaveProfile = async () => {

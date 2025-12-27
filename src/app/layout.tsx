@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/providers/AuthProvider";
 import QueryProvider from "@/providers/QueryProvider";
 import { cn } from "@/lib/utils";
+import { UserProvider } from "@/providers/UserProvider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -27,7 +28,9 @@ export default function RootLayout({
       >
         <QueryProvider>
           <AuthProvider>
-            {children}
+            <UserProvider>
+              {children}
+            </UserProvider>
           </AuthProvider>
         </QueryProvider>
       </body>

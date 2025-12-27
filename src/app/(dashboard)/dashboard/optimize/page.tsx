@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/Badge";
 import { AlertCircle, Zap, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@/providers/UserProvider";
 
 type ViewState = "form" | "questions" | "results";
 
@@ -74,34 +75,10 @@ export default function OptimizePage() {
     // Pending request for re-submission
     const [pendingRequest, setPendingRequest] = React.useState<OptimizeFormData | null>(null);
 
-    // User tier and credits
-    const [userTier, setUserTier] = React.useState<string>("free");
-    const [comprehensiveCredits, setComprehensiveCredits] = React.useState<number | null>(null);
-
-    // Fetch user tier and credits on mount
-    React.useEffect(() => {
-        async function fetchUserData() {
-            try {
-                const supabase = createClient();
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return;
-
-                const { data: profile } = await supabase
-                    .from("profiles")
-                    .select("subscription_tier, comprehensive_credits_remaining")
-                    .eq("id", user.id)
-                    .single();
-
-                if (profile) {
-                    setUserTier(profile.subscription_tier || "free");
-                    setComprehensiveCredits(profile.comprehensive_credits_remaining ?? 3);
-                }
-            } catch (err) {
-                console.error("Failed to fetch user data:", err);
-            }
-        }
-        fetchUserData();
-    }, []);
+    // User data from context
+    const { userData, refreshUserData } = useUser();
+    const userTier = userData?.tier || "free";
+    const comprehensiveCredits = userData?.comprehensiveCreditsRemaining ?? null;
 
     const handleSubmit = async (data: OptimizeFormData, contextAnswers?: Record<string, string>, forceStandard?: boolean) => {
         setIsLoading(true);
@@ -154,9 +131,10 @@ export default function OptimizePage() {
                 setClarificationData(null);
                 setUpgradeData(null);
                 // Update credits display
-                if (apiResult.usage?.comprehensiveRemaining !== undefined) {
-                    setComprehensiveCredits(apiResult.usage.comprehensiveRemaining);
-                }
+
+                // Refresh global user data (sidebar, header, etc.)
+                await refreshUserData();
+
                 return;
             }
 

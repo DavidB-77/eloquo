@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/Button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { useAuth } from "@/providers/AuthProvider";
+import { useUser } from "@/providers/UserProvider";
 
 import { UsageBar } from "@/components/dashboard/UsageBar";
 
@@ -36,31 +37,7 @@ export function DashboardSidebar() {
     const { user, signOut } = useAuth();
     const pathname = usePathname();
 
-    // Fetch real usage from API
-    const [usageData, setUsageData] = React.useState<{
-        optimizationsUsed: number;
-        optimizationsLimit: number;
-        tier: string;
-    } | null>(null);
-
-    React.useEffect(() => {
-        async function fetchUsage() {
-            try {
-                const res = await fetch("/api/usage");
-                const data = await res.json();
-                if (data.success && data.data) {
-                    setUsageData({
-                        optimizationsUsed: data.data.optimizationsUsed,
-                        optimizationsLimit: data.data.optimizationsLimit,
-                        tier: data.data.tier,
-                    });
-                }
-            } catch (error) {
-                console.error("Failed to fetch usage:", error);
-            }
-        }
-        fetchUsage();
-    }, [pathname]); // Refresh on navigation
+    const { userData } = useUser();
 
     return (
         <aside
@@ -109,14 +86,14 @@ export function DashboardSidebar() {
                 </nav>
 
                 {/* Usage Display (Hidden when collapsed) */}
-                {!isCollapsed && usageData && (
+                {!isCollapsed && userData && (
                     <div className="px-4 py-6">
                         <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
                             <div className="text-xs font-bold text-primary uppercase tracking-wider mb-2">Current Plan</div>
-                            <div className="font-bold text-sm mb-3 capitalize">{usageData.tier} Individual</div>
+                            <div className="font-bold text-sm mb-3 capitalize">{userData.tier} Individual</div>
                             <UsageBar
-                                used={usageData.optimizationsUsed}
-                                limit={usageData.optimizationsLimit}
+                                used={userData.optimizationsUsed}
+                                limit={userData.optimizationsLimit}
                                 label="Optimizations"
                                 showNumbers={true}
                             />

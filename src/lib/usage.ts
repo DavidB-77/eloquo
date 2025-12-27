@@ -24,6 +24,7 @@ export interface UsageStats {
     canOptimize: boolean;
     canOrchestrate: boolean;
     hasMcpAccess: boolean;
+    comprehensiveCreditsRemaining: number;
 }
 
 /**
@@ -71,7 +72,7 @@ export async function getUserUsage(userId: string): Promise<UsageStats> {
     // Get user's profile for tier
     const { data: profile } = await supabase
         .from('profiles')
-        .select('subscription_tier')
+        .select('subscription_tier, comprehensive_credits_remaining')
         .eq('id', userId)
         .single();
 
@@ -93,6 +94,7 @@ export async function getUserUsage(userId: string): Promise<UsageStats> {
         canOptimize: optimizationsRemaining > 0,
         canOrchestrate: premiumCreditsRemaining > 0 || tier === 'enterprise',
         hasMcpAccess: limits.hasMcpAccess,
+        comprehensiveCreditsRemaining: profile?.comprehensive_credits_remaining ?? 3,
     };
 }
 
