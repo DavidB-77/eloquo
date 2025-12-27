@@ -2,10 +2,11 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Menu, X, Zap } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
 const NAV_LINKS = [
     { name: "Features", href: "#features" },
@@ -17,10 +18,22 @@ const NAV_LINKS = [
 export function Navbar() {
     const [isOpen, setIsOpen] = React.useState(false);
     const [scrolled, setScrolled] = React.useState(false);
+    const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+    const [isLoading, setIsLoading] = React.useState(true);
 
     React.useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll);
+
+        const checkUser = async () => {
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            setIsLoggedIn(!!session);
+            setIsLoading(false);
+        };
+
+        checkUser();
+
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
@@ -51,12 +64,24 @@ export function Navbar() {
                             </Link>
                         ))}
                         <div className="flex items-center space-x-4 ml-6">
-                            <Button variant="ghost" size="sm" asChild className="text-xs font-bold uppercase tracking-widest text-white hover:bg-white/5 hover:text-neon-magenta transition-all">
-                                <Link href="/login">Access Hub</Link>
-                            </Button>
-                            <Button size="sm" asChild className="btn-gradient px-6 rounded-lg text-xs font-bold uppercase tracking-widest glow-sm hover:glow-md">
-                                <Link href="/signup">Initialize</Link>
-                            </Button>
+                            {!isLoading && (
+                                <>
+                                    {isLoggedIn ? (
+                                        <Button size="sm" asChild className="btn-gradient px-6 rounded-lg text-xs font-bold uppercase tracking-widest glow-sm hover:glow-md">
+                                            <Link href="/dashboard">Dashboard</Link>
+                                        </Button>
+                                    ) : (
+                                        <>
+                                            <Button variant="ghost" size="sm" asChild className="text-xs font-bold uppercase tracking-widest text-white hover:bg-white/5 hover:text-neon-magenta transition-all">
+                                                <Link href="/login">Sign In</Link>
+                                            </Button>
+                                            <Button size="sm" asChild className="btn-gradient px-6 rounded-lg text-xs font-bold uppercase tracking-widest glow-sm hover:glow-md">
+                                                <Link href="/signup">Initialize</Link>
+                                            </Button>
+                                        </>
+                                    )}
+                                </>
+                            )}
                         </div>
                     </div>
 
@@ -84,10 +109,18 @@ export function Navbar() {
                                 </Link>
                             ))}
                             <hr />
-                            <Link href="/login" className="text-lg font-medium" onClick={() => setIsOpen(false)}>Login</Link>
-                            <Button asChild onClick={() => setIsOpen(false)}>
-                                <Link href="/signup">Get Started</Link>
-                            </Button>
+                            {isLoggedIn ? (
+                                <Button asChild onClick={() => setIsOpen(false)}>
+                                    <Link href="/dashboard">Dashboard</Link>
+                                </Button>
+                            ) : (
+                                <>
+                                    <Link href="/login" className="text-lg font-medium" onClick={() => setIsOpen(false)}>Sign In</Link>
+                                    <Button asChild onClick={() => setIsOpen(false)}>
+                                        <Link href="/signup">Initialize</Link>
+                                    </Button>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}

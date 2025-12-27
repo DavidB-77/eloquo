@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { ArrowRight, Sparkles, Zap } from "lucide-react";
 
+import { createClient } from "@/lib/supabase/client";
 import { DemoOptimizeForm } from "@/components/landing/DemoOptimizeForm";
 
 export function HeroSection() {
     const containerRef = React.useRef<HTMLDivElement>(null);
+    const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
     useGSAP(() => {
         const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
@@ -29,6 +31,14 @@ export function HeroSection() {
                 duration: 1.5,
                 ease: "expo.out"
             }, "-=0.8");
+
+        // Check session
+        const checkUser = async () => {
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            setIsLoggedIn(!!session);
+        };
+        checkUser();
 
     }, { scope: containerRef });
 
@@ -55,8 +65,8 @@ export function HeroSection() {
 
                         <div className="hero-actions flex flex-col sm:flex-row items-center justify-start space-y-4 sm:space-y-0 sm:space-x-6 mb-12">
                             <Button size="lg" className="w-full sm:w-auto h-14 px-10 rounded-xl bg-neon-orange hover:bg-neon-orange/90 text-[#0A0A0A] border-none text-lg font-bold tracking-widest uppercase glow-sm hover:glow-md transition-all group" asChild>
-                                <Link href="/signup">
-                                    Start Optimizing <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                <Link href={isLoggedIn ? "/dashboard" : "/signup"}>
+                                    {isLoggedIn ? "Go to Dashboard" : "Start Optimizing"} <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                                 </Link>
                             </Button>
                             <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-10 rounded-xl border-electric-cyan text-electric-cyan hover:bg-electric-cyan/10 text-lg font-bold tracking-widest uppercase transition-all shadow-[0_0_15px_rgba(0,255,255,0.2)] hover:shadow-[0_0_25px_rgba(0,255,255,0.4)]" asChild>
