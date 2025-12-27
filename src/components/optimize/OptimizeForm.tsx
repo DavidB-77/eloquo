@@ -7,6 +7,7 @@ import { Select } from "@/components/ui/Select";
 import { FormField } from "@/components/forms/FormField";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { cn } from "@/lib/utils";
 import { Zap, Sparkles, Layers, Globe } from "lucide-react";
 import { FileUpload, type ContextFile } from "./FileUpload";
 
@@ -49,6 +50,9 @@ export function OptimizeForm({
     const [context, setContext] = React.useState(initialData?.context || "");
     const [contextFiles, setContextFiles] = React.useState<ContextFile[]>(initialData?.contextFiles || []);
     const [useOrchestration, setUseOrchestration] = React.useState(initialData?.useOrchestration || false);
+    const [progressStage, setProgressStage] = React.useState(0);
+
+    const STAGES = ["Analyzing...", "Optimizing...", "Validating...", "Complete!"];
 
     // Update form when initialData changes (for edit mode)
     React.useEffect(() => {
@@ -61,6 +65,22 @@ export function OptimizeForm({
             setUseOrchestration(initialData.useOrchestration || false);
         }
     }, [initialData]);
+
+    // Progress animation logic
+    React.useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isLoading) {
+            setProgressStage(0);
+            interval = setInterval(() => {
+                setProgressStage((prev) => (prev < STAGES.length - 2 ? prev + 1 : prev));
+            }, 1500);
+        } else if (progressStage > 0) {
+            setProgressStage(3);
+            const timeout = setTimeout(() => setProgressStage(0), 2000);
+            return () => clearTimeout(timeout);
+        }
+        return () => clearInterval(interval);
+    }, [isLoading]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -76,151 +96,187 @@ export function OptimizeForm({
     };
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center">
-                    <Zap className="h-5 w-5 mr-2 text-primary" />
-                    Optimize Your Prompt
-                </CardTitle>
-                <CardDescription>
-                    Enter your prompt below and we'll transform it for maximum effectiveness.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
+        <Card className="relative p-0.5 overflow-hidden glass rounded-[20px] shadow-2xl group/card">
+            {/* Animated Gradient Border Layer */}
+            <div className="absolute inset-0 bg-gradient-to-r from-electric-cyan via-sunset-orange to-electric-cyan bg-[length:200%_auto] animate-[gradient_4s_linear_infinite] opacity-30 group-hover/card:opacity-60 transition-opacity duration-500" />
+
+            <CardContent className="relative bg-midnight/90 rounded-[18px] p-6 md:p-8 space-y-8">
+                {/* Header */}
+                <div className="flex flex-col space-y-2">
+                    <div className="flex items-center space-x-3">
+                        <span className="font-display text-4xl text-white tracking-widest uppercase glow-md">Eloquo</span>
+                        <div className="h-px flex-1 bg-gradient-to-r from-electric-cyan/50 to-transparent" />
+                    </div>
+                    <p className="text-dusty-rose text-sm font-medium tracking-wide">
+                        ENTER YOUR PROMPT BELOW FOR BIOLUMINESCENT OPTIMIZATION
+                    </p>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-8">
                     {/* Prompt Input */}
-                    <div>
-                        <div className="flex justify-between items-center mb-2">
-                            <label className="text-sm font-medium">
-                                Your Prompt <span className="text-destructive">*</span>
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-end">
+                            <label className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em]">
+                                Input Prompt <span className="text-terracotta">*</span>
                             </label>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <span className="text-[10px] text-dusty-rose/60 flex items-center gap-1.5 uppercase tracking-wider">
                                 <Globe className="h-3 w-3" />
-                                Works in any language
+                                Multilingual Engine Active
                             </span>
                         </div>
-                        <Textarea
-                            placeholder="Enter your prompt here... Be as detailed as you like. We'll help structure it for the best results."
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            rows={6}
-                            className="resize-none"
-                        />
-                        <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                            <span>{prompt.length} characters</span>
-                            <span>~{Math.ceil(prompt.length / 4)} tokens</span>
+
+                        <div className="relative group">
+                            <Textarea
+                                placeholder="What would you like to build today?"
+                                value={prompt}
+                                onChange={(e) => setPrompt(e.target.value)}
+                                rows={8}
+                                className="resize-none bg-midnight border-electric-cyan/20 focus:border-electric-cyan focus:ring-4 focus:ring-electric-cyan/5 text-white placeholder:text-dusty-rose/30 rounded-xl transition-all duration-300 py-4 px-5 text-lg leading-relaxed shadow-inner"
+                            />
+                            <div className="absolute bottom-4 right-4 flex items-center space-x-4">
+                                <span className="text-[10px] font-mono text-dusty-rose/40 uppercase tracking-tighter">
+                                    {prompt.length} CHR / ~{Math.ceil(prompt.length / 4)} TOK
+                                </span>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Model and Strength Row */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField label="Target Model">
-                            <Select
-                                value={targetModel}
-                                onChange={(e) => setTargetModel(e.target.value)}
-                            >
-                                {TARGET_MODELS.map((model) => (
-                                    <option key={model.value} value={model.value}>
-                                        {model.icon} {model.label}
-                                    </option>
-                                ))}
-                            </Select>
-                        </FormField>
+                    {/* Controls Section */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+                        <div className="space-y-4">
+                            <label className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em]">
+                                Target Model
+                            </label>
+                            <div className="relative">
+                                <Select
+                                    value={targetModel}
+                                    onChange={(e) => setTargetModel(e.target.value)}
+                                    className="w-full bg-deep-teal/20 border-electric-cyan/20 text-white rounded-xl h-12 hover:bg-deep-teal/40 transition-colors cursor-pointer"
+                                >
+                                    {TARGET_MODELS.map((model) => (
+                                        <option key={model.value} value={model.value} className="bg-midnight">
+                                            {model.icon} {model.label}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </div>
+                        </div>
 
-                        <FormField label="Optimization Strength">
-                            <div className="flex space-x-2">
+                        <div className="space-y-4">
+                            <label className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em]">
+                                Optimization Strength
+                            </label>
+                            <div className="flex bg-deep-teal/20 border border-electric-cyan/20 p-1 rounded-xl h-12">
                                 {STRENGTH_OPTIONS.map((option) => (
                                     <button
                                         key={option.value}
                                         type="button"
                                         onClick={() => setStrength(option.value)}
-                                        className={`flex-1 p-2 rounded-lg border text-sm font-medium transition-all ${strength === option.value
-                                            ? "bg-primary text-primary-foreground border-primary"
-                                            : "bg-background hover:bg-muted border-input"
+                                        className={`flex-1 rounded-lg text-xs font-bold uppercase tracking-widest transition-all duration-300 ${strength === option.value
+                                            ? "bg-electric-cyan text-midnight shadow-[0_0_15px_rgba(9,183,180,0.4)]"
+                                            : "text-dusty-rose hover:text-white"
                                             }`}
                                     >
                                         {option.label}
                                     </button>
                                 ))}
                             </div>
-                        </FormField>
+                        </div>
                     </div>
 
-                    {/* Optional Context */}
-                    <FormField
-                        label="Additional Context"
-                        description="Optional: Provide background information to help refine the optimization."
-                    >
-                        <Textarea
-                            placeholder="E.g., 'This is for a formal business proposal' or 'Target audience is students'"
-                            value={context}
-                            onChange={(e) => setContext(e.target.value)}
-                            rows={2}
-                            className="resize-none"
-                        />
-                    </FormField>
+                    {/* Context and Files */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                        <div className="space-y-4">
+                            <label className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em]">
+                                Additional Context
+                            </label>
+                            <Textarea
+                                placeholder="E.g., 'Target audience is students'"
+                                value={context}
+                                onChange={(e) => setContext(e.target.value)}
+                                rows={3}
+                                className="resize-none bg-deep-teal/10 border-electric-cyan/10 focus:border-electric-cyan/30 text-white placeholder:text-dusty-rose/20 rounded-xl transition-all"
+                            />
+                        </div>
+                        <div className="space-y-4">
+                            <label className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em]">
+                                Reference Materials
+                            </label>
+                            <FileUpload
+                                onFilesChange={setContextFiles}
+                                disabled={isLoading}
+                            />
+                        </div>
+                    </div>
 
-                    {/* File Upload */}
-                    <FileUpload
-                        onFilesChange={setContextFiles}
-                        disabled={isLoading}
-                    />
-
-                    {/* Orchestration Toggle */}
-                    {canOrchestrate && (
-                        <div
-                            className={`p-4 rounded-lg border cursor-not-allowed transition-all opacity-60 bg-muted/30 border-input`}
-                        >
-                            <div className="flex items-start space-x-3">
+                    {/* Energy Bar Progress Animation */}
+                    <div className={cn(
+                        "transition-all duration-500 overflow-hidden",
+                        isLoading || progressStage > 0 ? "h-12 opacity-100" : "h-0 opacity-0"
+                    )}>
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center px-1">
+                                <span className="text-[10px] font-bold text-electric-cyan animate-pulse tracking-[0.2em] uppercase">
+                                    {STAGES[progressStage]}
+                                </span>
+                                <span className="text-[10px] font-mono text-white/40">
+                                    {isLoading ? "PHASE IN PROGRESS" : "COMPLETE"}
+                                </span>
+                            </div>
+                            <div className="h-1.5 w-full bg-deep-teal rounded-full overflow-hidden relative">
                                 <div
-                                    className={`h-5 w-5 rounded border-2 flex items-center justify-center mt-0.5 border-input`}
-                                >
-                                    {/* Unchecked state for disabled */}
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center space-x-2">
-                                        <Layers className="h-4 w-4 text-muted-foreground" />
-                                        <span className="font-medium text-sm text-muted-foreground">Use Orchestration</span>
-                                        <Badge variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/20">Coming Soon</Badge>
+                                    className="absolute inset-0 bg-gradient-to-r from-electric-cyan via-sunset-orange to-electric-cyan bg-[length:50%_100%] animate-[shimmer_1.5s_linear_infinite] rounded-full"
+                                    style={{
+                                        width: isLoading ? '100%' : '100%',
+                                        left: isLoading ? '0' : '0'
+                                    }}
+                                />
+                                {isLoading && (
+                                    <div className="absolute inset-0 flex items-center justify-around opacity-40">
+                                        {[...Array(20)].map((_, i) => (
+                                            <div key={i} className="h-full w-0.5 bg-white/20 blur-[1px] animate-pulse" style={{ animationDelay: `${i * 0.1}s` }} />
+                                        ))}
                                     </div>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        For complex tasks. Breaks your request into multiple targeted prompts. (Premium Feature)
-                                    </p>
-                                </div>
+                                )}
                             </div>
                         </div>
-                    )}
+                    </div>
 
-                    {/* Submit Button */}
-                    <div className="flex items-center justify-between pt-4">
-                        <div className="text-xs text-muted-foreground">
-                            {useOrchestration ? (
-                                <span className="flex items-center">
-                                    <Sparkles className="h-3 w-3 mr-1 text-primary" />
-                                    Uses premium credits for each segment
-                                </span>
-                            ) : (
-                                <span>Uses 1 optimization credit</span>
-                            )}
+                    {/* Footer & Submit */}
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-4 border-t border-electric-cyan/10">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-dusty-rose uppercase tracking-[0.1em]">Cost Structure</span>
+                            <div className="flex items-center mt-1">
+                                {useOrchestration ? (
+                                    <span className="flex items-center text-xs text-electric-cyan font-bold">
+                                        <Sparkles className="h-3 w-3 mr-1.5" />
+                                        PREMIUM ORCHESTRATION ACTIVE
+                                    </span>
+                                ) : (
+                                    <span className="text-xs text-white font-medium flex items-center">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-electric-cyan mr-2 animate-ping" />
+                                        1 STANDARD OPTIMIZATION CREDIT
+                                    </span>
+                                )}
+                            </div>
                         </div>
+
                         <Button
                             type="submit"
                             size="lg"
-                            isLoading={isLoading}
-                            disabled={!canOptimize || !prompt.trim()}
+                            className="w-full md:w-auto h-14 px-12 rounded-xl btn-gradient text-lg tracking-widest uppercase glow-sm hover:glow-md active:scale-95 transition-all"
+                            disabled={!canOptimize || !prompt.trim() || isLoading}
                         >
                             {isLoading ? (
-                                "⏳ Optimizing..."
-                            ) : useOrchestration ? (
-                                <>
-                                    <Layers className="h-4 w-4 mr-2" />
-                                    Orchestrate
-                                </>
+                                <div className="flex items-center space-x-2">
+                                    <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    <span>ENERGIZING...</span>
+                                </div>
                             ) : (
-                                <>
-                                    <Zap className="h-4 w-4 mr-2" />
+                                <div className="flex items-center">
+                                    <Zap className="h-5 w-5 mr-3 fill-current" />
                                     Optimize
-                                </>
+                                </div>
                             )}
                         </Button>
                     </div>

@@ -20,13 +20,13 @@ export function SidebarNavItem({ href, icon: Icon, label, isCollapsed }: Sidebar
         <Link
             href={href}
             className={cn(
-                "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors group relative",
+                "flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-300 group relative",
                 isActive
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-electric-cyan/10 text-electric-cyan shadow-[0_0_15px_rgba(9,183,180,0.2)] border border-electric-cyan/20"
+                    : "text-dusty-rose hover:text-white hover:bg-electric-cyan/5"
             )}
         >
-            <Icon className={cn("h-5 w-5 shrink-0", isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground")} />
+            <Icon className={cn("h-5 w-5 shrink-0 transition-colors duration-300", isActive ? "text-electric-cyan" : "text-dusty-rose group-hover:text-white")} />
             {!isCollapsed && (
                 <span className="font-medium text-sm transition-opacity duration-300">
                     {label}

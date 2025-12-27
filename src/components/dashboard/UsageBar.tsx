@@ -24,23 +24,23 @@ export function UsageBar({
     return (
         <div className={cn("space-y-1", className)}>
             {(label || showNumbers) && (
-                <div className="flex items-center justify-between text-xs">
-                    {label && <span className="text-muted-foreground">{label}</span>}
+                <div className="flex items-center justify-between text-[10px] uppercase tracking-wider">
+                    {label && <span className="text-dusty-rose font-semibold">{label}</span>}
                     {showNumbers && (
                         <span className={cn(
-                            "font-medium",
-                            isAtLimit ? "text-destructive" : isNearLimit ? "text-warning" : "text-foreground"
+                            "font-bold",
+                            isAtLimit ? "text-terracotta" : isNearLimit ? "text-sunset-orange" : "text-electric-cyan"
                         )}>
                             {limit === Infinity ? `${used} used` : `${used}/${limit}`}
                         </span>
                     )}
                 </div>
             )}
-            <div className="relative h-2 w-full bg-muted rounded-full overflow-hidden">
+            <div className="relative h-1.5 w-full bg-deep-teal rounded-full overflow-hidden shadow-inner">
                 <div
                     className={cn(
-                        "absolute top-0 left-0 h-full rounded-full transition-all duration-300",
-                        isAtLimit ? "bg-destructive" : isNearLimit ? "bg-warning" : "bg-primary"
+                        "absolute top-0 left-0 h-full rounded-full transition-all duration-500",
+                        isAtLimit ? "bg-terracotta" : isNearLimit ? "bg-sunset-orange" : "bg-electric-cyan shadow-[0_0_10px_rgba(9,183,180,0.5)]"
                     )}
                     style={{ width: `${percentage}%` }}
                 />
