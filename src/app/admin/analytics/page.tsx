@@ -48,9 +48,9 @@ export default function AdminAnalyticsPage() {
             if (daily.success) setDailyData(daily.data || []);
             if (users.success) setTopUsers(users.data || []);
             if (models.success) setModelStats(models.data || []);
-            if (balance.success) {
+            if (balance.success && balance.data) {
                 setBalanceData(balance.data);
-                setNewBalance(balance.data?.balance?.toString() || "0");
+                setNewBalance(balance.data.balance !== null ? balance.data.balance.toString() : "0");
             }
         } catch (error) {
             console.error("Failed to fetch analytics data:", error);
@@ -87,9 +87,21 @@ export default function AdminAnalyticsPage() {
         }
     };
 
-    const estOptimizationsRemaining = balanceData?.balance && dashboardStats?.avg_cost_per_optimization
+    const estOptimizationsRemaining = balanceData?.balance && dashboardStats?.avg_cost_per_optimization && dashboardStats.avg_cost_per_optimization > 0
         ? Math.floor(balanceData.balance / dashboardStats.avg_cost_per_optimization)
         : 0;
+
+    // Business Health Calculations
+    const dailyBurnRate = (dashboardStats?.cost_this_week || 0) / 7;
+    const projectedRunway = dailyBurnRate > 0 ? Math.floor((balanceData?.balance || 0) / dailyBurnRate) : "∞";
+    const costPerOptimization = dashboardStats?.total_optimizations > 0
+        ? (dashboardStats.total_cost_usd / dashboardStats.total_optimizations)
+        : 0;
+
+    // Pro Tier Margin: ($9 / 200) - avg_cost_per_optimization
+    const proRevenuePerOpt = 9 / 200; // $0.045
+    const proMarginPerOpt = proRevenuePerOpt - (dashboardStats?.avg_cost_per_optimization || 0);
+    const proMarginPercent = proRevenuePerOpt > 0 ? (proMarginPerOpt / proRevenuePerOpt) * 100 : 0;
 
     return (
         <div className="space-y-6">
@@ -128,61 +140,94 @@ export default function AdminAnalyticsPage() {
                 </Button>
             </div>
 
-            {/* OpenRouter Balance Card */}
-            <Card className="glass border-electric-cyan/20 overflow-hidden relative">
-                <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-                    <Wallet className="h-32 w-32 text-electric-cyan" />
-                </div>
-                <CardContent className="p-6 relative z-10">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                        <div className="flex items-center gap-6">
-                            <div className="h-16 w-16 rounded-2xl bg-electric-cyan/10 flex items-center justify-center text-electric-cyan border border-electric-cyan/20">
-                                <DollarSign className="h-8 w-8" />
-                            </div>
-                            <div>
-                                <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1">OpenRouter Credits</p>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-4xl font-bold text-white font-mono">
-                                        ${balanceData?.balance?.toFixed(2) || "0.00"}
-                                    </span>
-                                    <span className="text-sm text-electric-cyan font-medium">Remaining</span>
-                                </div>
-                                <p className="text-white/40 text-[10px] mt-2">
-                                    Last checked: {balanceData?.last_checked ? new Date(balanceData.last_checked).toLocaleString() : 'Never'}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
-                            <div className="text-center sm:text-right">
-                                <p className="text-white/40 text-[10px] uppercase font-bold tracking-widest mb-1">Capacity</p>
-                                <p className="text-lg font-bold text-white">
-                                    ~{estOptimizationsRemaining.toLocaleString()}
-                                </p>
-                                <p className="text-white/40 text-[10px]">Est. Optimizations</p>
-                            </div>
-                            <div className="h-10 w-px bg-white/10 hidden sm:block mx-2" />
-                            <div className="flex items-center gap-2">
-                                <Input
-                                    type="number"
-                                    step="0.01"
-                                    value={newBalance}
-                                    onChange={(e) => setNewBalance(e.target.value)}
-                                    placeholder="Update balance..."
-                                    className="w-32 bg-midnight/50 border-white/10 text-white h-10"
-                                />
-                                <Button
-                                    onClick={handleUpdateBalance}
-                                    disabled={updatingBalance || !newBalance}
-                                    className="btn-gradient text-white text-xs font-bold uppercase h-10 px-4"
-                                >
-                                    Update
-                                </Button>
-                            </div>
-                        </div>
+            {/* OpenRouter Balance & Business Health Card */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2 glass border-electric-cyan/20 overflow-hidden relative">
+                    <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+                        <Wallet className="h-32 w-32 text-electric-cyan" />
                     </div>
-                </CardContent>
-            </Card>
+                    <CardContent className="p-6 relative z-10">
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-8 h-full">
+                            <div className="flex items-center gap-6">
+                                <div className="h-16 w-16 rounded-2xl bg-electric-cyan/10 flex items-center justify-center text-electric-cyan border border-electric-cyan/20">
+                                    <DollarSign className="h-8 w-8" />
+                                </div>
+                                <div>
+                                    <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1">OpenRouter Credits</p>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-4xl font-bold text-white font-mono">
+                                            ${balanceData?.balance !== null ? balanceData?.balance?.toFixed(2) : "0.00"}
+                                        </span>
+                                        <span className="text-sm text-electric-cyan font-medium">Remaining</span>
+                                    </div>
+                                    <p className="text-white/40 text-[10px] mt-2">
+                                        Last checked: {balanceData?.last_checked ? new Date(balanceData.last_checked).toLocaleString() : 'Never'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                                <div className="text-center sm:text-right">
+                                    <p className="text-white/40 text-[10px] uppercase font-bold tracking-widest mb-1">Capacity</p>
+                                    <p className="text-lg font-bold text-white">
+                                        ~{estOptimizationsRemaining.toLocaleString()}
+                                    </p>
+                                    <p className="text-white/40 text-[10px]">Est. Optimizations</p>
+                                </div>
+                                <div className="h-10 w-px bg-white/10 hidden sm:block mx-2" />
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        value={newBalance}
+                                        onChange={(e) => setNewBalance(e.target.value)}
+                                        placeholder="Update balance..."
+                                        className="w-32 bg-midnight/50 border-white/10 text-white h-10"
+                                    />
+                                    <Button
+                                        onClick={() => handleUpdateBalance()}
+                                        disabled={updatingBalance || !newBalance}
+                                        className="btn-gradient text-white text-xs font-bold uppercase h-10 px-4"
+                                    >
+                                        Update
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Business Health Summary */}
+                <Card className="glass border-white/10 overflow-hidden">
+                    <CardHeader className="pb-2 border-b border-white/5">
+                        <CardTitle className="text-sm font-bold text-white flex items-center gap-2 italic uppercase tracking-wider">
+                            <Activity className="h-4 w-4 text-electric-cyan" />
+                            Business Health
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 space-y-3">
+                        <div className="flex justify-between items-center group">
+                            <span className="text-[10px] text-white/40 uppercase font-bold tracking-widest transition-colors group-hover:text-white/60">Daily Burn Rate</span>
+                            <span className="text-sm font-mono text-white">${dailyBurnRate.toFixed(2)}/day</span>
+                        </div>
+                        <div className="flex justify-between items-center group">
+                            <span className="text-[10px] text-white/40 uppercase font-bold tracking-widest transition-colors group-hover:text-white/60">Projected Runway</span>
+                            <span className="text-sm font-mono text-electric-cyan">{projectedRunway} days</span>
+                        </div>
+                        <div className="flex justify-between items-center group border-t border-white/5 pt-3">
+                            <span className="text-[10px] text-white/40 uppercase font-bold tracking-widest transition-colors group-hover:text-white/60">Cost/Optimization</span>
+                            <span className="text-sm font-mono text-white">${costPerOptimization.toFixed(3)}</span>
+                        </div>
+                        <div className="flex justify-between items-center group">
+                            <span className="text-[10px] text-white/40 uppercase font-bold tracking-widest transition-colors group-hover:text-white/60">Pro Margin/Opt</span>
+                            <div className="text-right">
+                                <p className="text-sm font-mono text-green-400">${proMarginPerOpt.toFixed(3)}</p>
+                                <p className="text-[9px] text-green-400/60 font-medium">({isNaN(proMarginPercent) ? '0' : proMarginPercent.toFixed(1)}%)</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
 
             {/* Stats Row - Core Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -298,20 +343,23 @@ export default function AdminAnalyticsPage() {
                     </div>
                     <div className="space-y-4">
                         {modelStats.length > 0 ? (
-                            modelStats.map((model) => (
-                                <div key={model.model_name} className="space-y-2">
-                                    <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest">
-                                        <span className="text-white/60">{model.model_name}</span>
-                                        <span className="text-white">{model.usage_count.toLocaleString()} ({Math.round(model.percentage)}%)</span>
+                            modelStats.map((model) => {
+                                const percentage = model.percentage || 0;
+                                return (
+                                    <div key={model.model_name} className="space-y-2">
+                                        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest">
+                                            <span className="text-white/60">{model.model_name}</span>
+                                            <span className="text-white">{model.usage_count.toLocaleString()} ({isNaN(percentage) ? '0' : Math.round(percentage)}%)</span>
+                                        </div>
+                                        <div className="h-2 bg-white/5 rounded-full overflow-hidden border border-white/5 p-[1px]">
+                                            <div
+                                                className="h-full bg-gradient-to-r from-electric-cyan to-electric-cyan/60 rounded-full"
+                                                style={{ width: `${isNaN(percentage) ? 0 : percentage}%` }}
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="h-2 bg-white/5 rounded-full overflow-hidden border border-white/5 p-[1px]">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-electric-cyan to-electric-cyan/60 rounded-full"
-                                            style={{ width: `${model.percentage}%` }}
-                                        />
-                                    </div>
-                                </div>
-                            ))
+                                );
+                            })
                         ) : (
                             <div className="h-48 flex items-center justify-center text-white/20 text-xs italic border border-dashed border-white/5 rounded-lg">
                                 Pending model usage data...
@@ -332,24 +380,28 @@ export default function AdminAnalyticsPage() {
                     <div className="grid grid-cols-2 gap-4">
                         <div className="p-4 bg-midnight/30 border border-white/5 rounded-xl">
                             <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest mb-1">Total Tokens</p>
-                            <p className="text-xl font-bold text-white font-mono">{(dashboardStats?.total_tokens / 1000).toFixed(1)}k</p>
+                            <p className="text-xl font-bold text-white font-mono">{dashboardStats?.total_tokens ? (dashboardStats.total_tokens / 1000).toFixed(1) : '0.0'}k</p>
                         </div>
                         <div className="p-4 bg-midnight/30 border border-white/5 rounded-xl">
                             <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest mb-1">Cost per 1k</p>
                             <p className="text-xl font-bold text-electric-cyan font-mono">
-                                ${((dashboardStats?.total_cost_usd / (dashboardStats?.total_tokens / 1000 + 0.001)) || 0).toFixed(4)}
+                                ${((dashboardStats?.total_cost_usd || 0) / ((dashboardStats?.total_tokens || 0) / 1000 + 0.000001)).toFixed(4)}
                             </p>
                         </div>
                         <div className="p-4 bg-midnight/30 border border-white/5 rounded-xl">
                             <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest mb-1">Input Density</p>
                             <p className="text-xl font-bold text-white font-mono">
-                                {Math.round((dashboardStats?.total_tokens_input / (dashboardStats?.total_tokens || 1)) * 100)}%
+                                {dashboardStats?.total_tokens > 0
+                                    ? Math.round((dashboardStats.total_tokens_input / dashboardStats.total_tokens) * 100)
+                                    : 0}%
                             </p>
                         </div>
                         <div className="p-4 bg-midnight/30 border border-white/5 rounded-xl">
                             <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest mb-1">Savings ROI</p>
                             <p className="text-xl font-bold text-green-400 font-mono">
-                                {Math.round((dashboardStats?.total_tokens_saved / (dashboardStats?.total_tokens_optimized || 1)) * 100)}%
+                                {dashboardStats?.total_tokens_optimized > 0
+                                    ? Math.round((dashboardStats.total_tokens_saved / dashboardStats.total_tokens_optimized) * 100)
+                                    : 0}%
                             </p>
                         </div>
                     </div>
