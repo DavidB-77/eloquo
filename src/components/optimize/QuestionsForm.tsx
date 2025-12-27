@@ -12,7 +12,7 @@ interface ClarificationQuestion {
     id: string;
     question: string;
     type: "select" | "text";
-    options?: Array<{ value: string; label: string }>;
+    options?: Array<string | { value: string; label: string }>;
 }
 
 interface QuestionsFormProps {
@@ -106,11 +106,15 @@ export function QuestionsForm({
                                         onChange={(e) => handleAnswerChange(question.id, e.target.value)}
                                     >
                                         <option value="">Select an option...</option>
-                                        {question.options.map((option) => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label}
-                                            </option>
-                                        ))}
+                                        {question.options.map((option, idx) => {
+                                            const value = typeof option === "string" ? option : option.value;
+                                            const label = typeof option === "string" ? option : option.label;
+                                            return (
+                                                <option key={value || idx} value={value}>
+                                                    {label}
+                                                </option>
+                                            );
+                                        })}
                                     </Select>
                                 ) : (
                                     <Input

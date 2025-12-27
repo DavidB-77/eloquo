@@ -70,7 +70,7 @@ export interface ClarificationQuestion {
     id: string;
     question: string;
     type: 'select' | 'text';
-    options?: Array<{ value: string; label: string }>;
+    options?: Array<string | { value: string; label: string }>;
 }
 
 export interface NeedsClarificationResponse {
