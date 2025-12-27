@@ -57,7 +57,7 @@ export function CTASection() {
                             Initialize Your <span className="text-electric-cyan italic">Success</span> Sequence
                         </h2>
                         <p className="text-xl text-white/60 mb-12 max-w-2xl mx-auto font-medium leading-relaxed tracking-wide border-t border-b border-white/5 py-8">
-                            Join 1,000+ elite operators optimizing their AI workflows with Eloquo. Start for free today and see the results instantly.
+                            Start optimizing your prompts today with Eloquo. Join elite operators using neuro-optimization to master AI communication.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center space-y-6 sm:space-y-0 sm:space-x-8">
                             <Button size="lg" className="w-full sm:w-auto btn-gradient text-white text-xs font-bold uppercase tracking-[0.2em] px-12 h-16 rounded-xl glow-sm hover:glow-md transition-all" asChild>
@@ -73,7 +73,7 @@ export function CTASection() {
                             </div>
                             <div className="flex items-center space-x-2">
                                 <Zap className="h-3 w-3 text-electric-cyan" />
-                                <span>10 Free Cycles</span>
+                                <span>25 Free Cycles</span>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <Zap className="h-3 w-3 text-electric-cyan" />

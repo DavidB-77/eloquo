@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Navbar } from "@/components/landing/Navbar";
 import { HeroSection } from "@/components/landing/HeroSection";
-import { SocialProofBar } from "@/components/landing/SocialProofBar";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
@@ -33,7 +32,6 @@ export default function LandingPage() {
       <Navbar />
       <main>
         <HeroSection />
-        <SocialProofBar />
         <ProblemSection />
         <HowItWorksSection />
         <FeaturesSection />

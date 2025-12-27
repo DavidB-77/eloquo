@@ -69,7 +69,7 @@ export function HeroSection() {
                         </h1>
 
                         <p className="hero-description text-xl text-white/60 mb-10 max-w-2xl mx-auto font-medium leading-relaxed">
-                            Eloquo optimizes your raw prompts for ChatGPT, Claude, and Gemini. Get higher quality responses while reducing API token costs by up to 40%.
+                            Eloquo optimizes your raw prompts for ChatGPT, Claude, and Gemini. Get consistent, high-quality AI responses every single time.
                         </p>
 
                         <div className="hero-actions flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
@@ -85,8 +85,8 @@ export function HeroSection() {
 
                         <div className="hero-stats mt-16 flex items-center justify-center space-x-8 text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">
                             <div className="flex items-center space-x-2">
-                                <span className="text-white">10+</span>
-                                <span>Optimizations Free</span>
+                                <span className="text-white">25+</span>
+                                <span>Cycles Free</span>
                             </div>
                             <div className="w-px h-4 bg-electric-cyan/10" />
                             <div className="flex items-center space-x-2">
@@ -95,8 +95,8 @@ export function HeroSection() {
                             </div>
                             <div className="w-px h-4 bg-electric-cyan/10" />
                             <div className="flex items-center space-x-2">
-                                <span className="text-white">30%</span>
-                                <span>Cost Reduction</span>
+                                <span className="text-white">Elite</span>
+                                <span>Response Quality</span>
                             </div>
                         </div>
                     </div>

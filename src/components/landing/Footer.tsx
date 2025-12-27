@@ -39,25 +39,11 @@ export function Footer() {
                         </ul>
                     </div>
 
-                    {/* Company Links */}
-                    <div>
-                        <h4 className="font-display text-[10px] uppercase tracking-[0.3em] text-white mb-8">Entity</h4>
-                        <ul className="space-y-4 text-[11px] font-bold uppercase tracking-widest">
-                            <li><Link href="#" className="text-white/60 hover:text-white transition-colors">Mission</Link></li>
-                            <li><Link href="#" className="text-white/60 hover:text-white transition-colors">Contact</Link></li>
-                            <li><Link href="#" className="text-white/60 hover:text-white transition-colors">Privacy</Link></li>
-                            <li><Link href="#" className="text-white/60 hover:text-white transition-colors">Terms</Link></li>
-                        </ul>
-                    </div>
-
-                    {/* Resources Links */}
+                    {/* Support Links */}
                     <div>
                         <h4 className="font-display text-[10px] uppercase tracking-[0.3em] text-white mb-8">Intel</h4>
                         <ul className="space-y-4 text-[11px] font-bold uppercase tracking-widest">
-                            <li><Link href="#" className="text-white/60 hover:text-white transition-colors">Log</Link></li>
-                            <li><Link href="#" className="text-white/60 hover:text-white transition-colors">Docs</Link></li>
-                            <li><Link href="#" className="text-white/60 hover:text-white transition-colors">Guides</Link></li>
-                            <li><Link href="#faq" className="text-white/60 hover:text-white transition-colors">Support</Link></li>
+                            <li><Link href="#faq" className="text-white/60 hover:text-white transition-colors">Support (FAQ)</Link></li>
                         </ul>
                     </div>
                 </div>
