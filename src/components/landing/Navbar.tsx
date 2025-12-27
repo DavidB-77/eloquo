@@ -35,10 +35,7 @@ export function Navbar() {
         >
             <Container>
                 <div className="flex items-center justify-between">
-                    <Link href="/" className="flex items-center space-x-3 group">
-                        <div className="h-10 w-10 rounded-xl btn-gradient flex items-center justify-center shadow-[0_0_15px_rgba(9,183,180,0.3)] group-hover:shadow-[0_0_25px_rgba(9,183,180,0.5)] transition-all">
-                            <Zap className="h-6 w-6 text-white fill-current" />
-                        </div>
+                    <Link href="/" className="flex items-center space-x-3 group -ml-2">
                         <span className="text-2xl font-display tracking-widest text-white glow-sm group-hover:glow-md transition-all uppercase">ELOQUO</span>
                     </Link>
 

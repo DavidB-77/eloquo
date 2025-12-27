@@ -212,6 +212,7 @@
   h5,
   h6 {
     @apply font-display font-normal text-electric-cyan;
+    font-family: 'Comodo', ui-sans-serif, system-ui, sans-serif !important;
     text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
   }
 
