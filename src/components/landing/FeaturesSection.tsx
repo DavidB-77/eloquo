@@ -83,7 +83,7 @@ export function FeaturesSection() {
                         <Zap className="h-3 w-3 fill-current" />
                         <span>Core Matrix Modules</span>
                     </div>
-                    <h2 className="text-4xl md:text-6xl font-normal font-display tracking-tight mb-6 text-white uppercase glow-sm">
+                    <h2 className="text-4xl md:text-6xl font-normal font-display mb-6 text-white uppercase glow-sm">
                         Master AI Communication
                     </h2>
                     <p className="text-white/60 text-lg max-w-2xl mx-auto font-medium leading-relaxed tracking-wide">

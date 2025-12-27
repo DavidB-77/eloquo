@@ -85,7 +85,7 @@ export function FAQSection() {
             <Container>
                 <div className="max-w-4xl mx-auto">
                     <div className="faq-header text-center mb-24">
-                        <h2 className="text-4xl md:text-6xl font-normal font-display tracking-tight mb-6 text-white uppercase glow-sm">
+                        <h2 className="text-4xl md:text-6xl font-normal font-display mb-6 text-white uppercase glow-sm">
                             Knowledge <span className="text-electric-cyan italic">Base</span>
                         </h2>
                         <p className="text-white/60 text-lg max-w-xl mx-auto font-medium tracking-wide">

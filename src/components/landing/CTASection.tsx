@@ -53,7 +53,7 @@ export function CTASection() {
                     <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-sunset-orange/10 rounded-full blur-3xl" />
 
                     <div className="cta-content relative z-10">
-                        <h2 className="text-4xl md:text-7xl font-normal font-display tracking-tight mb-10 text-white uppercase glow-sm">
+                        <h2 className="text-4xl md:text-7xl font-normal font-display mb-10 text-white uppercase glow-sm">
                             Initialize Your <span className="text-electric-cyan italic">Success</span> Sequence
                         </h2>
                         <p className="text-xl text-white/60 mb-12 max-w-2xl mx-auto font-medium leading-relaxed tracking-wide border-t border-b border-white/5 py-8">

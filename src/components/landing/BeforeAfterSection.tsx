@@ -65,7 +65,7 @@ export function BeforeAfterSection() {
         <section ref={sectionRef} className="py-32 relative overflow-hidden">
             <Container>
                 <div className="compare-header text-center mb-24">
-                    <h2 className="text-4xl md:text-6xl font-normal font-display tracking-tight mb-6 text-white uppercase glow-sm">
+                    <h2 className="text-4xl md:text-6xl font-normal font-display mb-6 text-white uppercase glow-sm">
                         Optimization <span className="text-electric-cyan italic">Comparison</span>
                     </h2>
                     <p className="text-white/60 text-lg max-w-2xl mx-auto font-medium tracking-wide">
