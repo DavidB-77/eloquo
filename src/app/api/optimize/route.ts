@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { callOptimize, type OptimizeRequest } from '@/lib/n8n';
 import { checkUsageLimits, incrementUsage, saveToHistory, getUserUsage } from '@/lib/usage';
+import { calculateTokenSavings } from '@/lib/tokenizer';
 
 export async function POST(request: Request) {
     try {
@@ -106,18 +107,39 @@ export async function POST(request: Request) {
                     .eq('id', user.id);
             }
 
-            // Save to history
-            await saveToHistory(
-                user.id,
-                prompt,
-                result.results.full,
-                targetModel,
-                strength,
-                false, // not orchestrated
-                null,  // no segments
-                result.improvements,
-                result.metrics
-            );
+            // Save to history using updated RPC
+            try {
+                // Calculate tokens
+                const tokenData = calculateTokenSavings(
+                    prompt,
+                    result.results.full,
+                    targetModel
+                );
+
+                const { error: saveError } = await supabase.rpc('save_optimization', {
+                    p_user_id: user.id,
+                    p_original_prompt: prompt,
+                    p_optimized_prompt: result.results.full,
+                    p_target_model: targetModel,
+                    p_strength: strength,
+                    p_tokens_original: tokenData.original,
+                    p_tokens_optimized: tokenData.optimized,
+                    p_tokens_saved: tokenData.saved,
+                    p_improvements: result.improvements || [],
+                    p_metrics: result.metrics || {},
+                    p_quick_reference: result.results.quickRef || null,
+                    p_snippet: result.results.snippet || null,
+                    p_was_orchestrated: false,
+                    p_segments: null,
+                    p_segments_count: 0,
+                });
+
+                if (saveError) {
+                    console.error('Failed to save optimization:', saveError);
+                }
+            } catch (saveError) {
+                console.error('Error saving optimization:', saveError);
+            }
         }
 
         // 8. Return result

@@ -10,13 +10,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Zap, Sparkles, Layers, Globe } from "lucide-react";
 import { FileUpload, type ContextFile } from "./FileUpload";
 
-const TARGET_MODELS = [
-    { value: "universal", label: "Universal (Best for all models)" },
-    { value: "chatgpt", label: "ChatGPT (GPT-4o)" },
-    { value: "claude", label: "Claude (Sonnet/Opus)" },
-    { value: "gemini", label: "Gemini (Pro/Flash)" },
-    { value: "cursor", label: "Cursor (Coding IDE)" },
-];
+import { TARGET_MODELS } from "@/lib/constants/models";
+// Remove local TARGET_MODELS definition
 
 const STRENGTH_OPTIONS = [
     { value: "light", label: "Light", description: "Subtle improvements" },
@@ -126,7 +121,7 @@ export function OptimizeForm({
                             >
                                 {TARGET_MODELS.map((model) => (
                                     <option key={model.value} value={model.value}>
-                                        {model.label}
+                                        {model.icon} {model.label}
                                     </option>
                                 ))}
                             </Select>
@@ -140,8 +135,8 @@ export function OptimizeForm({
                                         type="button"
                                         onClick={() => setStrength(option.value)}
                                         className={`flex-1 p-2 rounded-lg border text-sm font-medium transition-all ${strength === option.value
-                                                ? "bg-primary text-primary-foreground border-primary"
-                                                : "bg-background hover:bg-muted border-input"
+                                            ? "bg-primary text-primary-foreground border-primary"
+                                            : "bg-background hover:bg-muted border-input"
                                             }`}
                                     >
                                         {option.label}
@@ -175,8 +170,8 @@ export function OptimizeForm({
                     {canOrchestrate && (
                         <div
                             className={`p-4 rounded-lg border cursor-pointer transition-all ${useOrchestration
-                                    ? "bg-primary/5 border-primary"
-                                    : "bg-muted/30 border-input hover:border-muted-foreground"
+                                ? "bg-primary/5 border-primary"
+                                : "bg-muted/30 border-input hover:border-muted-foreground"
                                 }`}
                             onClick={() => setUseOrchestration(!useOrchestration)}
                         >

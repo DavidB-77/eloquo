@@ -9,65 +9,56 @@ const PAGE_SIZE = 20;
 export async function GET(request: Request) {
     try {
         const supabase = await createClient();
+
+        // Get current user
         const { data: { user }, error: authError } = await supabase.auth.getUser();
 
         if (authError || !user) {
-            return NextResponse.json(
-                { success: false, error: 'Unauthorized' },
-                { status: 401 }
-            );
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Parse query params
         const { searchParams } = new URL(request.url);
-        const page = parseInt(searchParams.get('page') || '1');
-        const search = searchParams.get('search') || '';
+        const limit = parseInt(searchParams.get('limit') || '50');
+        const offset = parseInt(searchParams.get('offset') || '0');
 
-        // Get total count for pagination
-        let countQuery = supabase
-            .from('optimizations')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', user.id);
+        // Fetch history using RPC function
+        const { data: history, error: historyError } = await supabase.rpc(
+            'get_optimization_history',
+            {
+                p_user_id: user.id,
+                p_limit: limit,
+                p_offset: offset,
+            }
+        );
 
-        if (search) {
-            countQuery = countQuery.ilike('original_prompt', `%${search}%`);
+        if (historyError) {
+            console.error('History fetch error:', historyError);
+            return NextResponse.json({ error: 'Failed to fetch history' }, { status: 500 });
         }
 
-        const { count } = await countQuery;
-        const totalPages = Math.ceil((count || 0) / PAGE_SIZE);
-
-        // Get paginated results
-        let dataQuery = supabase
-            .from('optimizations')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
-            .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
-
-        if (search) {
-            dataQuery = dataQuery.ilike('original_prompt', `%${search}%`);
-        }
-
-        const { data: optimizations, error } = await dataQuery;
-
-        if (error) {
-            throw error;
-        }
+        // Get user stats
+        const { data: stats, error: statsError } = await supabase.rpc(
+            'get_user_optimization_stats',
+            { p_user_id: user.id }
+        );
 
         return NextResponse.json({
             success: true,
-            data: {
-                optimizations: optimizations || [],
-                currentPage: page,
-                totalPages,
-                totalCount: count || 0,
+            history: history || [],
+            stats: stats?.[0] || {
+                total_optimizations: 0,
+                total_tokens_saved: 0,
+                avg_savings_percent: 0,
+            },
+            pagination: {
+                limit,
+                offset,
+                hasMore: (history?.length || 0) === limit,
             },
         });
-
     } catch (error) {
         console.error('History API error:', error);
-        return NextResponse.json(
-            { success: false, error: 'Internal server error' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

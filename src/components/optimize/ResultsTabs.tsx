@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Copy, Check, ChevronDown, FileText, FileCode, FileJson, File, Lightbulb, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { calculateTokenSavings } from "@/lib/tokenizer";
+import { TokenInfoTooltip } from "./TokenInfoTooltip";
 
 type TabType = "full" | "quickRef" | "snippet";
 
@@ -20,6 +22,7 @@ interface ResultsTabsProps {
         optimizedTokens: number;
         tokensSaved: number;
         percentageSaved: number;
+        accuracy?: number;
     };
     targetModel: string;
     onStartNew: () => void;
@@ -143,10 +146,24 @@ export function ResultsTabs({
                 </div>
                 <div className="flex items-center justify-between">
                     {metrics && (
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            Saved {metrics.tokensSaved} tokens ({metrics.percentageSaved}%)
-                            <Check className="h-3.5 w-3.5 text-primary" />
-                        </p>
+                        <div className="flex items-center gap-2">
+                            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                <span className="text-green-600 font-medium">
+                                    Saved ~{metrics.tokensSaved} tokens ({metrics.percentageSaved}%)
+                                </span>
+                                {metrics.accuracy && (
+                                    <span className="text-xs text-gray-500">
+                                        ±{100 - metrics.accuracy}%
+                                    </span>
+                                )}
+                            </p>
+                            {metrics.accuracy && (
+                                <TokenInfoTooltip
+                                    targetModel={targetModel}
+                                    accuracy={metrics.accuracy}
+                                />
+                            )}
+                        </div>
                     )}
                     {validation && (
                         <Badge
