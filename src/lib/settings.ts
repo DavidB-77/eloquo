@@ -1,0 +1,122 @@
+import { createClient } from "@/lib/supabase/client";
+
+export type PricingTier = {
+    monthly_price: number;
+    annual_price: number;
+    optimizations: number;
+    history_days: number;
+    api_access: boolean;
+    support: string;
+};
+
+export type PricingConfig = {
+    basic: PricingTier;
+    pro: PricingTier;
+    business: PricingTier;
+};
+
+export type Wave = {
+    wave: number;
+    spots: number;
+    pro_price: number;
+    business_price: number;
+};
+
+export type FoundingMemberConfig = {
+    enabled: boolean;
+    total_limit: number;
+    current_count: number;
+    applies_to: string[];
+    waves: Wave[];
+};
+
+export type AnnualDiscountConfig = {
+    enabled: boolean;
+    percent: number;
+};
+
+const DEFAULT_PRICING: PricingConfig = {
+    basic: {
+        monthly_price: 7,
+        annual_price: 70,
+        optimizations: 150,
+        history_days: 30,
+        api_access: false,
+        support: "email"
+    },
+    pro: {
+        monthly_price: 15,
+        annual_price: 150,
+        optimizations: 400,
+        history_days: 90,
+        api_access: true,
+        support: "priority"
+    },
+    business: {
+        monthly_price: 35,
+        annual_price: 350,
+        optimizations: 1000,
+        history_days: 0,
+        api_access: true,
+        support: "dedicated"
+    }
+};
+
+const DEFAULT_FOUNDING: FoundingMemberConfig = {
+    enabled: true,
+    total_limit: 500,
+    current_count: 87, // Simulate some usage for demo
+    applies_to: ["pro", "business"],
+    waves: [
+        { wave: 1, spots: 100, pro_price: 9, business_price: 20 },
+        { wave: 2, spots: 200, pro_price: 11, business_price: 25 },
+        { wave: 3, spots: 200, pro_price: 13, business_price: 30 }
+    ]
+};
+
+const DEFAULT_ANNUAL: AnnualDiscountConfig = {
+    enabled: true,
+    percent: 17
+};
+
+export async function getPricingConfig(): Promise<PricingConfig> {
+    const supabase = createClient();
+    const { data } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'pricing_tiers')
+        .single();
+
+    return data?.value || DEFAULT_PRICING;
+}
+
+export async function getFoundingMemberConfig(): Promise<FoundingMemberConfig> {
+    const supabase = createClient();
+    const { data } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'founding_member')
+        .single();
+
+    return data?.value || DEFAULT_FOUNDING;
+}
+
+export async function getAnnualDiscountConfig(): Promise<AnnualDiscountConfig> {
+    const supabase = createClient();
+    const { data } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'annual_discount')
+        .single();
+
+    return data?.value || DEFAULT_ANNUAL;
+}
+
+export async function updateSystemSetting(key: string, value: any) {
+    const supabase = createClient();
+    const { error } = await supabase
+        .from('system_settings')
+        .upsert({ key, value });
+
+    if (error) throw error;
+}
