@@ -130,7 +130,7 @@ export function OptimizeForm({
                                 placeholder="What would you like to build today?"
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
-                                rows={8}
+                                rows={6}
                                 className="resize-none bg-midnight border-electric-cyan/20 focus:border-electric-cyan focus:ring-4 focus:ring-electric-cyan/5 text-white placeholder:text-white/20 rounded-xl transition-all duration-300 py-4 px-5 text-lg leading-relaxed shadow-inner"
                             />
                             <div className="absolute bottom-4 right-4 flex items-center space-x-4">

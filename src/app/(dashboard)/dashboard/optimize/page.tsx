@@ -296,7 +296,7 @@ export default function OptimizePage() {
 
             {/* Form View (centered) */}
             {viewState === "form" && !isLoading && (
-                <div className="max-w-3xl mx-auto">
+                <div className="max-w-6xl mx-auto">
                     <OptimizeForm
                         onSubmit={(data) => handleSubmit(data)}
                         isLoading={isLoading}
