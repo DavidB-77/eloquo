@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { ArrowRight, Sparkles, Zap } from "lucide-react";
 
+import { DemoOptimizeForm } from "@/components/landing/DemoOptimizeForm";
+
 export function HeroSection() {
     const containerRef = React.useRef<HTMLDivElement>(null);
 
@@ -82,33 +84,9 @@ export function HeroSection() {
 
                     {/* Right Column: Visuals */}
                     <div className="hero-mockup-container relative">
-                        {/* Dashboard Preview Mockup */}
-                        <div className="relative z-10 rounded-3xl p-1.5 glass border-electric-cyan shadow-[0_0_60px_rgba(0,255,255,0.2)] overflow-hidden bg-midnight/80">
-                            <div className="absolute inset-0 bg-gradient-to-br from-electric-cyan/10 to-neon-orange/5" />
-                            <div className="rounded-2xl overflow-hidden border border-electric-cyan/20 bg-midnight aspect-[4/3] relative group/mockup">
-                                {/* Dashboard Mockup Content - Simplified for visual balance */}
-                                <div className="absolute inset-0 p-6 flex flex-col">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <div className="flex items-center space-x-3">
-                                            <div className="h-2.5 w-2.5 rounded-full bg-neon-magenta" />
-                                            <div className="h-2.5 w-2.5 rounded-full bg-neon-orange" />
-                                            <div className="h-2.5 w-2.5 rounded-full bg-electric-cyan" />
-                                        </div>
-                                        <div className="h-5 w-32 bg-deep-teal/40 rounded-full border border-electric-cyan/20" />
-                                    </div>
-                                    <div className="flex-1 border border-electric-cyan/10 bg-deep-teal/10 rounded-xl p-5 relative overflow-hidden">
-                                        <div className="space-y-3">
-                                            <div className="h-3 w-3/4 bg-electric-cyan/20 rounded-full animate-pulse" />
-                                            <div className="h-3 w-1/2 bg-neon-green/20 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
-                                            <div className="h-3 w-2/3 bg-electric-cyan/20 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
-                                            <div className="h-3 w-5/6 bg-neon-magenta/20 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }} />
-                                        </div>
-
-                                        {/* Floating visual element */}
-                                        <div className="absolute bottom-6 right-6 h-12 w-12 rounded-lg bg-gradient-to-br from-electric-cyan to-neon-magenta opacity-80 blur-md animate-pulse" />
-                                    </div>
-                                </div>
-                            </div>
+                        {/* Interactive Demo Form */}
+                        <div className="relative z-10 w-full max-w-lg mx-auto lg:max-w-none transform transition-transform hover:scale-[1.01] duration-500">
+                            <DemoOptimizeForm />
                         </div>
 
                         {/* Decorative Elements - New Colors */}
