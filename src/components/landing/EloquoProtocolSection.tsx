@@ -1,54 +1,33 @@
 "use client";
 
 import * as React from "react";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Container } from "@/components/layout/Container";
-import { Target, Microscope, Zap, Shield, Clock, Sparkles, TrendingDown } from "lucide-react";
+import { Target, Microscope, Zap, Shield, Clock, Sparkles, TrendingDown, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-gsap.registerPlugin(ScrollTrigger);
 
 const PIPELINE_STAGES = [
     {
         icon: Target,
-        step: "01",
         title: "Classify",
-        subtitle: "Intent Classification",
-        description: "AI analyzes your prompt to understand intent, complexity, and domain. Determines if clarifying questions are needed.",
-        model: "Gemini Flash",
-        modelNote: "Fast & accurate",
+        description: "Understand intent & complexity",
         color: "electric-cyan",
     },
     {
         icon: Microscope,
-        step: "02",
         title: "Analyze",
-        subtitle: "Deep Analysis",
-        description: "For complex prompts, performs deep analysis to identify gaps, implicit requirements, and optimization opportunities.",
-        model: "Claude Sonnet",
-        modelNote: "Nuanced reasoning",
+        description: "Evaluate structure & clarity",
         color: "neon-magenta",
     },
     {
         icon: Zap,
-        step: "03",
         title: "Generate",
-        subtitle: "Prompt Generation",
-        description: "Generates three versions - Full (comprehensive), Quick-Ref (condensed), and Snippet (one-liner). Structured with roles, context, and constraints.",
-        model: "Tier-appropriate",
-        modelNote: "DeepSeek to Claude",
+        description: "Create optimized versions",
         color: "sunset-orange",
     },
     {
         icon: Shield,
-        step: "04",
         title: "Validate",
-        subtitle: "Quality Validation",
-        description: "An AI judge reviews the output and scores it 1-5 on clarity, completeness, structure, and effectiveness.",
-        model: "Claude Haiku",
-        modelNote: "Quality assurance",
+        description: "Quality score verification",
         color: "electric-cyan",
     },
 ];
@@ -59,54 +38,27 @@ const STATS = [
     { icon: TrendingDown, value: "30-40", label: "Token Savings", suffix: "%" },
 ];
 
+const getColorStyles = (color: string) => {
+    switch (color) {
+        case "electric-cyan":
+            return { bg: "rgba(9,183,180,0.1)", border: "rgba(9,183,180,0.3)", text: "#09B7B4", glow: "rgba(9,183,180,0.4)" };
+        case "neon-magenta":
+            return { bg: "rgba(168,85,247,0.1)", border: "rgba(168,85,247,0.3)", text: "#A855F7", glow: "rgba(168,85,247,0.4)" };
+        case "sunset-orange":
+            return { bg: "rgba(229,120,68,0.1)", border: "rgba(229,120,68,0.3)", text: "#E57844", glow: "rgba(229,120,68,0.4)" };
+        default:
+            return { bg: "rgba(9,183,180,0.1)", border: "rgba(9,183,180,0.3)", text: "#09B7B4", glow: "rgba(9,183,180,0.4)" };
+    }
+};
+
 export function EloquoProtocolSection() {
-    const sectionRef = React.useRef<HTMLDivElement>(null);
-
-    useGSAP(() => {
-        gsap.from(".protocol-header > *", {
-            scrollTrigger: {
-                trigger: ".protocol-header",
-                start: "top 85%",
-            },
-            y: 30,
-            opacity: 0,
-            duration: 1,
-            stagger: 0.2,
-            ease: "power3.out"
-        });
-
-        gsap.from(".protocol-stage", {
-            scrollTrigger: {
-                trigger: ".protocol-stages",
-                start: "top 80%",
-            },
-            x: -30,
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.2,
-            ease: "expo.out"
-        });
-
-        gsap.from(".protocol-stat", {
-            scrollTrigger: {
-                trigger: ".protocol-stats",
-                start: "top 90%",
-            },
-            y: 20,
-            opacity: 0,
-            duration: 0.6,
-            stagger: 0.1,
-            ease: "power3.out"
-        });
-    }, { scope: sectionRef });
-
     return (
-        <section id="protocol" ref={sectionRef} className="py-24 relative overflow-hidden">
+        <section id="protocol" className="py-24 relative overflow-hidden">
             {/* Background glow */}
             <div className="absolute top-1/2 left-0 w-96 h-96 bg-electric-cyan/5 rounded-full blur-[150px] -translate-y-1/2" />
 
             <Container>
-                <div className="protocol-header text-center mb-16">
+                <div className="text-center mb-16">
                     <h2 className="text-4xl md:text-6xl font-normal font-display mb-6 text-white uppercase glow-sm">
                         The Eloquo <span className="text-electric-cyan italic">Protocol</span>
                     </h2>
@@ -115,77 +67,73 @@ export function EloquoProtocolSection() {
                     </p>
                 </div>
 
-                {/* Pipeline Stages */}
-                <div className="protocol-stages space-y-4 max-w-4xl mx-auto mb-16">
-                    {PIPELINE_STAGES.map((stage, i) => (
-                        <div
-                            key={i}
-                            className={cn(
-                                "protocol-stage glass p-6 rounded-2xl border border-white/10 hover:border-electric-cyan/30 transition-all duration-300",
-                                "bg-gradient-to-r from-midnight/80 to-deep-teal/5 group"
-                            )}
-                        >
-                            <div className="flex items-start gap-6">
-                                {/* Step Number & Icon */}
-                                <div className="flex-shrink-0">
-                                    <div className="relative">
-                                        <div className={cn(
-                                            "h-14 w-14 rounded-xl flex items-center justify-center",
-                                            `bg-${stage.color}/10 border border-${stage.color}/20`
-                                        )}
+                {/* Horizontal Pipeline Flow */}
+                <div className="max-w-5xl mx-auto mb-16">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-0 relative">
+                        {PIPELINE_STAGES.map((stage, i) => {
+                            const colors = getColorStyles(stage.color);
+                            return (
+                                <div key={i} className="relative flex flex-col items-center">
+                                    {/* Card */}
+                                    <div
+                                        className="glass p-6 rounded-2xl border text-center w-full group hover:shadow-lg transition-all duration-300"
+                                        style={{ borderColor: colors.border, backgroundColor: colors.bg }}
+                                    >
+                                        {/* Step Number */}
+                                        <div
+                                            className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold px-2 py-0.5 rounded border"
+                                            style={{ backgroundColor: '#0a1628', borderColor: colors.border, color: colors.text }}
+                                        >
+                                            0{i + 1}
+                                        </div>
+
+                                        {/* Icon */}
+                                        <div
+                                            className="h-14 w-14 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg transition-shadow"
                                             style={{
-                                                backgroundColor: stage.color === "electric-cyan" ? "rgba(9,183,180,0.1)" :
-                                                    stage.color === "neon-magenta" ? "rgba(255,0,255,0.1)" :
-                                                        stage.color === "sunset-orange" ? "rgba(229,120,68,0.1)" : "rgba(9,183,180,0.1)",
-                                                borderColor: stage.color === "electric-cyan" ? "rgba(9,183,180,0.2)" :
-                                                    stage.color === "neon-magenta" ? "rgba(255,0,255,0.2)" :
-                                                        stage.color === "sunset-orange" ? "rgba(229,120,68,0.2)" : "rgba(9,183,180,0.2)"
+                                                backgroundColor: colors.bg,
+                                                borderColor: colors.border,
+                                                borderWidth: 1,
+                                                borderStyle: 'solid',
                                             }}
                                         >
-                                            <stage.icon className="h-6 w-6 text-electric-cyan" />
+                                            <stage.icon className="h-7 w-7" style={{ color: colors.text }} />
                                         </div>
-                                        <span className="absolute -top-2 -right-2 text-[10px] font-bold text-white/30 bg-midnight px-1.5 py-0.5 rounded border border-white/10">
-                                            {stage.step}
-                                        </span>
-                                    </div>
-                                </div>
 
-                                {/* Content */}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <h3 className="text-lg font-bold text-white uppercase tracking-wide">
+                                        {/* Title */}
+                                        <h3 className="text-lg font-bold text-white mb-2 uppercase tracking-wide">
                                             {stage.title}
                                         </h3>
-                                        <span className="text-xs text-white/40">
-                                            {stage.subtitle}
-                                        </span>
-                                    </div>
-                                    <p className="text-sm text-white/60 leading-relaxed mb-3">
-                                        {stage.description}
-                                    </p>
-                                    <div className="flex items-center gap-2 text-[10px]">
-                                        <span className="px-2 py-1 bg-white/5 border border-white/10 rounded text-white/50 font-mono">
-                                            {stage.model}
-                                        </span>
-                                        <span className="text-white/30">
-                                            {stage.modelNote}
-                                        </span>
-                                    </div>
-                                </div>
 
-                                {/* Connector line */}
-                                {i < PIPELINE_STAGES.length - 1 && (
-                                    <div className="hidden md:block absolute left-[3.25rem] top-[4.5rem] w-px h-4 bg-gradient-to-b from-electric-cyan/30 to-transparent" />
-                                )}
-                            </div>
-                        </div>
-                    ))}
+                                        {/* Description */}
+                                        <p className="text-sm text-white/50">
+                                            {stage.description}
+                                        </p>
+                                    </div>
+
+                                    {/* Arrow connector (desktop only, not after last) */}
+                                    {i < PIPELINE_STAGES.length - 1 && (
+                                        <div className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10">
+                                            <ArrowRight className="h-6 w-6 text-electric-cyan/50" />
+                                        </div>
+                                    )}
+
+                                    {/* Mobile arrow (between cards) */}
+                                    {i < PIPELINE_STAGES.length - 1 && (
+                                        <div className="md:hidden flex justify-center py-2">
+                                            <ArrowRight className="h-5 w-5 text-electric-cyan/50 rotate-90" />
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* Stats Bar */}
-                <div className="protocol-stats flex flex-wrap items-center justify-center gap-8 md:gap-16 py-6 px-8 glass rounded-2xl border border-electric-cyan/20 max-w-3xl mx-auto">
+                <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16 py-6 px-8 glass rounded-2xl border border-electric-cyan/20 max-w-3xl mx-auto">
                     {STATS.map((stat, i) => (
-                        <div key={i} className="protocol-stat flex items-center gap-3">
+                        <div key={i} className="flex items-center gap-3">
                             <stat.icon className="h-5 w-5 text-electric-cyan" />
                             <div>
                                 <div className="flex items-baseline gap-1">
