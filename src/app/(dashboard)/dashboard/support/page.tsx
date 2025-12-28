@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus, MessageSquare, Send, Loader2, AlertCircle, CheckCircle, Clock, Archive } from "lucide-react";
+import { Plus, MessageSquare, Send, Loader2, AlertCircle, CheckCircle, Clock, Archive, ArchiveRestore } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -38,6 +38,9 @@ export default function UserSupportPage() {
 
     // Archive State
     const [archiving, setArchiving] = React.useState(false);
+
+    // Filter State
+    const [ticketFilter, setTicketFilter] = React.useState<'active' | 'archived'>('active');
 
     const supabase = createClient();
 
@@ -168,6 +171,37 @@ export default function UserSupportPage() {
         }
     };
 
+    const handleUnarchiveTicket = async () => {
+        if (!selectedTicket) return;
+        setArchiving(true);
+
+        try {
+            const { error } = await supabase
+                .from('support_tickets')
+                .update({ archived: false })
+                .eq('id', selectedTicket.id);
+
+            if (error) throw error;
+
+            // Update local state
+            setTickets(prev => prev.map(t =>
+                t.id === selectedTicket.id ? { ...t, archived: false } : t
+            ));
+            setSelectedTicket((prev: any) => ({ ...prev, archived: false }));
+            // Switch to active filter to see the ticket
+            setTicketFilter('active');
+        } catch (error) {
+            console.error("Error unarchiving ticket:", error);
+        } finally {
+            setArchiving(false);
+        }
+    };
+
+    // Filter tickets client-side
+    const filteredTickets = tickets.filter(t =>
+        ticketFilter === 'active' ? !t.archived : t.archived
+    );
+
     return (
         <div className="space-y-6 max-h-[calc(100vh-100px)] flex flex-col">
             <div className="flex items-center justify-between">
@@ -238,18 +272,44 @@ export default function UserSupportPage() {
                 {/* Lists */}
                 <div className="lg:col-span-1 bg-midnight/30 border border-white/10 rounded-xl overflow-hidden flex flex-col">
                     <div className="p-4 border-b border-white/10 bg-white/5">
-                        <h3 className="font-medium text-white text-sm">My Tickets</h3>
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-medium text-white text-sm">My Tickets</h3>
+                            <div className="flex bg-black/30 rounded-lg p-0.5">
+                                <button
+                                    onClick={() => setTicketFilter('active')}
+                                    className={cn(
+                                        "px-3 py-1 text-xs rounded-md transition-all",
+                                        ticketFilter === 'active'
+                                            ? "bg-electric-cyan text-black font-bold"
+                                            : "text-gray-400 hover:text-white"
+                                    )}
+                                >
+                                    Active
+                                </button>
+                                <button
+                                    onClick={() => setTicketFilter('archived')}
+                                    className={cn(
+                                        "px-3 py-1 text-xs rounded-md transition-all",
+                                        ticketFilter === 'archived'
+                                            ? "bg-orange-500 text-black font-bold"
+                                            : "text-gray-400 hover:text-white"
+                                    )}
+                                >
+                                    Archived
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
                         {loading ? (
                             <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-electric-cyan" /></div>
-                        ) : tickets.length === 0 ? (
+                        ) : filteredTickets.length === 0 ? (
                             <div className="text-center py-8 text-gray-500 text-sm">
                                 <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                No tickets yet
+                                {ticketFilter === 'active' ? 'No active tickets' : 'No archived tickets'}
                             </div>
                         ) : (
-                            tickets.map(ticket => (
+                            filteredTickets.map(ticket => (
                                 <button
                                     key={ticket.id}
                                     onClick={() => setSelectedTicket(ticket)}
@@ -257,16 +317,19 @@ export default function UserSupportPage() {
                                         "w-full text-left p-4 rounded-lg border transition-all",
                                         selectedTicket?.id === ticket.id
                                             ? "bg-[#09B7B4]/10 border-[#09B7B4]"
-                                            : "bg-[#111] border-white/5 hover:border-white/20"
+                                            : "bg-[#111] border-white/5 hover:border-white/20",
+                                        ticket.archived && "opacity-60"
                                     )}
                                 >
                                     <div className="flex items-center justify-between mb-2">
                                         <div className={cn(
                                             "text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold",
-                                            STATUS_STYLES[ticket.status as keyof typeof STATUS_STYLES]?.bg,
-                                            STATUS_STYLES[ticket.status as keyof typeof STATUS_STYLES]?.text
+                                            ticket.archived
+                                                ? "bg-gray-500/20 text-gray-400"
+                                                : STATUS_STYLES[ticket.status as keyof typeof STATUS_STYLES]?.bg,
+                                            !ticket.archived && STATUS_STYLES[ticket.status as keyof typeof STATUS_STYLES]?.text
                                         )}>
-                                            {STATUS_STYLES[ticket.status as keyof typeof STATUS_STYLES]?.label || ticket.status}
+                                            {ticket.archived ? 'Archived' : (STATUS_STYLES[ticket.status as keyof typeof STATUS_STYLES]?.label || ticket.status)}
                                         </div>
                                         <span className="text-xs text-gray-500">{formatDistanceToNow(new Date(ticket.created_at))} ago</span>
                                     </div>
@@ -356,26 +419,51 @@ export default function UserSupportPage() {
                             </div>
 
                             <div className="p-4 border-t border-white/10 bg-white/5">
-                                <div className="space-y-3">
-                                    <Textarea
-                                        value={replyUser}
-                                        onChange={e => setReplyUser(e.target.value)}
-                                        placeholder="Type a reply..."
-                                        className="bg-black/20 border-white/10 focus:border-electric-cyan resize-none"
-                                        rows={3}
-                                    />
-                                    <div className="flex justify-end">
+                                {selectedTicket.archived ? (
+                                    /* Archived ticket - read-only with unarchive option */
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-sm text-gray-500">
+                                            <Archive className="h-4 w-4 inline mr-2" />
+                                            This ticket is archived and read-only.
+                                        </p>
                                         <Button
-                                            onClick={handleSendReply}
-                                            disabled={sendingReply || !replyUser.trim()}
-                                            isLoading={sendingReply}
-                                            className="bg-[#09B7B4] hover:bg-[#08a5a3] text-white"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleUnarchiveTicket}
+                                            disabled={archiving}
+                                            className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
                                         >
-                                            <Send className="h-4 w-4 mr-2" />
-                                            Send Reply
+                                            {archiving ? (
+                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                            ) : (
+                                                <ArchiveRestore className="h-4 w-4 mr-2" />
+                                            )}
+                                            Unarchive
                                         </Button>
                                     </div>
-                                </div>
+                                ) : (
+                                    /* Active ticket - show reply form */
+                                    <div className="space-y-3">
+                                        <Textarea
+                                            value={replyUser}
+                                            onChange={e => setReplyUser(e.target.value)}
+                                            placeholder="Type a reply..."
+                                            className="bg-black/20 border-white/10 focus:border-electric-cyan resize-none"
+                                            rows={3}
+                                        />
+                                        <div className="flex justify-end">
+                                            <Button
+                                                onClick={handleSendReply}
+                                                disabled={sendingReply || !replyUser.trim()}
+                                                isLoading={sendingReply}
+                                                className="bg-[#09B7B4] hover:bg-[#08a5a3] text-white"
+                                            >
+                                                <Send className="h-4 w-4 mr-2" />
+                                                Send Reply
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </>
                     ) : (
