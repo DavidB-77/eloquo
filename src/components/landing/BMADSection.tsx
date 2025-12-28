@@ -4,6 +4,7 @@ import * as React from "react";
 import { Container } from "@/components/layout/Container";
 import { Check, Puzzle, Workflow, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const COMPATIBILITY_FEATURES = [
     "Cursor-ready output format",
@@ -13,10 +14,10 @@ const COMPATIBILITY_FEATURES = [
 ];
 
 const IDE_LOGOS = [
-    { name: "Cursor", icon: "▶" },
-    { name: "VS Code", icon: "⌨" },
-    { name: "Claude Code", icon: "🤖" },
-    { name: "Windsurf", icon: "🌊" },
+    { name: "Cursor", logo: "/logos/cursor.png" },
+    { name: "VS Code", logo: "/logos/vscode.png" },
+    { name: "Claude Code", logo: "/logos/claude-code.png" },
+    { name: "Windsurf", logo: "/logos/windsurf.png" },
 ];
 
 export function BMADSection() {
@@ -42,10 +43,18 @@ export function BMADSection() {
                         <div
                             key={i}
                             className={cn(
-                                "glass p-6 rounded-2xl border border-white/10 hover:border-electric-cyan/30 transition-all duration-300 text-center group"
+                                "glass p-6 rounded-2xl border border-white/10 hover:border-electric-cyan/30 transition-all duration-300 text-center group flex flex-col items-center"
                             )}
                         >
-                            <div className="text-3xl mb-3">{ide.icon}</div>
+                            <div className="h-12 w-12 mb-4 flex items-center justify-center">
+                                <Image
+                                    src={ide.logo}
+                                    alt={ide.name}
+                                    width={48}
+                                    height={48}
+                                    className="object-contain"
+                                />
+                            </div>
                             <span className="text-sm font-bold text-white uppercase tracking-wide">{ide.name}</span>
                         </div>
                     ))}
