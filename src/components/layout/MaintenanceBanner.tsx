@@ -1,18 +1,15 @@
 "use client";
 
 import * as React from 'react';
-import { getGeneralSettings } from '@/lib/settings';
 import { AlertTriangle, X } from 'lucide-react';
 
-export function MaintenanceBanner() {
-    const [isActive, setIsActive] = React.useState(false);
-    const [isDismissed, setIsDismissed] = React.useState(false);
+interface MaintenanceBannerProps {
+    active: boolean;
+    onDismiss: () => void;
+}
 
-    React.useEffect(() => {
-        getGeneralSettings().then(s => setIsActive(s.maintenance_mode));
-    }, []);
-
-    if (!isActive || isDismissed) return null;
+export function MaintenanceBanner({ active, onDismiss }: MaintenanceBannerProps) {
+    if (!active) return null;
 
     return (
         <div className="bg-gradient-to-r from-orange-600 to-red-600 text-white py-2.5 px-4 shadow-lg flex items-center justify-center relative z-[100] animate-in slide-in-from-top duration-500">
@@ -26,7 +23,7 @@ export function MaintenanceBanner() {
                 </span>
             </div>
             <button
-                onClick={() => setIsDismissed(true)}
+                onClick={onDismiss}
                 className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-white/10 rounded-full transition-colors"
             >
                 <X className="h-4 w-4 opacity-80" />

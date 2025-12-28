@@ -14,7 +14,8 @@ import {
     Shield,
     ChevronLeft,
     ChevronRight,
-    Megaphone
+    Megaphone,
+    Tag
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/revenue", label: "Revenue", icon: DollarSign },
     { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/admin/pricing", label: "Pricing", icon: Tag },
     { href: "/admin/support", label: "Support", icon: MessageSquare },
     { href: "/admin/announcements", label: "Announcements", icon: Megaphone },
     { href: "/admin/settings", label: "Settings", icon: Settings },

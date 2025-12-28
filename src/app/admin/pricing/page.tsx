@@ -238,6 +238,96 @@ export default function AdminPricingPage() {
                             </div>
                         ))}
                     </div>
+
+                    {/* Popup Settings Separator */}
+                    <div className="border-t border-white/10 pt-6 mt-6">
+                        <h3 className="text-sm font-bold uppercase text-white/60 mb-4">Popup Settings</h3>
+                        <div className="space-y-4">
+                            {/* Enable & Frequency */}
+                            <div className="flex items-center gap-6">
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={founding.popup_settings.enabled}
+                                        onChange={e => setFounding({ ...founding, popup_settings: { ...founding.popup_settings, enabled: e.target.checked } })}
+                                        className="form-checkbox bg-black/50 border-white/20 rounded text-neon-orange"
+                                    />
+                                    <span className="text-sm font-bold">Enable Popup</span>
+                                </label>
+                                <div>
+                                    <select
+                                        value={founding.popup_settings.show_frequency}
+                                        onChange={e => setFounding({ ...founding, popup_settings: { ...founding.popup_settings, show_frequency: e.target.value as any } })}
+                                        className="bg-black/50 border border-white/20 rounded px-2 py-1 text-sm"
+                                    >
+                                        <option value="session">Once per session</option>
+                                        <option value="once">Once ever per user</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Triggers */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs text-white/40 block mb-1">Delay (seconds)</label>
+                                    <input
+                                        type="number"
+                                        value={founding.popup_settings.delay}
+                                        onChange={e => setFounding({ ...founding, popup_settings: { ...founding.popup_settings, delay: Number(e.target.value) } })}
+                                        className="w-full bg-black/50 border border-white/20 rounded px-3 py-2 text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="flex items-center space-x-2 text-xs text-white/40 mb-1">
+                                        <input
+                                            type="checkbox"
+                                            checked={founding.popup_settings.trigger_on_scroll.enabled}
+                                            onChange={e => setFounding({ ...founding, popup_settings: { ...founding.popup_settings, trigger_on_scroll: { ...founding.popup_settings.trigger_on_scroll, enabled: e.target.checked } } })}
+                                            className="form-checkbox bg-black/50 border-white/20 rounded"
+                                        />
+                                        <span>Trigger on Scroll (%)</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={founding.popup_settings.trigger_on_scroll.percentage}
+                                        onChange={e => setFounding({ ...founding, popup_settings: { ...founding.popup_settings, trigger_on_scroll: { ...founding.popup_settings.trigger_on_scroll, percentage: Number(e.target.value) } } })}
+                                        disabled={!founding.popup_settings.trigger_on_scroll.enabled}
+                                        className="w-full bg-black/50 border border-white/20 rounded px-3 py-2 text-sm disabled:opacity-50"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Content */}
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="text-xs text-white/40 block mb-1">Headline</label>
+                                    <input
+                                        type="text"
+                                        value={founding.popup_settings.headline}
+                                        onChange={e => setFounding({ ...founding, popup_settings: { ...founding.popup_settings, headline: e.target.value } })}
+                                        className="w-full bg-black/50 border border-white/20 rounded px-3 py-2 text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-white/40 block mb-1">Description</label>
+                                    <textarea
+                                        value={founding.popup_settings.description}
+                                        onChange={e => setFounding({ ...founding, popup_settings: { ...founding.popup_settings, description: e.target.value } })}
+                                        className="w-full bg-black/50 border border-white/20 rounded px-3 py-2 text-sm min-h-[80px]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-white/40 block mb-1">Button Text</label>
+                                    <input
+                                        type="text"
+                                        value={founding.popup_settings.button_text}
+                                        onChange={e => setFounding({ ...founding, popup_settings: { ...founding.popup_settings, button_text: e.target.value } })}
+                                        className="w-full bg-black/50 border border-white/20 rounded px-3 py-2 text-sm"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
 

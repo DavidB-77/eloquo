@@ -64,7 +64,7 @@ export default function AdminAnnouncementsPage() {
             priority,
             target,
             is_active: isActive,
-            expires_at: expiresAt || null,
+            expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
         };
 
         let error;
@@ -99,7 +99,16 @@ export default function AdminAnnouncementsPage() {
         setPriority(announcement.priority);
         setTarget(announcement.target || "both");
         setIsActive(announcement.is_active);
-        setExpiresAt(announcement.expires_at ? announcement.expires_at.split('T')[0] : "");
+
+        // Convert UTC DB timestamp to local datetime-local format
+        if (announcement.expires_at) {
+            const date = new Date(announcement.expires_at);
+            const localIso = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+            setExpiresAt(localIso);
+        } else {
+            setExpiresAt("");
+        }
+
         setSaveError(null);
         setIsCreateOpen(true);
     };
@@ -176,12 +185,12 @@ export default function AdminAnnouncementsPage() {
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label>Expires At (Optional)</Label>
+                                <Label>Expires At (Date & Time)</Label>
                                 <Input
-                                    type="date"
+                                    type="datetime-local"
                                     value={expiresAt}
                                     onChange={e => setExpiresAt(e.target.value)}
-                                    className="bg-black/20 border-white/10"
+                                    className="bg-black/20 border-white/10 [color-scheme:dark]"
                                 />
                             </div>
                             <div className="flex items-center space-x-2 pt-2">
@@ -240,12 +249,12 @@ export default function AdminAnnouncementsPage() {
                             <div className="flex items-center gap-4 text-xs text-gray-500 pt-2">
                                 <span className="flex items-center">
                                     <Calendar className="h-3 w-3 mr-1" />
-                                    Created: {new Date(announcement.created_at).toLocaleDateString()}
+                                    Created: {new Date(announcement.created_at).toLocaleString()}
                                 </span>
                                 {announcement.expires_at && (
                                     <span className="flex items-center text-orange-400/80">
                                         <Clock className="h-3 w-3 mr-1" />
-                                        Expires: {new Date(announcement.expires_at).toLocaleDateString()}
+                                        Expires: {new Date(announcement.expires_at).toLocaleString()}
                                     </span>
                                 )}
                             </div>

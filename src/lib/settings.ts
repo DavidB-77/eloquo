@@ -28,6 +28,18 @@ export type FoundingMemberConfig = {
     current_count: number;
     applies_to: string[];
     waves: Wave[];
+    popup_settings: {
+        enabled: boolean;
+        delay: number;
+        trigger_on_scroll: {
+            enabled: boolean;
+            percentage: number;
+        };
+        show_frequency: "session" | "once";
+        headline: string;
+        description: string;
+        button_text: string;
+    };
 };
 
 export type AnnualDiscountConfig = {
@@ -71,7 +83,16 @@ const DEFAULT_FOUNDING: FoundingMemberConfig = {
         { wave: 1, spots: 100, pro_price: 9, business_price: 20 },
         { wave: 2, spots: 200, pro_price: 11, business_price: 25 },
         { wave: 3, spots: 200, pro_price: 13, business_price: 30 }
-    ]
+    ],
+    popup_settings: {
+        enabled: false,
+        delay: 3,
+        trigger_on_scroll: { enabled: false, percentage: 50 },
+        show_frequency: "session",
+        headline: "Become a Founding Member",
+        description: "Join early and lock in exclusive pricing forever.",
+        button_text: "Join Now"
+    }
 };
 
 const DEFAULT_ANNUAL: AnnualDiscountConfig = {
@@ -98,7 +119,16 @@ export async function getFoundingMemberConfig(): Promise<FoundingMemberConfig> {
         .eq('key', 'founding_member')
         .single();
 
-    return data?.value || DEFAULT_FOUNDING;
+    // Merge defaults to handle missing new fields
+    const loaded = data?.value || {};
+    return {
+        ...DEFAULT_FOUNDING,
+        ...loaded,
+        popup_settings: {
+            ...DEFAULT_FOUNDING.popup_settings,
+            ...(loaded.popup_settings || {})
+        }
+    };
 }
 
 export async function getAnnualDiscountConfig(): Promise<AnnualDiscountConfig> {

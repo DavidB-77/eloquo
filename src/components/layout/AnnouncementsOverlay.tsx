@@ -7,9 +7,14 @@ import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import { Megaphone, X } from "lucide-react";
 
-export function AnnouncementsOverlay() {
+export function AnnouncementsOverlay({ onOpenChange }: { onOpenChange?: (open: boolean) => void }) {
     const [announcement, setAnnouncement] = React.useState<any>(null);
     const [isOpen, setIsOpen] = React.useState(false);
+
+    const setOpen = (open: boolean) => {
+        setIsOpen(open);
+        onOpenChange?.(open);
+    };
     const supabase = createClient();
     const pathname = usePathname();
 
@@ -46,7 +51,7 @@ export function AnnouncementsOverlay() {
 
             if (next) {
                 setAnnouncement(next);
-                setIsOpen(true);
+                setOpen(true);
             }
         };
 
@@ -57,7 +62,7 @@ export function AnnouncementsOverlay() {
         if (!announcement) return;
         const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
         localStorage.setItem('dismissed_announcements', JSON.stringify([...dismissed, announcement.id]));
-        setIsOpen(false);
+        setOpen(false);
         // Optionally show next? for now just close.
     };
 
