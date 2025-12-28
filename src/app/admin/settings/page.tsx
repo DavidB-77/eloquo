@@ -1,10 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Save, RefreshCw, Plus, Trash2, Check, X } from "lucide-react";
+import { Save, RefreshCw, Plus, Trash2, Check, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import { formatDistanceToNow } from "date-fns";
 
 // Mock data
 const MOCK_SETTINGS = {
@@ -28,13 +30,44 @@ const MOCK_SETTINGS = {
     },
 };
 
-const MOCK_ADMINS = [
-    { id: "1", name: "David Admin", email: "david@eloquo.io", role: "Super Admin", added: "Dec 1, 2025" },
-];
-
 export default function AdminSettingsPage() {
     const [settings, setSettings] = React.useState(MOCK_SETTINGS);
     const [isSaving, setIsSaving] = React.useState(false);
+
+    // Admin Users State
+    const [adminUsers, setAdminUsers] = React.useState<any[]>([]);
+    const [loadingAdmins, setLoadingAdmins] = React.useState(true);
+
+    React.useEffect(() => {
+        const fetchAdmins = async () => {
+            const supabase = createClient();
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('id, email, full_name, display_name, created_at, is_admin')
+                    .eq('is_admin', true)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (data) {
+                    setAdminUsers(data.map(user => ({
+                        id: user.id,
+                        name: user.full_name || user.display_name || "Unknown",
+                        email: user.email,
+                        role: "Admin", // For now just generic 'Admin'
+                        added: user.created_at ? formatDistanceToNow(new Date(user.created_at), { addSuffix: true }) : "Unknown"
+                    })));
+                }
+            } catch (err) {
+                console.error("Error fetching admin users:", err);
+            } finally {
+                setLoadingAdmins(false);
+            }
+        };
+
+        fetchAdmins();
+    }, []);
 
     const handleSave = async () => {
         setIsSaving(true);
@@ -80,6 +113,7 @@ export default function AdminSettingsPage() {
                             onClick={() => setSettings({ ...settings, maintenanceMode: !settings.maintenanceMode })}
                             className={cn(
                                 "w-12 h-6 rounded-full transition-colors relative",
+                                "transition-all duration-300",
                                 settings.maintenanceMode ? "bg-[#09B7B4]" : "bg-gray-600"
                             )}
                         >
@@ -185,21 +219,30 @@ export default function AdminSettingsPage() {
                     </Button>
                 </div>
                 <div className="space-y-3">
-                    {MOCK_ADMINS.map((admin) => (
-                        <div
-                            key={admin.id}
-                            className="flex items-center justify-between py-3 border-b border-white/5 last:border-0"
-                        >
-                            <div>
-                                <p className="text-sm font-medium text-white">{admin.name}</p>
-                                <p className="text-xs text-gray-500">{admin.email}</p>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <span className="text-xs text-gray-400">{admin.role}</span>
-                                <span className="text-xs text-gray-500">Added {admin.added}</span>
-                            </div>
+                    {loadingAdmins ? (
+                        <div className="flex items-center justify-center p-4">
+                            <Loader2 className="h-5 w-5 animate-spin text-electric-cyan" />
                         </div>
-                    ))}
+                    ) : (
+                        adminUsers.map((admin) => (
+                            <div
+                                key={admin.id}
+                                className="flex items-center justify-between py-3 border-b border-white/5 last:border-0"
+                            >
+                                <div>
+                                    <p className="text-sm font-medium text-white">{admin.name}</p>
+                                    <p className="text-xs text-gray-500">{admin.email}</p>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-xs text-gray-400">{admin.role}</span>
+                                    <span className="text-xs text-gray-500">Added {admin.added}</span>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                    {!loadingAdmins && adminUsers.length === 0 && (
+                        <p className="text-sm text-gray-500 text-center py-2">No admin users found.</p>
+                    )}
                 </div>
             </section>
 

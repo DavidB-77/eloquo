@@ -15,12 +15,12 @@ interface UserProfile {
     display_name: string | null;
     subscription_tier: string | null;
     created_at: string;
-    last_sign_in_at: string | null;
+    last_sign_in_at: string | null; // This will now reflect the *real* last activity (latest optimization)
     optimization_count: number;
     is_founding_member: boolean;
     founding_wave: number | null;
     is_admin: boolean;
-    status?: string; // Optional, might not be in DB, defaulting to 'active' logic if missing
+    status?: string;
 }
 
 const PLAN_STYLES: Record<string, string> = {
@@ -43,17 +43,56 @@ export default function AdminUsersPage() {
         setError(null);
         try {
             const supabase = createClient();
-            const { data, error: supabaseError } = await supabase
+
+            // 1. Fetch Profiles
+            const { data: profiles, error: profilesError } = await supabase
                 .from('profiles')
                 .select('*')
                 .order('created_at', { ascending: false });
 
-            if (supabaseError) throw supabaseError;
+            if (profilesError) throw profilesError;
 
-            // Map null subscription_tier to 'none' for easier filtering/display logic if needed, 
-            // or just handle it in render.
-            // Also ensure we handle potential missing fields gracefully.
-            setUsers(data || []);
+            // 2. Fetch Optimizations (minimal data needed for counts/stats)
+            // Note: In a production app with millions of rows, you'd want an Aggregation query or RPC.
+            // For now, fetching all relevant optimization metadata is acceptable for this scale.
+            const { data: optimizations, error: optError } = await supabase
+                .from('optimizations')
+                .select('user_id, created_at');
+
+            if (optError) {
+                console.error("Error fetching optimizations:", optError);
+                // We won't block the UI, but counts might be 0
+            }
+
+            // 3. Enrich Profiles with Optimization Data
+            const enrichedUsers = (profiles || []).map((profile) => {
+                const userOpts = (optimizations || []).filter((o) => o.user_id === profile.id);
+
+                // Count
+                const realOptCount = userOpts.length;
+
+                // Last Active (Latest optimization time, or fall back to login time)
+                let lastActive = profile.last_sign_in_at;
+                if (userOpts.length > 0) {
+                    // Find the most recent date
+                    const timestamps = userOpts.map(o => new Date(o.created_at).getTime());
+                    const maxTime = Math.max(...timestamps);
+
+                    // If the latest optimization is more recent than the sign-in (or sign-in is null), use it.
+                    // Usually we just want to show "Last Active" as likely the last time they optimized.
+                    if (!lastActive || maxTime > new Date(lastActive).getTime()) {
+                        lastActive = new Date(maxTime).toISOString();
+                    }
+                }
+
+                return {
+                    ...profile,
+                    optimization_count: realOptCount,
+                    last_sign_in_at: lastActive
+                };
+            });
+
+            setUsers(enrichedUsers);
         } catch (err: any) {
             console.error("Error fetching users:", err);
             setError(err.message || "Failed to load users");
