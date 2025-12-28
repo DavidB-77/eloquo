@@ -36,6 +36,7 @@ interface OptimizeFormProps {
     canOptimize?: boolean;
     canOrchestrate?: boolean;
     initialData?: Partial<OptimizeFormData>;
+    awaitingQuestions?: boolean;
 }
 
 export function OptimizeForm({
@@ -44,6 +45,7 @@ export function OptimizeForm({
     canOptimize = true,
     canOrchestrate = false,
     initialData,
+    awaitingQuestions = false,
 }: OptimizeFormProps) {
     const [prompt, setPrompt] = React.useState(initialData?.prompt || "");
     const [targetModel, setTargetModel] = React.useState(initialData?.targetModel || "universal");
@@ -279,7 +281,9 @@ export function OptimizeForm({
                             {/* Stage Label - Centered above bar */}
                             <div className="text-center">
                                 <span className="text-sm font-bold text-electric-cyan tracking-wider uppercase">
-                                    {realStageName || STAGES[progressStage]?.label || "Preparing..."}
+                                    {awaitingQuestions
+                                        ? "Awaiting your input..."
+                                        : (realStageName || STAGES[progressStage]?.label || "Preparing...")}
                                 </span>
                             </div>
 
@@ -289,9 +293,12 @@ export function OptimizeForm({
                                 <div className="h-3 w-full bg-deep-teal/40 rounded-full overflow-hidden border border-electric-cyan/20 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
                                     {/* Filled portion */}
                                     <div
-                                        className="h-full bg-gradient-to-r from-electric-cyan via-electric-cyan to-sunset-orange rounded-full transition-all duration-500 ease-out relative overflow-hidden"
+                                        className={cn(
+                                            "h-full bg-gradient-to-r from-electric-cyan via-electric-cyan to-sunset-orange rounded-full transition-all duration-500 ease-out relative overflow-hidden",
+                                            awaitingQuestions && "animate-pulse"
+                                        )}
                                         style={{
-                                            width: `${STAGES[Math.min(progressStage, STAGES.length - 1)]?.percent || 5}%`,
+                                            width: awaitingQuestions ? '50%' : `${STAGES[Math.min(progressStage, STAGES.length - 1)]?.percent || 5}%`,
                                             boxShadow: '0 0 15px rgba(9, 183, 180, 0.6)'
                                         }}
                                     >

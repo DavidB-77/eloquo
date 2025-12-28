@@ -61,21 +61,20 @@ interface UpgradeData {
 }
 
 export default function OptimizePage() {
-    const [viewState, setViewState] = React.useState<ViewState>("form");
+    // State
     const [isLoading, setIsLoading] = React.useState(false);
     const [result, setResult] = React.useState<SuccessResult | null>(null);
     const [error, setError] = React.useState<string | null>(null);
     const [submittedData, setSubmittedData] = React.useState<OptimizeFormData | null>(null);
 
     // Questions flow state
+    const [showQuestions, setShowQuestions] = React.useState(false);
     const [clarificationData, setClarificationData] = React.useState<ClarificationData | null>(null);
+    const [isSubmittingQuestions, setIsSubmittingQuestions] = React.useState(false);
 
     // Upgrade flow state
     const [showUpgradeModal, setShowUpgradeModal] = React.useState(false);
     const [upgradeData, setUpgradeData] = React.useState<UpgradeData | null>(null);
-
-    // Pending request for re-submission
-    const [pendingRequest, setPendingRequest] = React.useState<OptimizeFormData | null>(null);
 
     // User data from context
     const { userData, refreshUserData } = useUser();
@@ -83,9 +82,16 @@ export default function OptimizePage() {
     const comprehensiveCredits = userData?.comprehensiveCreditsRemaining ?? null;
 
     const handleSubmit = async (data: OptimizeFormData, contextAnswers?: Record<string, string>, forceStandard?: boolean) => {
-        setIsLoading(true);
-        setError(null);
-        setSubmittedData(data);
+        // If not already loading (initial submit), set loading
+        if (!isLoading) {
+            setIsLoading(true);
+            setResult(null);
+            setError(null);
+            setShowQuestions(false);
+            setClarificationData(null);
+        }
+
+        setSubmittedData(data); // Always update submitted data
 
         try {
             const endpoint = data.useOrchestration ? "/api/orchestrate" : "/api/optimize";
@@ -113,53 +119,61 @@ export default function OptimizePage() {
 
             // Handle: Needs Clarification
             if (apiResult.status === "needs_clarification") {
-                setPendingRequest(data);
                 setClarificationData(apiResult);
-                setViewState("questions");
+                setShowQuestions(true);
+                // NOTE: We keep isLoading=true so the progress bar continues
                 return;
             }
 
             // Handle: Upgrade Required
             if (apiResult.status === "upgrade_required") {
-                setPendingRequest(data);
                 setUpgradeData(apiResult);
                 setShowUpgradeModal(true);
+                // Pause loading state for modal
+                setIsLoading(false);
                 return;
             }
 
             // Handle: Success
             if (apiResult.success) {
                 setResult(apiResult);
-                setViewState("results");
+                setShowQuestions(false);
                 setClarificationData(null);
                 setUpgradeData(null);
-                // Update credits display
-
-                // Refresh global user data (sidebar, header, etc.)
                 await refreshUserData();
-
+                setIsLoading(false); // Stop loading ONLY on success (or error)
                 return;
             }
 
             // Handle: Error
             setError(apiResult.error || "Optimization failed");
+            setIsLoading(false);
+
         } catch (err) {
             setError("Failed to connect to optimization service");
-        } finally {
             setIsLoading(false);
         }
     };
 
     // Handle questions submit
     const handleQuestionsSubmit = async (answers: Record<string, string>) => {
-        if (!pendingRequest) return;
-        await handleSubmit(pendingRequest, answers);
+        if (!submittedData) return;
+
+        setIsSubmittingQuestions(true);
+        setShowQuestions(false); // Hide panel, return to full width form with progress
+        // isLoading is ALREADY true, so progress bar continues
+
+        try {
+            await handleSubmit(submittedData, answers);
+        } finally {
+            setIsSubmittingQuestions(false);
+        }
     };
 
     const handleQuestionsCancel = () => {
-        setViewState("form");
+        setShowQuestions(false);
         setClarificationData(null);
-        setPendingRequest(null);
+        setIsLoading(false); // Stop progress
     };
 
     // Handle upgrade modal
@@ -168,23 +182,24 @@ export default function OptimizePage() {
     };
 
     const handleContinueStandard = async () => {
-        if (!pendingRequest) return;
+        if (!submittedData) return;
         setShowUpgradeModal(false);
-        await handleSubmit(pendingRequest, undefined, true);
+        setIsLoading(true);
+        await handleSubmit(submittedData, undefined, true);
     };
 
     const handleEdit = () => {
-        setViewState("form");
+        setResult(null);
     };
 
     const handleStartNew = () => {
-        setViewState("form");
         setResult(null);
         setError(null);
         setSubmittedData(null);
         setClarificationData(null);
         setUpgradeData(null);
-        setPendingRequest(null);
+        setShowQuestions(false);
+        setIsLoading(false);
     };
 
     // Calculate metrics for display
@@ -245,7 +260,7 @@ export default function OptimizePage() {
             )}
 
             {/* Error State */}
-            {error && !isLoading && viewState === "form" && (
+            {error && !isLoading && !result && (
                 <Card className="border-destructive bg-destructive/5">
                     <CardContent className="py-6">
                         <div className="flex items-start space-x-3">
@@ -267,39 +282,8 @@ export default function OptimizePage() {
                 </Card>
             )}
 
-
-
-            {/* Questions View */}
-            {viewState === "questions" && clarificationData && !isLoading && (
-                <div className="max-w-3xl mx-auto">
-                    <QuestionsForm
-                        questions={clarificationData.questions}
-                        originalPrompt={clarificationData.originalPrompt}
-                        creditsWillUse={clarificationData.creditsWillUse}
-                        classification={clarificationData.classification}
-                        onSubmit={handleQuestionsSubmit}
-                        onCancel={handleQuestionsCancel}
-                        isSubmitting={isLoading}
-                    />
-                </div>
-            )}
-
-            {/* Form View (centered) */}
-            {/* Form View (centered) */}
-            {viewState === "form" && (
-                <div className="max-w-6xl mx-auto">
-                    <OptimizeForm
-                        onSubmit={(data) => handleSubmit(data)}
-                        isLoading={isLoading}
-                        canOptimize={true}
-                        canOrchestrate={userTier !== "free"}
-                        initialData={submittedData || undefined}
-                    />
-                </div>
-            )}
-
-            {/* Results View (side-by-side) */}
-            {viewState === "results" && result && !isLoading && (
+            {/* Results View */}
+            {result && !isLoading ? (
                 <div
                     className={cn(
                         "grid gap-6 animate-in slide-in-from-right-5 duration-300",
@@ -329,6 +313,39 @@ export default function OptimizePage() {
                             validation={result.validation}
                         />
                     </div>
+                </div>
+            ) : (
+                /* Form + Questions Layout */
+                <div className={cn(
+                    "grid gap-6 transition-all duration-500",
+                    showQuestions ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 max-w-6xl mx-auto"
+                )}>
+                    {/* Left: Always show the form during optimization */}
+                    <div className="w-full">
+                        <OptimizeForm
+                            onSubmit={(data) => handleSubmit(data)}
+                            isLoading={isLoading}
+                            canOptimize={true}
+                            canOrchestrate={userTier !== "free"}
+                            initialData={submittedData || undefined}
+                            awaitingQuestions={showQuestions}
+                        />
+                    </div>
+
+                    {/* Right: Questions panel (appears when needed) */}
+                    {showQuestions && clarificationData && (
+                        <div className="w-full h-full animate-in slide-in-from-right duration-500">
+                            <QuestionsForm
+                                questions={clarificationData.questions}
+                                originalPrompt={clarificationData.originalPrompt}
+                                creditsWillUse={clarificationData.creditsWillUse}
+                                classification={clarificationData.classification}
+                                onSubmit={handleQuestionsSubmit}
+                                onCancel={handleQuestionsCancel}
+                                isSubmitting={isSubmittingQuestions}
+                            />
+                        </div>
+                    )}
                 </div>
             )}
         </div>
