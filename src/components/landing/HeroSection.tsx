@@ -47,7 +47,7 @@ export function HeroSection() {
     };
 
     return (
-        <section ref={containerRef} className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
+        <section ref={containerRef} className="relative pt-20 pb-20 md:pt-24 md:pb-32 overflow-hidden">
             <Container className="relative">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
