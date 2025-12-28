@@ -14,10 +14,10 @@ const COMPATIBILITY_FEATURES = [
 ];
 
 const IDE_LOGOS = [
-    { name: "Cursor", logo: "/logos/cursor.png" },
-    { name: "VS Code", logo: "/logos/vscode.png" },
-    { name: "Claude Code", logo: "/logos/claude-code.png" },
-    { name: "Windsurf", logo: "/logos/windsurf.png" },
+    { name: "Cursor", logo: "/logos/cursor.png", invert: true },
+    { name: "VS Code", logo: "/logos/vscode.png", invert: false },
+    { name: "Claude Code", logo: "/logos/claude-code.png", invert: false },
+    { name: "Windsurf", logo: "/logos/windsurf.png", invert: true },
 ];
 
 export function BMADSection() {
@@ -52,7 +52,7 @@ export function BMADSection() {
                                     alt={ide.name}
                                     width={48}
                                     height={48}
-                                    className="object-contain"
+                                    className={cn("object-contain", ide.invert && "brightness-0 invert")}
                                 />
                             </div>
                             <span className="text-sm font-bold text-white uppercase tracking-wide">{ide.name}</span>
