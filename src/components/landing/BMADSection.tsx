@@ -14,10 +14,10 @@ const COMPATIBILITY_FEATURES = [
 ];
 
 const IDE_LOGOS = [
-    { name: "Cursor", logo: "/logos/cursor.png", invert: true },
-    { name: "VS Code", logo: "/logos/vscode.png", invert: false },
-    { name: "Claude Code", logo: "/logos/claude-code.png", invert: false },
-    { name: "Windsurf", logo: "/logos/windsurf.png", invert: true },
+    { name: "Cursor", logo: "/logos/cursor.png", invert: true, bgDark: false },
+    { name: "VS Code", logo: "/logos/vscode.png", invert: false, bgDark: false },
+    { name: "Claude Code", logo: "/logos/claude-code.png", invert: false, bgDark: false },
+    { name: "Windsurf", logo: "/logos/windsurf.png", invert: true, bgDark: false },
 ];
 
 export function BMADSection() {
@@ -52,7 +52,11 @@ export function BMADSection() {
                                     alt={ide.name}
                                     width={48}
                                     height={48}
-                                    className={cn("object-contain", ide.invert && "brightness-0 invert")}
+                                    className={cn(
+                                        "object-contain",
+                                        ide.invert && "brightness-0 invert",
+                                        ide.bgDark && "bg-[#0d1117] rounded-lg p-1"
+                                    )}
                                 />
                             </div>
                             <span className="text-sm font-bold text-white uppercase tracking-wide">{ide.name}</span>
