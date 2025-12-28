@@ -14,7 +14,8 @@ import {
     ChevronLeft,
     ChevronRight,
     Menu,
-    LifeBuoy
+    LifeBuoy,
+    Rocket
 } from "lucide-react";
 import { SidebarNavItem } from "./SidebarNavItem";
 import { Button } from "@/components/ui/Button";
@@ -28,6 +29,7 @@ import { UsageBar } from "@/components/dashboard/UsageBar";
 const NAV_LINKS = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
     { href: "/dashboard/optimize", icon: Zap, label: "Optimize" },
+    { href: "/dashboard/project-protocol", icon: Rocket, label: "Project Protocol", badge: "PRO" },
     { href: "/dashboard/history", icon: History, label: "History" },
     { href: "/dashboard/support", icon: LifeBuoy, label: "Support" },
     { href: "/dashboard/settings", icon: Settings, label: "Settings" },

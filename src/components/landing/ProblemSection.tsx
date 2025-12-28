@@ -22,8 +22,8 @@ const PAIN_POINTS = [
         icon: <TrendingDown className="h-10 w-10 text-electric-cyan" />,
     },
     {
-        title: "No Visibility",
-        description: "Without tracking, you have no way to know which prompt versions performed best or saved most.",
+        title: "No Quality Assurance",
+        description: "Without validation, you don't know if your prompt will actually work until you try it. No feedback loop means wasted iterations.",
         icon: <AlertCircle className="h-10 w-10 text-electric-cyan" />,
     },
 ];

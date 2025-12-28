@@ -10,9 +10,10 @@ interface SidebarNavItemProps {
     icon: LucideIcon;
     label: string;
     isCollapsed?: boolean;
+    badge?: string;
 }
 
-export function SidebarNavItem({ href, icon: Icon, label, isCollapsed }: SidebarNavItemProps) {
+export function SidebarNavItem({ href, icon: Icon, label, isCollapsed, badge }: SidebarNavItemProps) {
     const pathname = usePathname();
     const isActive = pathname === href;
 
@@ -28,8 +29,13 @@ export function SidebarNavItem({ href, icon: Icon, label, isCollapsed }: Sidebar
         >
             <Icon className={cn("h-5 w-5 shrink-0 transition-all duration-300", isActive ? "text-white glow-sm" : "text-white/40 group-hover:text-white")} />
             {!isCollapsed && (
-                <span className="font-display text-[11px] font-bold uppercase tracking-[0.2em] transition-opacity duration-300">
+                <span className="font-display text-[11px] font-bold uppercase tracking-[0.2em] transition-opacity duration-300 flex-1">
                     {label}
+                </span>
+            )}
+            {!isCollapsed && badge && (
+                <span className="text-[8px] font-bold uppercase tracking-wider bg-purple-500/20 text-purple-400 border border-purple-500/30 px-1.5 py-0.5 rounded">
+                    {badge}
                 </span>
             )}
             {isCollapsed && (
@@ -40,3 +46,4 @@ export function SidebarNavItem({ href, icon: Icon, label, isCollapsed }: Sidebar
         </Link>
     );
 }
+

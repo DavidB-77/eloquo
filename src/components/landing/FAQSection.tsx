@@ -27,21 +27,31 @@ const FAQS = [
     },
     {
         id: "faq-4",
-        title: "What is the Quality Score?",
-        content: "Every optimization includes an AI-powered quality validation. Our system rates your optimized prompt from 1-5 based on clarity, completeness, structure, and effectiveness. This ensures you always receive production-ready prompts.",
+        title: "What is Project Protocol?",
+        content: "Project Protocol is our advanced feature for developers. Describe your project idea, and we generate three production-ready documents: a Product Requirements Document (PRD), Technical Architecture Document, and Implementation Stories. It's like having a senior PM, architect, and scrum master on demand.",
     },
     {
         id: "faq-5",
+        title: "How is Project Protocol different from regular optimization?",
+        content: "Regular optimization improves a single prompt. Project Protocol takes a project idea and generates complete development documentation - including database schemas, API designs, user stories with acceptance criteria, and sprint planning. It uses 5 credits per generation.",
+    },
+    {
+        id: "faq-6",
+        title: "What formats work with Project Protocol output?",
+        content: "The output is standard Markdown that works everywhere. It's specifically formatted to be compatible with BMAD methodology and works seamlessly with Cursor, VS Code, Claude Code, Windsurf, and any AI-assisted development workflow.",
+    },
+    {
+        id: "faq-7",
         title: "What are the pricing tiers?",
         content: "We offer three plans: Basic ($9/month) for 150 optimizations, Pro ($19/month) for 400 optimizations with enhanced models, and Business ($39/month) for 1,000 optimizations with priority processing. All plans include file uploads, quality scoring, and multi-model support.",
     },
     {
-        id: "faq-6",
+        id: "faq-8",
         title: "Is my data secure?",
         content: "Absolutely. Your prompts are encrypted in transit and at rest. Uploaded files are processed ephemerally (in memory only) and immediately discarded - we never store your files. We never use your data to train any models.",
     },
     {
-        id: "faq-7",
+        id: "faq-9",
         title: "Can I cancel anytime?",
         content: "Yes, cancel anytime from your account settings. You'll retain access until the end of your billing period.",
     },

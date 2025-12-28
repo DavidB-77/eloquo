@@ -13,7 +13,8 @@ import {
     Layers,
     History,
     Zap,
-    TrendingUp
+    TrendingUp,
+    GitBranch
 } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -43,6 +44,11 @@ const FEATURES = [
         title: "History & Versioning",
         description: "Never lose a great prompt again. Track iterations and revert anytime.",
         icon: <History className="h-6 w-6" />,
+    },
+    {
+        title: "BMAD Integration",
+        description: "Generate structured prompts following the BMAD methodology. Get PM, Architect, and Developer prompts for complex projects.",
+        icon: <GitBranch className="h-6 w-6" />,
     },
 ];
 
