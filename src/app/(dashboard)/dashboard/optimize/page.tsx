@@ -7,17 +7,13 @@ import { ResultsTabs } from "@/components/optimize/ResultsTabs";
 import { InputSummary } from "@/components/optimize/InputSummary";
 import { QuestionsForm, type ClarificationQuestion } from "@/components/optimize/QuestionsForm";
 import { UpgradeModal, type UpgradeOption } from "@/components/optimize/UpgradeModal";
-import { OrchestrationResults } from "@/components/optimize/OrchestrationResults";
+import OptimizationModal from "@/components/OptimizationModal";
 import { Card, CardContent } from "@/components/ui/Card";
-import { Spinner } from "@/components/ui/Spinner";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { AlertCircle, Zap, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/providers/UserProvider";
-
-type ViewState = "form" | "questions" | "results";
 
 // Response types from n8n
 interface SuccessResult {
@@ -61,11 +57,14 @@ interface UpgradeData {
 }
 
 export default function OptimizePage() {
-    // State
-    const [isLoading, setIsLoading] = React.useState(false);
+    // Core state
     const [result, setResult] = React.useState<SuccessResult | null>(null);
     const [error, setError] = React.useState<string | null>(null);
     const [submittedData, setSubmittedData] = React.useState<OptimizeFormData | null>(null);
+
+    // Optimization modal state
+    const [showOptimizationModal, setShowOptimizationModal] = React.useState(false);
+    const [optimizationComplete, setOptimizationComplete] = React.useState(false);
 
     // Questions flow state
     const [showQuestions, setShowQuestions] = React.useState(false);
@@ -82,16 +81,14 @@ export default function OptimizePage() {
     const comprehensiveCredits = userData?.comprehensiveCreditsRemaining ?? null;
 
     const handleSubmit = async (data: OptimizeFormData, contextAnswers?: Record<string, string>, forceStandard?: boolean) => {
-        // If not already loading (initial submit), set loading
-        if (!isLoading) {
-            setIsLoading(true);
-            setResult(null);
-            setError(null);
-            setShowQuestions(false);
-            setClarificationData(null);
-        }
-
-        setSubmittedData(data); // Always update submitted data
+        // Show the mini-game modal
+        setShowOptimizationModal(true);
+        setOptimizationComplete(false);
+        setResult(null);
+        setError(null);
+        setShowQuestions(false);
+        setClarificationData(null);
+        setSubmittedData(data);
 
         try {
             const endpoint = data.useOrchestration ? "/api/orchestrate" : "/api/optimize";
@@ -111,7 +108,6 @@ export default function OptimizePage() {
                     })),
                     contextAnswers: contextAnswers || null,
                     forceStandard: forceStandard || false,
-                    sessionId: data.sessionId,
                 }),
             });
 
@@ -119,39 +115,36 @@ export default function OptimizePage() {
 
             // Handle: Needs Clarification
             if (apiResult.status === "needs_clarification") {
+                // Close modal, show questions
+                setShowOptimizationModal(false);
                 setClarificationData(apiResult);
                 setShowQuestions(true);
-                // NOTE: We keep isLoading=true so the progress bar continues
                 return;
             }
 
             // Handle: Upgrade Required
             if (apiResult.status === "upgrade_required") {
+                setShowOptimizationModal(false);
                 setUpgradeData(apiResult);
                 setShowUpgradeModal(true);
-                // Pause loading state for modal
-                setIsLoading(false);
                 return;
             }
 
             // Handle: Success
             if (apiResult.success) {
                 setResult(apiResult);
-                setShowQuestions(false);
-                setClarificationData(null);
-                setUpgradeData(null);
+                setOptimizationComplete(true); // This triggers "complete" in modal
                 await refreshUserData();
-                setIsLoading(false); // Stop loading ONLY on success (or error)
                 return;
             }
 
             // Handle: Error
+            setShowOptimizationModal(false);
             setError(apiResult.error || "Optimization failed");
-            setIsLoading(false);
 
         } catch (err) {
+            setShowOptimizationModal(false);
             setError("Failed to connect to optimization service");
-            setIsLoading(false);
         }
     };
 
@@ -160,8 +153,7 @@ export default function OptimizePage() {
         if (!submittedData) return;
 
         setIsSubmittingQuestions(true);
-        setShowQuestions(false); // Hide panel, return to full width form with progress
-        // isLoading is ALREADY true, so progress bar continues
+        setShowQuestions(false);
 
         try {
             await handleSubmit(submittedData, answers);
@@ -173,7 +165,6 @@ export default function OptimizePage() {
     const handleQuestionsCancel = () => {
         setShowQuestions(false);
         setClarificationData(null);
-        setIsLoading(false); // Stop progress
     };
 
     // Handle upgrade modal
@@ -184,8 +175,13 @@ export default function OptimizePage() {
     const handleContinueStandard = async () => {
         if (!submittedData) return;
         setShowUpgradeModal(false);
-        setIsLoading(true);
         await handleSubmit(submittedData, undefined, true);
+    };
+
+    // When user clicks "View Optimized Prompt" in modal
+    const handleViewResults = () => {
+        setShowOptimizationModal(false);
+        // Results are already loaded, just close the modal
     };
 
     const handleEdit = () => {
@@ -199,7 +195,8 @@ export default function OptimizePage() {
         setClarificationData(null);
         setUpgradeData(null);
         setShowQuestions(false);
-        setIsLoading(false);
+        setShowOptimizationModal(false);
+        setOptimizationComplete(false);
     };
 
     // Calculate metrics for display
@@ -210,6 +207,13 @@ export default function OptimizePage() {
 
     return (
         <div className="space-y-6">
+            {/* Optimization Modal with Mini-Games */}
+            <OptimizationModal
+                isOpen={showOptimizationModal}
+                isComplete={optimizationComplete}
+                onViewResults={handleViewResults}
+            />
+
             {/* Header with Tier Display */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -260,7 +264,7 @@ export default function OptimizePage() {
             )}
 
             {/* Error State */}
-            {error && !isLoading && !result && (
+            {error && !result && (
                 <Card className="border-destructive bg-destructive/5">
                     <CardContent className="py-6">
                         <div className="flex items-start space-x-3">
@@ -283,7 +287,7 @@ export default function OptimizePage() {
             )}
 
             {/* Results View */}
-            {result && !isLoading ? (
+            {result && !showOptimizationModal ? (
                 <div
                     className={cn(
                         "grid gap-6 animate-in slide-in-from-right-5 duration-300",
@@ -314,21 +318,20 @@ export default function OptimizePage() {
                         />
                     </div>
                 </div>
-            ) : (
+            ) : !showOptimizationModal ? (
                 /* Form + Questions Layout */
                 <div className={cn(
                     "grid gap-6 transition-all duration-500",
                     showQuestions ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 max-w-6xl mx-auto"
                 )}>
-                    {/* Left: Always show the form during optimization */}
+                    {/* Left: Form */}
                     <div className="w-full">
                         <OptimizeForm
                             onSubmit={(data) => handleSubmit(data)}
-                            isLoading={isLoading}
+                            isLoading={false}
                             canOptimize={true}
                             canOrchestrate={userTier !== "free"}
                             initialData={submittedData || undefined}
-                            awaitingQuestions={showQuestions}
                         />
                     </div>
 
@@ -347,7 +350,7 @@ export default function OptimizePage() {
                         </div>
                     )}
                 </div>
-            )}
+            ) : null}
         </div>
     );
 }

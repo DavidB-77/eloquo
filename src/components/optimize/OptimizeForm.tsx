@@ -4,15 +4,12 @@ import * as React from "react";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
-import { FormField } from "@/components/forms/FormField";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
-import { Zap, Sparkles, Layers, Globe } from "lucide-react";
+import { Zap, Sparkles, Globe } from "lucide-react";
 import { FileUpload, type ContextFile } from "./FileUpload";
 
 import { TARGET_MODELS } from "@/lib/constants/models";
-// Remove local TARGET_MODELS definition
 
 const STRENGTH_OPTIONS = [
     { value: "light", label: "Light", description: "Subtle improvements" },
@@ -27,7 +24,6 @@ export interface OptimizeFormData {
     context: string;
     contextFiles: ContextFile[];
     useOrchestration: boolean;
-    sessionId?: string;
 }
 
 interface OptimizeFormProps {
@@ -36,7 +32,6 @@ interface OptimizeFormProps {
     canOptimize?: boolean;
     canOrchestrate?: boolean;
     initialData?: Partial<OptimizeFormData>;
-    awaitingQuestions?: boolean;
 }
 
 export function OptimizeForm({
@@ -45,7 +40,6 @@ export function OptimizeForm({
     canOptimize = true,
     canOrchestrate = false,
     initialData,
-    awaitingQuestions = false,
 }: OptimizeFormProps) {
     const [prompt, setPrompt] = React.useState(initialData?.prompt || "");
     const [targetModel, setTargetModel] = React.useState(initialData?.targetModel || "universal");
@@ -53,18 +47,6 @@ export function OptimizeForm({
     const [context, setContext] = React.useState(initialData?.context || "");
     const [contextFiles, setContextFiles] = React.useState<ContextFile[]>(initialData?.contextFiles || []);
     const [useOrchestration, setUseOrchestration] = React.useState(initialData?.useOrchestration || false);
-    const [progressStage, setProgressStage] = React.useState(0);
-    const [sessionId, setSessionId] = React.useState<string | null>(null);
-    const [realStageName, setRealStageName] = React.useState<string | null>(null);
-
-    const STAGES = [
-        { stage: 0, label: "Preparing request...", percent: 5 },
-        { stage: 1, label: "Initializing...", percent: 15 },
-        { stage: 2, label: "Classifying request...", percent: 35 },
-        { stage: 3, label: "Deep analysis...", percent: 60 },
-        { stage: 4, label: "Generating optimization...", percent: 90 },
-        { stage: 5, label: "Complete!", percent: 100 }
-    ];
 
     // Update form when initialData changes (for edit mode)
     React.useEffect(() => {
@@ -78,67 +60,9 @@ export function OptimizeForm({
         }
     }, [initialData]);
 
-    // Poll for real progress from n8n
-    React.useEffect(() => {
-        let pollInterval: NodeJS.Timeout;
-
-        if (isLoading && sessionId) {
-            // Start with stage 0
-            setProgressStage(0);
-            setRealStageName("Preparing request...");
-
-            pollInterval = setInterval(async () => {
-                try {
-                    const response = await fetch(`/api/optimize/progress?sessionId=${sessionId}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.stage > 0) {
-                            setRealStageName(data.stageName);
-                            setProgressStage(data.stage);
-                        }
-                    }
-                } catch (error) {
-                    // Silent fail - don't break the UX if progress polling fails
-                    console.error('Progress poll error:', error);
-                }
-            }, 400); // Poll every 400ms for responsive updates
-        }
-
-        return () => {
-            if (pollInterval) clearInterval(pollInterval);
-        };
-    }, [isLoading, sessionId]);
-
-    // Reset progress when loading completes
-    React.useEffect(() => {
-        if (!isLoading && progressStage > 0 && progressStage < 5) {
-            // Jump to complete
-            setProgressStage(5);
-            setRealStageName("Complete!");
-
-            // Clean up after a delay
-            const timeout = setTimeout(() => {
-                setProgressStage(0);
-                setRealStageName(null);
-                if (sessionId) {
-                    // Clean up the progress session
-                    fetch(`/api/optimize/progress?sessionId=${sessionId}`, { method: 'DELETE' }).catch(() => { });
-                    setSessionId(null);
-                }
-            }, 1500);
-            return () => clearTimeout(timeout);
-        }
-    }, [isLoading, progressStage, sessionId]);
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!prompt.trim()) return;
-
-        // Generate a new session ID for progress tracking
-        const newSessionId = crypto.randomUUID();
-        setSessionId(newSessionId);
-        setRealStageName(null);
-        setProgressStage(0);
 
         onSubmit({
             prompt,
@@ -147,7 +71,6 @@ export function OptimizeForm({
             context,
             contextFiles,
             useOrchestration,
-            sessionId: newSessionId
         });
     };
 
@@ -272,101 +195,6 @@ export function OptimizeForm({
                         </div>
                     </div>
 
-                    {/* Real-Time Progress Bar */}
-                    <div className={cn(
-                        "transition-all duration-500 ease-in-out overflow-hidden",
-                        isLoading || (progressStage > 0 && progressStage <= 5) ? "opacity-100 max-h-48" : "opacity-0 max-h-0"
-                    )}>
-                        <div className="space-y-4 py-4">
-                            {/* Stage Label - Centered above bar */}
-                            <div className="text-center">
-                                <span className="text-sm font-bold text-electric-cyan tracking-wider uppercase">
-                                    {awaitingQuestions
-                                        ? "Awaiting your input..."
-                                        : (realStageName || STAGES[progressStage]?.label || "Preparing...")}
-                                </span>
-                            </div>
-
-                            {/* Progress Bar Container */}
-                            <div className="relative px-1">
-                                {/* Background bar */}
-                                <div className="h-3 w-full bg-deep-teal/40 rounded-full overflow-hidden border border-electric-cyan/20 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
-                                    {/* Filled portion */}
-                                    <div
-                                        className={cn(
-                                            "h-full bg-gradient-to-r from-electric-cyan via-electric-cyan to-sunset-orange rounded-full transition-all duration-500 ease-out relative overflow-hidden",
-                                            awaitingQuestions && "animate-pulse"
-                                        )}
-                                        style={{
-                                            width: awaitingQuestions ? '50%' : `${STAGES[Math.min(progressStage, STAGES.length - 1)]?.percent || 5}%`,
-                                            boxShadow: '0 0 15px rgba(9, 183, 180, 0.6)'
-                                        }}
-                                    >
-                                        {/* Shimmer effect */}
-                                        {isLoading && (
-                                            <div
-                                                className="absolute inset-0 w-full h-full"
-                                                style={{
-                                                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
-                                                    animation: 'shimmer 1.5s infinite'
-                                                }}
-                                            />
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Stage markers */}
-                                <div className="absolute top-1/2 -translate-y-1/2 w-full pointer-events-none">
-                                    {[
-                                        { pos: 15, stage: 1 },
-                                        { pos: 35, stage: 2 },
-                                        { pos: 60, stage: 3 },
-                                        { pos: 90, stage: 4 }
-                                    ].map(({ pos, stage }) => (
-                                        <div
-                                            key={stage}
-                                            className={cn(
-                                                "absolute h-4 w-4 rounded-full border-2 transition-all duration-500",
-                                                progressStage >= stage
-                                                    ? "bg-electric-cyan border-electric-cyan shadow-[0_0_10px_rgba(9,183,180,0.8)]"
-                                                    : "bg-midnight border-electric-cyan/30"
-                                            )}
-                                            style={{
-                                                left: `${pos}%`,
-                                                transform: 'translate(-50%, -50%)'
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Stage labels below bar */}
-                            <div className="grid grid-cols-4 text-[9px] text-white/50 uppercase tracking-wider">
-                                <span className={cn("text-center transition-colors", progressStage >= 1 && "text-electric-cyan/80")}>Classify</span>
-                                <span className={cn("text-center transition-colors", progressStage >= 2 && "text-electric-cyan/80")}>Analyze</span>
-                                <span className={cn("text-center transition-colors", progressStage >= 3 && "text-electric-cyan/80")}>Generate</span>
-                                <span className={cn("text-center transition-colors", progressStage >= 4 && "text-electric-cyan/80")}>Complete</span>
-                            </div>
-
-                            {/* Processing indicator */}
-                            <div className="flex justify-center">
-                                <span className="text-[10px] text-white/40 uppercase tracking-[0.15em] flex items-center gap-2">
-                                    {isLoading ? (
-                                        <>
-                                            <div className="h-1.5 w-1.5 rounded-full bg-electric-cyan animate-ping" />
-                                            Stage {Math.max(1, Math.min(progressStage, 4))} of 4
-                                        </>
-                                    ) : progressStage === 5 ? (
-                                        <>
-                                            <div className="h-1.5 w-1.5 rounded-full bg-green-400" />
-                                            Optimization Complete
-                                        </>
-                                    ) : null}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
                     {/* Footer & Submit */}
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-4 border-t border-electric-cyan/10">
                         <div className="flex flex-col">
@@ -392,17 +220,10 @@ export function OptimizeForm({
                             className="w-full md:w-auto h-14 px-12 rounded-xl btn-gradient text-lg tracking-widest uppercase glow-sm hover:glow-md active:scale-95 transition-all"
                             disabled={!canOptimize || !prompt.trim() || isLoading}
                         >
-                            {isLoading ? (
-                                <div className="flex items-center space-x-2">
-                                    <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    <span>ENERGIZING...</span>
-                                </div>
-                            ) : (
-                                <div className="flex items-center">
-                                    <Zap className="h-5 w-5 mr-3 fill-current" />
-                                    Optimize
-                                </div>
-                            )}
+                            <div className="flex items-center">
+                                <Zap className="h-5 w-5 mr-3 fill-current" />
+                                Optimize
+                            </div>
                         </Button>
                     </div>
                 </form>
