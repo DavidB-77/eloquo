@@ -57,9 +57,11 @@ export default function AdminOverviewPage() {
                 if (recentError) console.error("Error fetching recent users:", recentError);
 
                 // 3. Optimizations Today
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const todayISO = today.toISOString();
+                const now = new Date();
+                const year = now.getUTCFullYear();
+                const month = now.getUTCMonth();
+                const day = now.getUTCDate();
+                const todayISO = new Date(Date.UTC(year, month, day)).toISOString();
 
                 const { count: optCount, error: optError } = await supabase
                     .from("optimizations")
