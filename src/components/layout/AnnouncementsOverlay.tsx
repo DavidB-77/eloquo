@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
@@ -10,6 +11,7 @@ export function AnnouncementsOverlay() {
     const [announcement, setAnnouncement] = React.useState<any>(null);
     const [isOpen, setIsOpen] = React.useState(false);
     const supabase = createClient();
+    const pathname = usePathname();
 
     React.useEffect(() => {
         const checkAnnouncements = async () => {
@@ -19,16 +21,24 @@ export function AnnouncementsOverlay() {
                 .select('*')
                 .eq('is_active', true)
                 .or(`expires_at.is.null,expires_at.gt.${now}`)
-                // sort by priority/created? Let's verify priority handling later.
-                // Critical > High > Normal > Low.
-                // We'll simplistic sort in JS or assume DB order if we had priority column
                 .order('created_at', { ascending: false });
 
             if (!data || data.length === 0) return;
 
+            // Filter based on Target
+            const filtered = data.filter((a: any) => {
+                const target = a.target || 'both';
+                if (target === 'both') return true;
+                if (target === 'dashboard' && pathname?.startsWith('/dashboard')) return true;
+                if (target === 'landing' && pathname === '/') return true;
+                return false;
+            });
+
+            if (filtered.length === 0) return;
+
             // Simple Priority Sorting
             const priorityMap: Record<string, number> = { critical: 4, high: 3, normal: 2, low: 1 };
-            const sorted = data.sort((a, b) => (priorityMap[b.priority] || 0) - (priorityMap[a.priority] || 0));
+            const sorted = filtered.sort((a, b) => (priorityMap[b.priority] || 0) - (priorityMap[a.priority] || 0));
 
             // Find first undismissed
             const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
@@ -41,7 +51,7 @@ export function AnnouncementsOverlay() {
         };
 
         checkAnnouncements();
-    }, [supabase]);
+    }, [supabase, pathname]);
 
     const handleDismiss = () => {
         if (!announcement) return;

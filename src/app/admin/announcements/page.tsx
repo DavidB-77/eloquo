@@ -17,6 +17,7 @@ type Announcement = {
     content: string;
     is_active: boolean;
     priority: "low" | "normal" | "high" | "critical";
+    target: "landing" | "dashboard" | "both";
     starts_at: string | null;
     expires_at: string | null;
     created_at: string;
@@ -32,8 +33,10 @@ export default function AdminAnnouncementsPage() {
     const [title, setTitle] = React.useState("");
     const [content, setContent] = React.useState("");
     const [priority, setPriority] = React.useState("normal");
+    const [target, setTarget] = React.useState("both");
     const [isActive, setIsActive] = React.useState(true);
     const [expiresAt, setExpiresAt] = React.useState("");
+    const [saveError, setSaveError] = React.useState<string | null>(null);
 
     const supabase = createClient();
 
@@ -53,19 +56,30 @@ export default function AdminAnnouncementsPage() {
 
     const handleSave = async () => {
         if (!title.trim() || !content.trim()) return;
+        setSaveError(null);
 
         const payload = {
             title,
             content,
             priority,
+            target,
             is_active: isActive,
             expires_at: expiresAt || null,
         };
 
+        let error;
         if (editingId) {
-            await supabase.from('announcements').update(payload).eq('id', editingId);
+            const { error: updateError } = await supabase.from('announcements').update(payload).eq('id', editingId);
+            error = updateError;
         } else {
-            await supabase.from('announcements').insert([payload]);
+            const { error: insertError } = await supabase.from('announcements').insert([payload]);
+            error = insertError;
+        }
+
+        if (error) {
+            console.error("Error saving announcement:", error);
+            setSaveError(error.message || "Failed to save announcement");
+            return;
         }
 
         resetForm();
@@ -83,8 +97,10 @@ export default function AdminAnnouncementsPage() {
         setTitle(announcement.title);
         setContent(announcement.content);
         setPriority(announcement.priority);
+        setTarget(announcement.target || "both");
         setIsActive(announcement.is_active);
         setExpiresAt(announcement.expires_at ? announcement.expires_at.split('T')[0] : "");
+        setSaveError(null);
         setIsCreateOpen(true);
     };
 
@@ -93,8 +109,10 @@ export default function AdminAnnouncementsPage() {
         setTitle("");
         setContent("");
         setPriority("normal");
+        setTarget("both");
         setIsActive(true);
         setExpiresAt("");
+        setSaveError(null);
         setIsCreateOpen(false);
     };
 
@@ -145,16 +163,28 @@ export default function AdminAnnouncementsPage() {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Expires At (Optional)</Label>
-                                    <Input
-                                        type="date"
-                                        value={expiresAt}
-                                        onChange={e => setExpiresAt(e.target.value)}
-                                        className="bg-black/20 border-white/10"
-                                    />
+                                    <Label>Target</Label>
+                                    <select
+                                        value={target}
+                                        onChange={e => setTarget(e.target.value)}
+                                        className="w-full bg-black/20 border border-white/10 rounded-md p-2 text-sm"
+                                    >
+                                        <option value="both">Both (All)</option>
+                                        <option value="dashboard">Dashboard Only</option>
+                                        <option value="landing">Landing Page Only</option>
+                                    </select>
                                 </div>
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="space-y-2">
+                                <Label>Expires At (Optional)</Label>
+                                <Input
+                                    type="date"
+                                    value={expiresAt}
+                                    onChange={e => setExpiresAt(e.target.value)}
+                                    className="bg-black/20 border-white/10"
+                                />
+                            </div>
+                            <div className="flex items-center space-x-2 pt-2">
                                 <input
                                     type="checkbox"
                                     id="isActive"
@@ -164,6 +194,13 @@ export default function AdminAnnouncementsPage() {
                                 />
                                 <Label htmlFor="isActive">Active immediately</Label>
                             </div>
+
+                            {saveError && (
+                                <div className="bg-red-500/10 text-red-400 p-3 rounded-md text-sm flex items-center gap-2">
+                                    <AlertCircle className="h-4 w-4" />
+                                    {saveError}
+                                </div>
+                            )}
                         </div>
                         <DialogFooter>
                             <Button variant="ghost" onClick={resetForm}>Cancel</Button>
@@ -193,6 +230,11 @@ export default function AdminAnnouncementsPage() {
                                 )}>
                                     {announcement.priority}
                                 </div>
+                                {announcement.target && announcement.target !== 'both' && (
+                                    <div className="px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider bg-white/10 text-gray-400">
+                                        {announcement.target} Only
+                                    </div>
+                                )}
                             </div>
                             <p className="text-gray-400 text-sm whitespace-pre-wrap">{announcement.content}</p>
                             <div className="flex items-center gap-4 text-xs text-gray-500 pt-2">
