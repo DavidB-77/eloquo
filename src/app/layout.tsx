@@ -5,6 +5,8 @@ import { AuthProvider } from "@/providers/AuthProvider";
 import QueryProvider from "@/providers/QueryProvider";
 import { cn } from "@/lib/utils";
 import { UserProvider } from "@/providers/UserProvider";
+import { MaintenanceBanner } from "@/components/layout/MaintenanceBanner";
+import { AnnouncementsOverlay } from "@/components/layout/AnnouncementsOverlay";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -29,6 +31,8 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             <UserProvider>
+              <MaintenanceBanner />
+              <AnnouncementsOverlay />
               {children}
             </UserProvider>
           </AuthProvider>

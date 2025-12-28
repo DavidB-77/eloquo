@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/forms/FormField";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/Card";
 import { Container } from "@/components/layout/Container";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
+import { getGeneralSettings } from "@/lib/settings";
 
 export default function SignupPage() {
     const [email, setEmail] = React.useState("");
@@ -17,7 +18,19 @@ export default function SignupPage() {
     const [error, setError] = React.useState<string | null>(null);
     const [isLoading, setIsLoading] = React.useState(false);
     const [isSuccess, setIsSuccess] = React.useState(false);
+
+    // Settings State
+    const [registrationAllowed, setRegistrationAllowed] = React.useState(true);
+    const [checkingSettings, setCheckingSettings] = React.useState(true);
+
     const supabase = createClient();
+
+    React.useEffect(() => {
+        getGeneralSettings().then(settings => {
+            setRegistrationAllowed(settings.allow_new_signups);
+            setCheckingSettings(false);
+        });
+    }, []);
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -40,6 +53,37 @@ export default function SignupPage() {
             setIsLoading(false);
         }
     };
+
+    if (checkingSettings) {
+        return (
+            <div className="min-h-screen bg-muted/30 flex flex-col justify-center py-12">
+                <div className="flex justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            </div>
+        );
+    }
+
+    if (!registrationAllowed) {
+        return (
+            <div className="min-h-screen bg-muted/30 flex flex-col justify-center py-12">
+                <Container className="max-w-md text-center">
+                    <Card className="shadow-xl border-none p-8">
+                        <div className="h-16 w-16 bg-yellow-500/10 text-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <AlertTriangle className="h-8 w-8" />
+                        </div>
+                        <h2 className="text-2xl font-bold font-display mb-4">Registration Closed</h2>
+                        <p className="text-muted-foreground mb-8">
+                            We are currently not accepting new signups. Please check back later or contact support if you believe this is an error.
+                        </p>
+                        <Button variant="outline" className="w-full" asChild>
+                            <Link href="/">Back to Home</Link>
+                        </Button>
+                    </Card>
+                </Container>
+            </div>
+        );
+    }
 
     if (isSuccess) {
         return (

@@ -13,7 +13,8 @@ import {
     LogOut,
     ChevronLeft,
     ChevronRight,
-    Menu
+    Menu,
+    LifeBuoy
 } from "lucide-react";
 import { SidebarNavItem } from "./SidebarNavItem";
 import { Button } from "@/components/ui/Button";
@@ -28,6 +29,7 @@ const NAV_LINKS = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
     { href: "/dashboard/optimize", icon: Zap, label: "Optimize" },
     { href: "/dashboard/history", icon: History, label: "History" },
+    { href: "/dashboard/support", icon: LifeBuoy, label: "Support" },
     { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 

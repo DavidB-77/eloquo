@@ -112,6 +112,37 @@ export async function getAnnualDiscountConfig(): Promise<AnnualDiscountConfig> {
     return data?.value || DEFAULT_ANNUAL;
 }
 
+export type GeneralSettings = {
+    enable_team_plan: boolean;
+    enable_api_access: boolean;
+    allow_new_signups: boolean;
+    show_changelog_popup: boolean;
+    maintenance_mode: boolean;
+    free_plan_monthly_limit: number;
+    test_mode_enabled: boolean;
+};
+
+const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
+    enable_team_plan: true,
+    enable_api_access: true,
+    allow_new_signups: true,
+    show_changelog_popup: false,
+    maintenance_mode: false,
+    free_plan_monthly_limit: 10,
+    test_mode_enabled: false
+};
+
+export async function getGeneralSettings(): Promise<GeneralSettings> {
+    const supabase = createClient();
+    const { data } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'general_settings')
+        .single();
+
+    return data?.value ? { ...DEFAULT_GENERAL_SETTINGS, ...data.value } : DEFAULT_GENERAL_SETTINGS;
+}
+
 export async function updateSystemSetting(key: string, value: any) {
     const supabase = createClient();
     const { error } = await supabase
