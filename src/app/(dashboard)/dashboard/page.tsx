@@ -161,25 +161,6 @@ export default function DashboardPage() {
 
                 {/* Quick Actions */}
                 <div className="space-y-6">
-                    <Link href="/dashboard/optimize" className="group">
-                        <Card className="relative overflow-hidden glass border-electric-cyan/20 cursor-pointer h-full transition-all group-hover:border-electric-cyan/40">
-                            <div className="absolute inset-0 bg-gradient-to-br from-electric-cyan/20 via-transparent to-sunset-orange/20 opacity-40 group-hover:opacity-70 transition-opacity" />
-                            <div className="absolute -top-4 -right-4 h-24 w-24 bg-electric-cyan/10 blur-3xl rounded-full" />
-
-                            <CardContent className="relative pt-8 pb-8 flex flex-col items-center text-center">
-                                <div className="h-16 w-16 rounded-2xl btn-gradient flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(9,183,180,0.4)] group-hover:scale-110 transition-transform duration-500">
-                                    <Zap className="h-8 w-8 text-white fill-current" />
-                                </div>
-                                <h3 className="text-2xl font-display text-white mb-2 uppercase tracking-widest glow-sm">Ignite Base</h3>
-                                <p className="text-white/40 text-xs font-bold leading-relaxed mb-8 max-w-[200px] uppercase tracking-tighter">
-                                    INITIALIZE NEW PROMPT TRANSFORM SEQUENCE
-                                </p>
-                                <div className="flex items-center text-electric-cyan text-[10px] font-bold tracking-[0.3em] uppercase group-hover:gap-4 transition-all">
-                                    START SESSION <ArrowRight className="ml-2 h-3 w-3" />
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </Link>
 
                     <Card className="glass border-electric-cyan/10">
                         <CardHeader className="pb-4">
