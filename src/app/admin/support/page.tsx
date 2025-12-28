@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, Filter, MessageSquare, Clock, CheckCircle, AlertCircle, Send, Loader2, Trash2, AlertTriangle } from "lucide-react";
+import { Search, Filter, MessageSquare, Clock, CheckCircle, AlertCircle, Send, Loader2, Trash2, AlertTriangle, Archive } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -29,6 +29,13 @@ export default function AdminSupportPage() {
     // Delete state
     const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
     const [deleting, setDeleting] = React.useState(false);
+
+    // Archive state
+    const [archiving, setArchiving] = React.useState(false);
+
+    // Search and filter state
+    const [searchQuery, setSearchQuery] = React.useState('');
+    const [ticketFilter, setTicketFilter] = React.useState<'active' | 'archived'>('active');
 
     const supabase = createClient();
 
@@ -167,39 +174,118 @@ export default function AdminSupportPage() {
         }
     };
 
-    const stats = {
-        open: tickets.filter((t) => t.status === "open").length,
-        pending: tickets.filter((t) => t.status === "pending").length,
-        resolved: tickets.filter((t) => t.status === "resolved").length,
+    const handleArchiveTicket = async () => {
+        if (!selectedTicket) return;
+        setArchiving(true);
+
+        try {
+            const { error } = await supabase
+                .from('support_tickets')
+                .update({ archived: true })
+                .eq('id', selectedTicket.id);
+
+            if (error) throw error;
+
+            // Update local state
+            setTickets(prev => prev.map(t =>
+                t.id === selectedTicket.id ? { ...t, archived: true } : t
+            ));
+            setSelectedTicket(null);
+            setTicketResponses([]);
+        } catch (error) {
+            console.error("Error archiving ticket:", error);
+        } finally {
+            setArchiving(false);
+        }
     };
 
-    const filteredTickets = filterStatus
-        ? tickets.filter((t) => t.status === filterStatus)
-        : tickets;
+    const stats = {
+        open: tickets.filter((t) => t.status === "open" && !t.archived).length,
+        pending: tickets.filter((t) => t.status === "pending" && !t.archived).length,
+        resolved: tickets.filter((t) => t.status === "resolved" && !t.archived).length,
+        archived: tickets.filter((t) => t.archived).length,
+    };
+
+    // Filter by active/archived first, then by status, then by search
+    const filteredTickets = tickets
+        .filter(t => ticketFilter === 'active' ? !t.archived : t.archived)
+        .filter(t => !filterStatus || t.status === filterStatus)
+        .filter(t => {
+            if (!searchQuery.trim()) return true;
+            const query = searchQuery.toLowerCase();
+            return (
+                t.subject?.toLowerCase().includes(query) ||
+                t.message?.toLowerCase().includes(query) ||
+                t.id?.toLowerCase().includes(query) ||
+                t.user_id?.toLowerCase().includes(query)
+            );
+        });
 
     return (
         <div className="space-y-6">
             {/* Stats Bar */}
-            <div className="flex items-center gap-6 p-4 bg-[#1a1a1a] border border-white/10 rounded-xl">
-                <div className="flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-red-400" />
-                    <span className="text-sm text-white">{stats.open} Open</span>
+            <div className="flex items-center justify-between p-4 bg-[#1a1a1a] border border-white/10 rounded-xl">
+                <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-red-400" />
+                        <span className="text-sm text-white">{stats.open} Open</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-yellow-400" />
+                        <span className="text-sm text-white">{stats.pending} Pending</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-400" />
+                        <span className="text-sm text-white">{stats.resolved} Resolved</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Archive className="h-4 w-4 text-orange-400" />
+                        <span className="text-sm text-white">{stats.archived} Archived</span>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-yellow-400" />
-                    <span className="text-sm text-white">{stats.pending} Pending</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-400" />
-                    <span className="text-sm text-white">{stats.resolved} Resolved</span>
+                {/* Active/Archived Toggle */}
+                <div className="flex bg-black/30 rounded-lg p-0.5">
+                    <button
+                        onClick={() => setTicketFilter('active')}
+                        className={cn(
+                            "px-4 py-1.5 text-xs rounded-md transition-all font-medium",
+                            ticketFilter === 'active'
+                                ? "bg-electric-cyan text-black font-bold"
+                                : "text-gray-400 hover:text-white"
+                        )}
+                    >
+                        Active
+                    </button>
+                    <button
+                        onClick={() => setTicketFilter('archived')}
+                        className={cn(
+                            "px-4 py-1.5 text-xs rounded-md transition-all font-medium",
+                            ticketFilter === 'archived'
+                                ? "bg-orange-500 text-black font-bold"
+                                : "text-gray-400 hover:text-white"
+                        )}
+                    >
+                        Archived
+                    </button>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
                 {/* Tickets List - Scrollable */}
                 <div className="lg:col-span-1 flex flex-col gap-4 bg-[#1a1a1a] border border-white/10 rounded-xl p-4 overflow-hidden">
-                    {/* Filters */}
-                    <div className="flex gap-2 flex-shrink-0">
+                    {/* Search Bar */}
+                    <div className="relative flex-shrink-0">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                        <Input
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search tickets..."
+                            className="pl-10 bg-black/30 border-white/10 text-white placeholder:text-gray-500 h-10"
+                        />
+                    </div>
+
+                    {/* Status Filters */}
+                    <div className="flex gap-2 flex-shrink-0 flex-wrap">
                         <button
                             onClick={() => setFilterStatus(null)}
                             className={cn(
@@ -234,35 +320,49 @@ export default function AdminSupportPage() {
                         ) : filteredTickets.length === 0 ? (
                             <div className="text-center py-8 text-gray-500 text-sm">No tickets found</div>
                         ) : (
-                            filteredTickets.map((ticket) => (
-                                <button
-                                    key={ticket.id}
-                                    onClick={() => setSelectedTicket(ticket)}
-                                    className={cn(
-                                        "w-full text-left p-4 rounded-xl border transition-all",
-                                        selectedTicket?.id === ticket.id
-                                            ? "bg-[#09B7B4]/10 border-[#09B7B4]"
-                                            : "bg-[#111] border-white/5 hover:border-white/20"
-                                    )}
-                                >
-                                    <div className="flex items-start justify-between mb-2">
-                                        <span className="text-sm font-medium text-white">#{ticket.id.slice(0, 8)}</span>
-                                        <span
-                                            className={cn(
-                                                "text-xs px-2 py-0.5 rounded-full capitalize",
-                                                STATUS_STYLES[ticket.status as keyof typeof STATUS_STYLES]?.bg || "bg-gray-500/20",
-                                                STATUS_STYLES[ticket.status as keyof typeof STATUS_STYLES]?.text || "text-gray-400"
-                                            )}
-                                        >
-                                            {ticket.status}
-                                        </span>
-                                    </div>
-                                    <p className="text-sm text-white mb-1 line-clamp-1">{ticket.subject}</p>
-                                    <p className="text-xs text-gray-500">
-                                        {ticket.profiles?.email || 'Unknown User'} • {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true })}
-                                    </p>
-                                </button>
-                            ))
+                            filteredTickets.map((ticket) => {
+                                const borderColor = ticket.archived
+                                    ? 'border-orange-500/50 hover:border-orange-500'
+                                    : ticket.status === 'open'
+                                        ? 'border-red-500/50 hover:border-red-500'
+                                        : ticket.status === 'pending'
+                                            ? 'border-yellow-500/50 hover:border-yellow-500'
+                                            : ticket.status === 'resolved'
+                                                ? 'border-green-500/50 hover:border-green-500'
+                                                : 'border-white/5 hover:border-white/20';
+                                return (
+                                    <button
+                                        key={ticket.id}
+                                        onClick={() => setSelectedTicket(ticket)}
+                                        className={cn(
+                                            "w-full text-left p-4 rounded-xl border transition-all",
+                                            selectedTicket?.id === ticket.id
+                                                ? "bg-[#09B7B4]/10 border-[#09B7B4]"
+                                                : `bg-[#111] ${borderColor}`,
+                                            ticket.archived && "opacity-75"
+                                        )}
+                                    >
+                                        <div className="flex items-start justify-between mb-2">
+                                            <span className="text-sm font-medium text-white">#{ticket.id.slice(0, 8)}</span>
+                                            <span
+                                                className={cn(
+                                                    "text-xs px-2 py-0.5 rounded-full capitalize",
+                                                    ticket.archived
+                                                        ? "bg-orange-500/20 text-orange-400"
+                                                        : STATUS_STYLES[ticket.status as keyof typeof STATUS_STYLES]?.bg || "bg-gray-500/20",
+                                                    !ticket.archived && (STATUS_STYLES[ticket.status as keyof typeof STATUS_STYLES]?.text || "text-gray-400")
+                                                )}
+                                            >
+                                                {ticket.archived ? 'Archived' : ticket.status}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-white mb-1 line-clamp-1">{ticket.subject}</p>
+                                        <p className="text-xs text-gray-500">
+                                            {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true })}
+                                        </p>
+                                    </button>
+                                );
+                            })
                         )}
                     </div>
                 </div>
@@ -291,6 +391,20 @@ export default function AdminSupportPage() {
                                             <option value="pending">Pending</option>
                                             <option value="resolved">Resolved</option>
                                         </select>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={handleArchiveTicket}
+                                            disabled={archiving || selectedTicket.archived}
+                                            className="text-gray-400 hover:text-orange-400 hover:bg-orange-500/10"
+                                        >
+                                            {archiving ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <Archive className="h-4 w-4" />
+                                            )}
+                                            <span className="ml-1.5">{selectedTicket.archived ? 'Archived' : 'Archive'}</span>
+                                        </Button>
                                         <Button
                                             variant="ghost"
                                             size="sm"

@@ -317,8 +317,10 @@ export default function UserSupportPage() {
                                         "w-full text-left p-4 rounded-lg border transition-all",
                                         selectedTicket?.id === ticket.id
                                             ? "bg-[#09B7B4]/10 border-[#09B7B4]"
-                                            : "bg-[#111] border-white/5 hover:border-white/20",
-                                        ticket.archived && "opacity-60"
+                                            : ticket.archived
+                                                ? "bg-[#111] border-orange-500/50 hover:border-orange-500"
+                                                : "bg-[#111] border-white/5 hover:border-white/20",
+                                        ticket.archived && "opacity-75"
                                     )}
                                 >
                                     <div className="flex items-center justify-between mb-2">
