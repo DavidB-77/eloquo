@@ -31,7 +31,7 @@ export default function AdminSupportPage() {
         try {
             const { data, error } = await supabase
                 .from('support_tickets')
-                .select('*, profiles(email, full_name, display_name)')
+                .select('*')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -54,7 +54,7 @@ export default function AdminSupportPage() {
             setLoadingResponses(true);
             const { data, error } = await supabase
                 .from('ticket_responses')
-                .select('*, profiles(email, full_name)') // Sender info if needed (admin/user)
+                .select('*') // Sender info if needed (admin/user)
                 .eq('ticket_id', selectedTicket.id)
                 .order('created_at', { ascending: true });
 
