@@ -105,6 +105,7 @@ export default function OptimizePage() {
                     })),
                     contextAnswers: contextAnswers || null,
                     forceStandard: forceStandard || false,
+                    sessionId: data.sessionId,
                 }),
             });
 
@@ -266,18 +267,7 @@ export default function OptimizePage() {
                 </Card>
             )}
 
-            {/* Loading State */}
-            {isLoading && (
-                <Card className="border-primary bg-primary/5">
-                    <CardContent className="py-12 flex flex-col items-center justify-center space-y-4">
-                        <Spinner size="lg" />
-                        <div className="text-center">
-                            <p className="font-medium">⏳ Optimizing your prompt...</p>
-                            <p className="text-sm text-muted-foreground">This usually takes 3-10 seconds</p>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+
 
             {/* Questions View */}
             {viewState === "questions" && clarificationData && !isLoading && (
@@ -295,7 +285,8 @@ export default function OptimizePage() {
             )}
 
             {/* Form View (centered) */}
-            {viewState === "form" && !isLoading && (
+            {/* Form View (centered) */}
+            {viewState === "form" && (
                 <div className="max-w-6xl mx-auto">
                     <OptimizeForm
                         onSubmit={(data) => handleSubmit(data)}

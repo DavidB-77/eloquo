@@ -27,6 +27,7 @@ export interface OptimizeFormData {
     context: string;
     contextFiles: ContextFile[];
     useOrchestration: boolean;
+    sessionId?: string;
 }
 
 interface OptimizeFormProps {
@@ -51,8 +52,17 @@ export function OptimizeForm({
     const [contextFiles, setContextFiles] = React.useState<ContextFile[]>(initialData?.contextFiles || []);
     const [useOrchestration, setUseOrchestration] = React.useState(initialData?.useOrchestration || false);
     const [progressStage, setProgressStage] = React.useState(0);
+    const [sessionId, setSessionId] = React.useState<string | null>(null);
+    const [realStageName, setRealStageName] = React.useState<string | null>(null);
 
-    const STAGES = ["Analyzing...", "Optimizing...", "Validating...", "Complete!"];
+    const STAGES = [
+        { stage: 0, label: "Preparing request...", percent: 5 },
+        { stage: 1, label: "Initializing...", percent: 15 },
+        { stage: 2, label: "Classifying request...", percent: 35 },
+        { stage: 3, label: "Deep analysis...", percent: 60 },
+        { stage: 4, label: "Generating optimization...", percent: 90 },
+        { stage: 5, label: "Complete!", percent: 100 }
+    ];
 
     // Update form when initialData changes (for edit mode)
     React.useEffect(() => {
@@ -66,26 +76,77 @@ export function OptimizeForm({
         }
     }, [initialData]);
 
-    // Progress animation logic
+    // Poll for real progress from n8n
     React.useEffect(() => {
-        let interval: NodeJS.Timeout;
-        if (isLoading) {
+        let pollInterval: NodeJS.Timeout;
+
+        if (isLoading && sessionId) {
+            // Start with stage 0
             setProgressStage(0);
-            interval = setInterval(() => {
-                setProgressStage((prev) => (prev < STAGES.length - 2 ? prev + 1 : prev));
+            setRealStageName("Preparing request...");
+
+            pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/optimize/progress?sessionId=${sessionId}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.stage > 0) {
+                            setRealStageName(data.stageName);
+                            setProgressStage(data.stage);
+                        }
+                    }
+                } catch (error) {
+                    // Silent fail - don't break the UX if progress polling fails
+                    console.error('Progress poll error:', error);
+                }
+            }, 400); // Poll every 400ms for responsive updates
+        }
+
+        return () => {
+            if (pollInterval) clearInterval(pollInterval);
+        };
+    }, [isLoading, sessionId]);
+
+    // Reset progress when loading completes
+    React.useEffect(() => {
+        if (!isLoading && progressStage > 0 && progressStage < 5) {
+            // Jump to complete
+            setProgressStage(5);
+            setRealStageName("Complete!");
+
+            // Clean up after a delay
+            const timeout = setTimeout(() => {
+                setProgressStage(0);
+                setRealStageName(null);
+                if (sessionId) {
+                    // Clean up the progress session
+                    fetch(`/api/optimize/progress?sessionId=${sessionId}`, { method: 'DELETE' }).catch(() => { });
+                    setSessionId(null);
+                }
             }, 1500);
-        } else if (progressStage > 0) {
-            setProgressStage(3);
-            const timeout = setTimeout(() => setProgressStage(0), 2000);
             return () => clearTimeout(timeout);
         }
-        return () => clearInterval(interval);
-    }, [isLoading]);
+    }, [isLoading, progressStage, sessionId]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!prompt.trim()) return;
-        onSubmit({ prompt, targetModel, strength, context, contextFiles, useOrchestration });
+
+        // Generate a new session ID for progress tracking
+        const newSessionId = crypto.randomUUID();
+        setSessionId(newSessionId);
+        setRealStageName(null);
+        setProgressStage(0);
+
+        onSubmit({
+            prompt,
+            targetModel,
+            strength,
+            context,
+            contextFiles,
+            useOrchestration,
+            sessionId: newSessionId
+        });
     };
 
     const clearForm = () => {
@@ -209,42 +270,92 @@ export function OptimizeForm({
                         </div>
                     </div>
 
-                    {/* Energy Bar Progress Animation */}
+                    {/* Real-Time Progress Bar */}
                     <div className={cn(
-                        "transition-all duration-700 ease-in-out",
-                        isLoading || progressStage > 0 ? "opacity-100 translate-y-0" : "opacity-30 pointer-events-none grayscale blur-[0.5px]"
+                        "transition-all duration-500 ease-in-out overflow-hidden",
+                        isLoading || (progressStage > 0 && progressStage <= 5) ? "opacity-100 max-h-48" : "opacity-0 max-h-0"
                     )}>
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center px-1">
-                                <span className="text-[10px] font-bold text-electric-cyan animate-pulse tracking-[0.2em] uppercase">
-                                    {STAGES[progressStage]}
-                                </span>
-                                <span className="text-[10px] font-mono text-white/40">
-                                    {isLoading ? "PHASE IN PROGRESS" : "COMPLETE"}
+                        <div className="space-y-4 py-4">
+                            {/* Stage Label - Centered above bar */}
+                            <div className="text-center">
+                                <span className="text-sm font-bold text-electric-cyan tracking-wider uppercase">
+                                    {realStageName || STAGES[progressStage]?.label || "Preparing..."}
                                 </span>
                             </div>
-                            <div className="h-3 w-full bg-deep-teal/40 rounded-full overflow-hidden relative border border-electric-cyan/20 shadow-[0_0_15px_rgba(0,255,255,0.2)]">
-                                <div
-                                    className={cn(
-                                        "absolute inset-0 bg-gradient-to-r from-electric-cyan via-sunset-orange to-electric-cyan bg-[length:50%_100%] animate-shimmer rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(0,255,255,0.5)]",
-                                        !isLoading && progressStage === 0 ? "opacity-20" : "opacity-100"
-                                    )}
-                                    style={{
-                                        width: '100%',
-                                        left: '0'
-                                    }}
-                                />
-                                {isLoading && (
-                                    <>
-                                        {/* Pulse effect */}
-                                        <div className="absolute inset-0 bg-electric-cyan/20 animate-pulse" />
-                                        <div className="absolute inset-0 flex items-center justify-around opacity-60">
-                                            {[...Array(15)].map((_, i) => (
-                                                <div key={i} className="h-full w-1 bg-white/30 blur-[2px] animate-pulse" style={{ animationDelay: `${i * 0.15}s` }} />
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
+
+                            {/* Progress Bar Container */}
+                            <div className="relative px-1">
+                                {/* Background bar */}
+                                <div className="h-3 w-full bg-deep-teal/40 rounded-full overflow-hidden border border-electric-cyan/20 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
+                                    {/* Filled portion */}
+                                    <div
+                                        className="h-full bg-gradient-to-r from-electric-cyan via-electric-cyan to-sunset-orange rounded-full transition-all duration-500 ease-out relative overflow-hidden"
+                                        style={{
+                                            width: `${STAGES[Math.min(progressStage, STAGES.length - 1)]?.percent || 5}%`,
+                                            boxShadow: '0 0 15px rgba(9, 183, 180, 0.6)'
+                                        }}
+                                    >
+                                        {/* Shimmer effect */}
+                                        {isLoading && (
+                                            <div
+                                                className="absolute inset-0 w-full h-full"
+                                                style={{
+                                                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                                                    animation: 'shimmer 1.5s infinite'
+                                                }}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Stage markers */}
+                                <div className="absolute top-1/2 -translate-y-1/2 w-full pointer-events-none">
+                                    {[
+                                        { pos: 15, stage: 1 },
+                                        { pos: 35, stage: 2 },
+                                        { pos: 60, stage: 3 },
+                                        { pos: 90, stage: 4 }
+                                    ].map(({ pos, stage }) => (
+                                        <div
+                                            key={stage}
+                                            className={cn(
+                                                "absolute h-4 w-4 rounded-full border-2 transition-all duration-500",
+                                                progressStage >= stage
+                                                    ? "bg-electric-cyan border-electric-cyan shadow-[0_0_10px_rgba(9,183,180,0.8)]"
+                                                    : "bg-midnight border-electric-cyan/30"
+                                            )}
+                                            style={{
+                                                left: `${pos}%`,
+                                                transform: 'translate(-50%, -50%)'
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Stage labels below bar */}
+                            <div className="grid grid-cols-4 text-[9px] text-white/50 uppercase tracking-wider">
+                                <span className={cn("text-center transition-colors", progressStage >= 1 && "text-electric-cyan/80")}>Classify</span>
+                                <span className={cn("text-center transition-colors", progressStage >= 2 && "text-electric-cyan/80")}>Analyze</span>
+                                <span className={cn("text-center transition-colors", progressStage >= 3 && "text-electric-cyan/80")}>Generate</span>
+                                <span className={cn("text-center transition-colors", progressStage >= 4 && "text-electric-cyan/80")}>Complete</span>
+                            </div>
+
+                            {/* Processing indicator */}
+                            <div className="flex justify-center">
+                                <span className="text-[10px] text-white/40 uppercase tracking-[0.15em] flex items-center gap-2">
+                                    {isLoading ? (
+                                        <>
+                                            <div className="h-1.5 w-1.5 rounded-full bg-electric-cyan animate-ping" />
+                                            Stage {Math.max(1, Math.min(progressStage, 4))} of 4
+                                        </>
+                                    ) : progressStage === 5 ? (
+                                        <>
+                                            <div className="h-1.5 w-1.5 rounded-full bg-green-400" />
+                                            Optimization Complete
+                                        </>
+                                    ) : null}
+                                </span>
                             </div>
                         </div>
                     </div>

@@ -150,12 +150,13 @@ export function ResultsTabs({
                         Optimized Result
                     </CardTitle>
                     <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
                         onClick={onStartNew}
-                        className="text-white/60 hover:text-white hover:bg-white/5 uppercase tracking-[0.2em] font-bold"
+                        className="border-electric-cyan/50 bg-electric-cyan/10 text-electric-cyan hover:bg-electric-cyan hover:text-midnight font-bold uppercase tracking-[0.15em] text-[11px] px-4 py-2 rounded-lg transition-all duration-300 hover:shadow-[0_0_20px_rgba(9,183,180,0.5)] hover:scale-105 flex items-center gap-2"
                     >
-                        🔄 NEW_SEQ
+                        <span className="text-lg leading-none">+</span>
+                        New Optimization
                     </Button>
                 </div>
 
