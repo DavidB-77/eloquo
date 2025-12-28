@@ -7,7 +7,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight, Zap, Paperclip, Star, Target } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -54,29 +54,29 @@ export function CTASection() {
 
                     <div className="cta-content relative z-10">
                         <h2 className="text-4xl md:text-7xl font-normal font-display mb-10 text-white uppercase glow-sm">
-                            Initialize Your <span className="text-electric-cyan italic">Success</span> Sequence
+                            Start <span className="text-electric-cyan italic">Optimizing</span> Today
                         </h2>
                         <p className="text-xl text-white/60 mb-12 max-w-2xl mx-auto font-medium leading-relaxed tracking-wide border-t border-b border-white/5 py-8">
-                            Start optimizing your prompts today with Eloquo. Join elite operators using neuro-optimization to master AI communication.
+                            Start optimizing your prompts today with Eloquo. Join professionals using AI-powered prompt optimization.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center space-y-6 sm:space-y-0 sm:space-x-8">
                             <Button size="lg" className="w-full sm:w-auto btn-gradient text-white text-xs font-bold uppercase tracking-[0.2em] px-12 h-16 rounded-xl glow-sm hover:glow-md transition-all" asChild>
                                 <Link href="/signup">
-                                    Start Protocol Initializer <ArrowRight className="ml-3 h-5 w-5" />
+                                    Start Optimizing <ArrowRight className="ml-3 h-5 w-5" />
                                 </Link>
                             </Button>
                         </div>
-                        <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">
+                        <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">
                             <div className="flex items-center space-x-2">
-                                <Zap className="h-3 w-3 text-electric-cyan" />
-                                <span>No Credit Card Required</span>
+                                <Paperclip className="h-3 w-3 text-electric-cyan" />
+                                <span>File & Image Analysis</span>
                             </div>
                             <div className="flex items-center space-x-2">
-                                <Zap className="h-3 w-3 text-electric-cyan" />
-                                <span>25 Free Optimizations</span>
+                                <Star className="h-3 w-3 text-electric-cyan" />
+                                <span>AI Quality Scoring</span>
                             </div>
                             <div className="flex items-center space-x-2">
-                                <Zap className="h-3 w-3 text-electric-cyan" />
+                                <Target className="h-3 w-3 text-electric-cyan" />
                                 <span>Multi-Model Support</span>
                             </div>
                         </div>

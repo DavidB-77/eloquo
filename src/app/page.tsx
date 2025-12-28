@@ -7,7 +7,6 @@ import { ProblemSection } from "@/components/landing/ProblemSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { PricingSection } from "@/components/landing/PricingSection";
-import { BeforeAfterSection } from "@/components/landing/BeforeAfterSection";
 import { FAQSection } from "@/components/landing/FAQSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { Footer } from "@/components/landing/Footer";
@@ -35,7 +34,6 @@ export default function LandingPage() {
         <ProblemSection />
         <HowItWorksSection />
         <FeaturesSection />
-        <BeforeAfterSection />
         <PricingSection />
         <FAQSection />
         <CTASection />
