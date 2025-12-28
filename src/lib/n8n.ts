@@ -27,6 +27,7 @@ export interface OptimizeRequest {
     contextAnswers?: Record<string, string> | null;
     comprehensiveCreditsRemaining?: number;
     forceStandard?: boolean;
+    sessionId?: string;
 }
 
 export interface OrchestrationRequest extends OptimizeRequest {
@@ -161,6 +162,7 @@ export async function callOptimize(request: OptimizeRequest): Promise<OptimizeRe
                 contextAnswers: request.contextAnswers || null,
                 comprehensiveCreditsRemaining: request.comprehensiveCreditsRemaining ?? 3,
                 forceStandard: request.forceStandard || false,
+                sessionId: request.sessionId || null,
             }),
         });
 

@@ -97,6 +97,7 @@ export async function POST(request: Request) {
             contextFiles = [],
             contextAnswers = null,
             forceStandard = false,
+            sessionId = null,
         } = body;
 
         if (!prompt || !prompt.trim()) {
@@ -164,6 +165,7 @@ export async function POST(request: Request) {
                 contextAnswers,
                 comprehensiveCreditsRemaining,
                 forceStandard,
+                sessionId,
             };
 
             result = await callOptimize(n8nRequest) as ExtendedOptimizeResult | any;
