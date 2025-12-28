@@ -14,7 +14,7 @@ const PERSONAS = [
     {
         icon: Code2,
         title: "Developers & Engineers",
-        description: "Build software faster with BMAD-structured prompts. Get architecture docs, implementation specs, and Cursor-ready outputs for your projects.",
+        description: "Build software faster with production-ready prompts. Get architecture docs, implementation specs, and Cursor-ready outputs for your projects.",
         useCase: "Generate a complete PRD and tech spec for my SaaS idea",
         color: "electric-cyan",
     },
