@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus, MessageSquare, Send, Loader2, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { Plus, MessageSquare, Send, Loader2, AlertCircle, CheckCircle, Clock, Archive } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -35,6 +35,9 @@ export default function UserSupportPage() {
     // Reply State
     const [replyUser, setReplyUser] = React.useState("");
     const [sendingReply, setSendingReply] = React.useState(false);
+
+    // Archive State
+    const [archiving, setArchiving] = React.useState(false);
 
     const supabase = createClient();
 
@@ -139,6 +142,29 @@ export default function UserSupportPage() {
             console.error("Error sending reply:", error);
         } finally {
             setSendingReply(false);
+        }
+    };
+
+    const handleArchiveTicket = async () => {
+        if (!selectedTicket) return;
+        setArchiving(true);
+
+        try {
+            const { error } = await supabase
+                .from('support_tickets')
+                .update({ archived: true })
+                .eq('id', selectedTicket.id);
+
+            if (error) throw error;
+
+            // Remove from local state and clear selection
+            setTickets(prev => prev.filter(t => t.id !== selectedTicket.id));
+            setSelectedTicket(null);
+            setResponses([]);
+        } catch (error) {
+            console.error("Error archiving ticket:", error);
+        } finally {
+            setArchiving(false);
         }
     };
 
@@ -274,6 +300,20 @@ export default function UserSupportPage() {
                                 )}>
                                     {selectedTicket.status}
                                 </div>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleArchiveTicket}
+                                    disabled={archiving}
+                                    className="text-gray-400 hover:text-orange-400 hover:bg-orange-500/10"
+                                >
+                                    {archiving ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Archive className="h-4 w-4" />
+                                    )}
+                                    <span className="ml-1.5">Archive</span>
+                                </Button>
                             </div>
 
                             <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-black/20">

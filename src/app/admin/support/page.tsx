@@ -1,13 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { Search, Filter, MessageSquare, Clock, CheckCircle, AlertCircle, Send, Loader2 } from "lucide-react";
+import { Search, Filter, MessageSquare, Clock, CheckCircle, AlertCircle, Send, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { formatDistanceToNow } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const STATUS_STYLES = {
     open: { bg: "bg-red-500/20", text: "text-red-400", label: "Open" },
@@ -24,6 +25,10 @@ export default function AdminSupportPage() {
     const [sendingResponse, setSendingResponse] = React.useState(false);
     const [ticketResponses, setTicketResponses] = React.useState<any[]>([]);
     const [loadingResponses, setLoadingResponses] = React.useState(false);
+
+    // Delete state
+    const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+    const [deleting, setDeleting] = React.useState(false);
 
     const supabase = createClient();
 
@@ -126,6 +131,39 @@ export default function AdminSupportPage() {
             console.error("Error sending response:", error);
         } finally {
             setSendingResponse(false);
+        }
+    };
+
+    const handleDeleteTicket = async () => {
+        if (!selectedTicket) return;
+        setDeleting(true);
+
+        try {
+            // 1. Delete all responses first
+            const { error: respError } = await supabase
+                .from('ticket_responses')
+                .delete()
+                .eq('ticket_id', selectedTicket.id);
+
+            if (respError) throw respError;
+
+            // 2. Delete the ticket
+            const { error: ticketError } = await supabase
+                .from('support_tickets')
+                .delete()
+                .eq('id', selectedTicket.id);
+
+            if (ticketError) throw ticketError;
+
+            // Remove from local state and clear selection
+            setTickets(prev => prev.filter(t => t.id !== selectedTicket.id));
+            setSelectedTicket(null);
+            setTicketResponses([]);
+            setShowDeleteConfirm(false);
+        } catch (error) {
+            console.error("Error deleting ticket:", error);
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -253,6 +291,15 @@ export default function AdminSupportPage() {
                                             <option value="pending">Pending</option>
                                             <option value="resolved">Resolved</option>
                                         </select>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setShowDeleteConfirm(true)}
+                                            className="text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            <span className="ml-1.5">Delete</span>
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
@@ -326,6 +373,50 @@ export default function AdminSupportPage() {
                     )}
                 </div>
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                <DialogContent className="bg-midnight border-red-500/20 text-white">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-400">
+                            <AlertTriangle className="h-5 w-5" />
+                            Delete Ticket Permanently
+                        </DialogTitle>
+                        <DialogDescription className="text-gray-400">
+                            This action cannot be undone. This will permanently delete the ticket
+                            <span className="text-white font-medium"> "{selectedTicket?.subject}"</span> and all
+                            {ticketResponses.length > 0 ? ` ${ticketResponses.length} ` : ' '}
+                            associated responses.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button
+                            variant="ghost"
+                            onClick={() => setShowDeleteConfirm(false)}
+                            disabled={deleting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleDeleteTicket}
+                            disabled={deleting}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                            {deleting ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                <>
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete Permanently
+                                </>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
