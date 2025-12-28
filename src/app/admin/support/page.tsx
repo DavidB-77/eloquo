@@ -37,6 +37,12 @@ export default function AdminSupportPage() {
     const [searchQuery, setSearchQuery] = React.useState('');
     const [ticketFilter, setTicketFilter] = React.useState<'active' | 'archived'>('active');
 
+    // Bulk delete (flush) state
+    const [showFlushModal, setShowFlushModal] = React.useState(false);
+    const [flushStatus, setFlushStatus] = React.useState<'open' | 'pending' | 'resolved' | null>(null);
+    const [flushConfirmText, setFlushConfirmText] = React.useState('');
+    const [flushing, setFlushing] = React.useState(false);
+
     const supabase = createClient();
 
     const fetchTickets = React.useCallback(async () => {
@@ -199,6 +205,53 @@ export default function AdminSupportPage() {
         }
     };
 
+    const handleFlushStatus = async () => {
+        if (!flushStatus || flushConfirmText !== 'DELETE') return;
+        setFlushing(true);
+
+        try {
+            // Get all ticket IDs matching the status (non-archived)
+            const ticketsToDelete = tickets.filter(t => t.status === flushStatus && !t.archived);
+
+            for (const ticket of ticketsToDelete) {
+                // Delete responses first
+                await supabase
+                    .from('ticket_responses')
+                    .delete()
+                    .eq('ticket_id', ticket.id);
+
+                // Delete ticket
+                await supabase
+                    .from('support_tickets')
+                    .delete()
+                    .eq('id', ticket.id);
+            }
+
+            // Update local state
+            setTickets(prev => prev.filter(t => !(t.status === flushStatus && !t.archived)));
+
+            // Clear selection if the selected ticket was deleted
+            if (selectedTicket && selectedTicket.status === flushStatus && !selectedTicket.archived) {
+                setSelectedTicket(null);
+                setTicketResponses([]);
+            }
+
+            setShowFlushModal(false);
+            setFlushStatus(null);
+            setFlushConfirmText('');
+        } catch (error) {
+            console.error("Error flushing tickets:", error);
+        } finally {
+            setFlushing(false);
+        }
+    };
+
+    const openFlushModal = (status: 'open' | 'pending' | 'resolved') => {
+        setFlushStatus(status);
+        setFlushConfirmText('');
+        setShowFlushModal(true);
+    };
+
     const stats = {
         open: tickets.filter((t) => t.status === "open" && !t.archived).length,
         pending: tickets.filter((t) => t.status === "pending" && !t.archived).length,
@@ -225,20 +278,57 @@ export default function AdminSupportPage() {
         <div className="space-y-6">
             {/* Stats Bar */}
             <div className="flex items-center justify-between p-4 bg-[#1a1a1a] border border-white/10 rounded-xl">
-                <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
+                    {/* Clickable Open Counter */}
+                    <button
+                        onClick={() => stats.open > 0 && openFlushModal('open')}
+                        disabled={stats.open === 0}
+                        className={cn(
+                            "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all",
+                            stats.open > 0
+                                ? "hover:bg-red-500/20 cursor-pointer"
+                                : "cursor-default opacity-60"
+                        )}
+                        title={stats.open > 0 ? "Click to flush all open tickets" : "No open tickets"}
+                    >
                         <AlertCircle className="h-4 w-4 text-red-400" />
                         <span className="text-sm text-white">{stats.open} Open</span>
-                    </div>
-                    <div className="flex items-center gap-2">
+                    </button>
+
+                    {/* Clickable Pending Counter */}
+                    <button
+                        onClick={() => stats.pending > 0 && openFlushModal('pending')}
+                        disabled={stats.pending === 0}
+                        className={cn(
+                            "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all",
+                            stats.pending > 0
+                                ? "hover:bg-yellow-500/20 cursor-pointer"
+                                : "cursor-default opacity-60"
+                        )}
+                        title={stats.pending > 0 ? "Click to flush all pending tickets" : "No pending tickets"}
+                    >
                         <Clock className="h-4 w-4 text-yellow-400" />
                         <span className="text-sm text-white">{stats.pending} Pending</span>
-                    </div>
-                    <div className="flex items-center gap-2">
+                    </button>
+
+                    {/* Clickable Resolved Counter */}
+                    <button
+                        onClick={() => stats.resolved > 0 && openFlushModal('resolved')}
+                        disabled={stats.resolved === 0}
+                        className={cn(
+                            "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all",
+                            stats.resolved > 0
+                                ? "hover:bg-green-500/20 cursor-pointer"
+                                : "cursor-default opacity-60"
+                        )}
+                        title={stats.resolved > 0 ? "Click to flush all resolved tickets" : "No resolved tickets"}
+                    >
                         <CheckCircle className="h-4 w-4 text-green-400" />
                         <span className="text-sm text-white">{stats.resolved} Resolved</span>
-                    </div>
-                    <div className="flex items-center gap-2">
+                    </button>
+
+                    {/* Non-clickable Archived Counter */}
+                    <div className="flex items-center gap-2 px-3 py-1.5">
                         <Archive className="h-4 w-4 text-orange-400" />
                         <span className="text-sm text-white">{stats.archived} Archived</span>
                     </div>
@@ -525,6 +615,71 @@ export default function AdminSupportPage() {
                                 <>
                                     <Trash2 className="h-4 w-4 mr-2" />
                                     Delete Permanently
+                                </>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Flush Status Confirmation Dialog */}
+            <Dialog open={showFlushModal} onOpenChange={(open) => {
+                if (!open) {
+                    setShowFlushModal(false);
+                    setFlushStatus(null);
+                    setFlushConfirmText('');
+                }
+            }}>
+                <DialogContent className="bg-midnight border-red-500/30 text-white">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-400">
+                            <AlertTriangle className="h-5 w-5" />
+                            Flush All {flushStatus?.charAt(0).toUpperCase()}{flushStatus?.slice(1)} Tickets
+                        </DialogTitle>
+                        <DialogDescription className="text-gray-400">
+                            This will <span className="text-red-400 font-bold">permanently delete</span> all
+                            <span className="text-white font-medium"> {flushStatus && stats[flushStatus]} {flushStatus}</span> tickets
+                            and their responses. This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-3">
+                        <p className="text-sm text-gray-300">
+                            Type <span className="font-mono bg-red-500/20 text-red-400 px-2 py-0.5 rounded">DELETE</span> to confirm:
+                        </p>
+                        <Input
+                            value={flushConfirmText}
+                            onChange={(e) => setFlushConfirmText(e.target.value)}
+                            placeholder="Type DELETE to confirm"
+                            className="bg-black/30 border-red-500/30 text-white font-mono"
+                            autoFocus
+                        />
+                    </div>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button
+                            variant="ghost"
+                            onClick={() => {
+                                setShowFlushModal(false);
+                                setFlushStatus(null);
+                                setFlushConfirmText('');
+                            }}
+                            disabled={flushing}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleFlushStatus}
+                            disabled={flushing || flushConfirmText !== 'DELETE'}
+                            className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+                        >
+                            {flushing ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                <>
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete {flushStatus && stats[flushStatus]} Tickets
                                 </>
                             )}
                         </Button>
