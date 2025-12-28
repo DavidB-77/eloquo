@@ -1,14 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Container } from "@/components/layout/Container";
-import { Check, Terminal, Puzzle, Workflow, ExternalLink } from "lucide-react";
+import { Check, Puzzle, Workflow, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-gsap.registerPlugin(ScrollTrigger);
 
 const COMPATIBILITY_FEATURES = [
     "Cursor-ready output format",
@@ -25,38 +20,10 @@ const IDE_LOGOS = [
 ];
 
 export function BMADSection() {
-    const sectionRef = React.useRef<HTMLDivElement>(null);
-
-    useGSAP(() => {
-        gsap.from(".compat-header > *", {
-            scrollTrigger: {
-                trigger: ".compat-header",
-                start: "top 85%",
-            },
-            y: 30,
-            opacity: 0,
-            duration: 1,
-            stagger: 0.2,
-            ease: "power3.out"
-        });
-
-        gsap.from(".compat-card", {
-            scrollTrigger: {
-                trigger: ".compat-cards",
-                start: "top 80%",
-            },
-            y: 40,
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.15,
-            ease: "expo.out"
-        });
-    }, { scope: sectionRef });
-
     return (
-        <section ref={sectionRef} className="py-24 relative overflow-hidden">
+        <section className="py-24 relative overflow-hidden">
             <Container>
-                <div className="compat-header text-center mb-16">
+                <div className="text-center mb-16">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-electric-cyan/10 border border-electric-cyan/20 mb-6">
                         <Puzzle className="h-4 w-4 text-electric-cyan" />
                         <span className="text-xs font-bold text-electric-cyan uppercase tracking-wider">Workflow Integration</span>
@@ -70,12 +37,12 @@ export function BMADSection() {
                 </div>
 
                 {/* IDE Compatibility */}
-                <div className="compat-cards grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
                     {IDE_LOGOS.map((ide, i) => (
                         <div
                             key={i}
                             className={cn(
-                                "compat-card glass p-6 rounded-2xl border border-white/10 hover:border-electric-cyan/30 transition-all duration-300 text-center group"
+                                "glass p-6 rounded-2xl border border-white/10 hover:border-electric-cyan/30 transition-all duration-300 text-center group"
                             )}
                         >
                             <div className="text-3xl mb-3">{ide.icon}</div>
