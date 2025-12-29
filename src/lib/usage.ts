@@ -77,10 +77,10 @@ export async function getUserUsage(userId: string): Promise<UsageStats> {
     // If RPC works, use that data
     if (!rpcError && rpcData) {
         const stats = Array.isArray(rpcData) ? rpcData[0] : rpcData;
-        const tier = stats.subscription_tier as SubscriptionTier || 'basic';
+        const tier = (stats.tier || stats.subscription_tier) as SubscriptionTier || 'basic';
         const tierLimits = TIER_LIMITS[tier] || TIER_LIMITS.basic;
-        const optimizationsUsed = stats.optimizations_used || 0;
-        const optimizationsLimit = stats.optimizations_limit || tierLimits.optimizations;
+        const optimizationsUsed = stats.used || stats.optimizations_used || 0;
+        const optimizationsLimit = stats.limit || stats.optimizations_limit || tierLimits.optimizations;
         const premiumCreditsUsed = stats.premium_credits_used || 0;
         const premiumCreditsLimit = stats.premium_credits_limit || tierLimits.premiumCredits;
 
