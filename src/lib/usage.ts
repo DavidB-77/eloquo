@@ -69,49 +69,66 @@ async function getOrCreateUsageRecord(userId: string) {
 export async function getUserUsage(userId: string): Promise<UsageStats> {
     const supabase = await createClient();
 
-    // Use RPC to get all limits and usage in one call
-    const { data, error } = await supabase.rpc('get_user_tier_limits', {
+    // First try RPC to get all limits and usage in one call
+    const { data: rpcData, error: rpcError } = await supabase.rpc('get_user_tier_limits', {
         p_user_id: userId
     });
 
-    if (error || !data) {
-        console.error('Failed to fetch user tier limits:', error);
-        // Fallback to basic tier if RPC fails
+    // If RPC works, use that data
+    if (!rpcError && rpcData) {
+        const stats = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+        const tier = stats.subscription_tier as SubscriptionTier || 'basic';
+        const tierLimits = TIER_LIMITS[tier] || TIER_LIMITS.basic;
+        const optimizationsUsed = stats.optimizations_used || 0;
+        const optimizationsLimit = stats.optimizations_limit || tierLimits.optimizations;
+        const premiumCreditsUsed = stats.premium_credits_used || 0;
+        const premiumCreditsLimit = stats.premium_credits_limit || tierLimits.premiumCredits;
+
         return {
-            tier: 'basic',
-            optimizationsUsed: 0,
-            optimizationsLimit: 150,
-            premiumCreditsUsed: 0,
-            premiumCreditsLimit: 0,
-            canOptimize: true,
-            canOrchestrate: false,
-            hasMcpAccess: false,
-            comprehensiveCreditsRemaining: 3,
+            tier,
+            optimizationsUsed,
+            optimizationsLimit: tier === 'enterprise' ? 999999 : optimizationsLimit,
+            premiumCreditsUsed,
+            premiumCreditsLimit,
+            canOptimize: optimizationsUsed < optimizationsLimit || tier === 'enterprise',
+            canOrchestrate: tier === 'enterprise' || (premiumCreditsUsed < premiumCreditsLimit),
+            hasMcpAccess: stats.has_mcp_access || tier !== 'basic',
+            comprehensiveCreditsRemaining: stats.comprehensive_credits_remaining ?? 3,
         };
     }
 
-    // Handle both array and single object returns from RPC
-    const stats = Array.isArray(data) ? data[0] : data;
+    // Fallback: Query profiles table directly
+    console.warn('RPC get_user_tier_limits failed, falling back to direct query:', rpcError);
 
-    const tier = stats.subscription_tier as SubscriptionTier || 'basic';
+    const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('subscription_tier, optimizations_used, comprehensive_credits_remaining, has_mcp_access')
+        .eq('id', userId)
+        .single();
+
+    if (profileError) {
+        console.error('Failed to fetch profile:', profileError);
+    }
+
+    // Get tier from database or default to basic
+    const tier = (profile?.subscription_tier as SubscriptionTier) || 'basic';
     const tierLimits = TIER_LIMITS[tier] || TIER_LIMITS.basic;
-    const optimizationsUsed = stats.optimizations_used || 0;
-    const optimizationsLimit = stats.optimizations_limit || tierLimits.optimizations;
-    const premiumCreditsUsed = stats.premium_credits_used || 0;
-    const premiumCreditsLimit = stats.premium_credits_limit || tierLimits.premiumCredits;
+    const optimizationsUsed = profile?.optimizations_used || 0;
+    const optimizationsLimit = tier === 'enterprise' ? 999999 : tierLimits.optimizations;
 
     return {
         tier,
         optimizationsUsed,
-        optimizationsLimit: tier === 'enterprise' ? 999999 : optimizationsLimit,
-        premiumCreditsUsed,
-        premiumCreditsLimit,
+        optimizationsLimit,
+        premiumCreditsUsed: 0,
+        premiumCreditsLimit: tierLimits.premiumCredits,
         canOptimize: optimizationsUsed < optimizationsLimit || tier === 'enterprise',
-        canOrchestrate: tier === 'enterprise' || (premiumCreditsUsed < premiumCreditsLimit),
-        hasMcpAccess: stats.has_mcp_access || tier !== 'basic',
-        comprehensiveCreditsRemaining: stats.comprehensive_credits_remaining ?? 3,
+        canOrchestrate: tier === 'enterprise' || tier === 'business',
+        hasMcpAccess: profile?.has_mcp_access || tier !== 'basic',
+        comprehensiveCreditsRemaining: profile?.comprehensive_credits_remaining ?? 3,
     };
 }
+
 
 /**
  * Check if user can perform an optimization
