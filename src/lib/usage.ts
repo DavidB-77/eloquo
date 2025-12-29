@@ -94,18 +94,19 @@ export async function getUserUsage(userId: string): Promise<UsageStats> {
     const stats = Array.isArray(data) ? data[0] : data;
 
     const tier = stats.subscription_tier as SubscriptionTier || 'basic';
+    const tierLimits = TIER_LIMITS[tier] || TIER_LIMITS.basic;
     const optimizationsUsed = stats.optimizations_used || 0;
-    const optimizationsLimit = stats.optimizations_limit || 25;
+    const optimizationsLimit = stats.optimizations_limit || tierLimits.optimizations;
     const premiumCreditsUsed = stats.premium_credits_used || 0;
-    const premiumCreditsLimit = stats.premium_credits_limit || 0;
+    const premiumCreditsLimit = stats.premium_credits_limit || tierLimits.premiumCredits;
 
     return {
         tier,
         optimizationsUsed,
-        optimizationsLimit,
+        optimizationsLimit: tier === 'enterprise' ? 999999 : optimizationsLimit,
         premiumCreditsUsed,
         premiumCreditsLimit,
-        canOptimize: optimizationsUsed < optimizationsLimit || optimizationsLimit === -1, // -1 or Infinity
+        canOptimize: optimizationsUsed < optimizationsLimit || tier === 'enterprise',
         canOrchestrate: tier === 'enterprise' || (premiumCreditsUsed < premiumCreditsLimit),
         hasMcpAccess: stats.has_mcp_access || tier !== 'basic',
         comprehensiveCreditsRemaining: stats.comprehensive_credits_remaining ?? 3,
