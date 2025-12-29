@@ -7,9 +7,9 @@ import { createClient } from '@/lib/supabase/server';
 
 // Tier limits
 export const TIER_LIMITS = {
-    free: { optimizations: 25, premiumCredits: 0, hasMcpAccess: false },
-    pro: { optimizations: 200, premiumCredits: 100, hasMcpAccess: true },
-    team: { optimizations: 5000, premiumCredits: 500, hasMcpAccess: true },
+    basic: { optimizations: 150, premiumCredits: 0, hasMcpAccess: false },
+    pro: { optimizations: 400, premiumCredits: 100, hasMcpAccess: true },
+    business: { optimizations: 1000, premiumCredits: 500, hasMcpAccess: true },
     enterprise: { optimizations: Infinity, premiumCredits: Infinity, hasMcpAccess: true },
 } as const;
 
@@ -76,11 +76,11 @@ export async function getUserUsage(userId: string): Promise<UsageStats> {
 
     if (error || !data) {
         console.error('Failed to fetch user tier limits:', error);
-        // Fallback to basic free tier if RPC fails
+        // Fallback to basic tier if RPC fails
         return {
-            tier: 'free',
+            tier: 'basic',
             optimizationsUsed: 0,
-            optimizationsLimit: 25,
+            optimizationsLimit: 150,
             premiumCreditsUsed: 0,
             premiumCreditsLimit: 0,
             canOptimize: true,
@@ -93,7 +93,7 @@ export async function getUserUsage(userId: string): Promise<UsageStats> {
     // Handle both array and single object returns from RPC
     const stats = Array.isArray(data) ? data[0] : data;
 
-    const tier = stats.subscription_tier as SubscriptionTier || 'free';
+    const tier = stats.subscription_tier as SubscriptionTier || 'basic';
     const optimizationsUsed = stats.optimizations_used || 0;
     const optimizationsLimit = stats.optimizations_limit || 25;
     const premiumCreditsUsed = stats.premium_credits_used || 0;
@@ -107,7 +107,7 @@ export async function getUserUsage(userId: string): Promise<UsageStats> {
         premiumCreditsLimit,
         canOptimize: optimizationsUsed < optimizationsLimit || optimizationsLimit === -1, // -1 or Infinity
         canOrchestrate: tier === 'enterprise' || (premiumCreditsUsed < premiumCreditsLimit),
-        hasMcpAccess: stats.has_mcp_access || tier !== 'free',
+        hasMcpAccess: stats.has_mcp_access || tier !== 'basic',
         comprehensiveCreditsRemaining: stats.comprehensive_credits_remaining ?? 3,
     };
 }

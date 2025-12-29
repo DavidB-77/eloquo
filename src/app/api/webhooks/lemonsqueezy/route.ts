@@ -92,11 +92,11 @@ export async function POST(request: Request) {
             }
 
             case 'subscription_expired': {
-                // Subscription has fully expired, downgrade to free
+                // Subscription has fully expired, downgrade to basic
                 const { error } = await supabase
                     .from('profiles')
                     .update({
-                        subscription_tier: 'free',
+                        subscription_tier: 'basic',
                         subscription_status: 'active',
                         updated_at: new Date().toISOString(),
                     })

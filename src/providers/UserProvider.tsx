@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import { useAuth } from "@/providers/AuthProvider";
 
 interface UserData {
-    tier: "free" | "pro" | "team" | "enterprise";
+    tier: "basic" | "pro" | "business" | "enterprise";
     optimizationsUsed: number;
     optimizationsLimit: number;
     premiumCreditsUsed: number;

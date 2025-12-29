@@ -100,10 +100,13 @@ export function DashboardSidebar() {
                             <UsageBar
                                 used={userData.optimizationsUsed}
                                 limit={userData.optimizationsLimit}
-                                label="Active Cycles"
+                                label="Credits"
                                 showNumbers={true}
                             />
-                            <div className="mt-6">
+                            <div className="mt-2 text-[9px] text-white/30 font-mono">
+                                1 opt = 1 credit • Project Protocol = 5
+                            </div>
+                            <div className="mt-4">
                                 <Link href="/dashboard/settings?tab=subscription" className="text-[10px] font-bold text-sunset-orange uppercase tracking-[0.2em] hover:text-white transition-colors flex items-center gap-1">
                                     <span>Expand Protocol</span>
                                     <ChevronRight className="h-3 w-3" />

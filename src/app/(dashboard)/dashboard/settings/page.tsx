@@ -27,11 +27,11 @@ const MOCK_API_KEYS = [
     },
 ];
 
-const PLAN_DETAILS = {
-    free: { name: "Free", price: "$0/mo", color: "bg-muted text-muted-foreground" },
+const PLAN_DETAILS: Record<string, { name: string; price: string; color: string }> = {
+    basic: { name: "Basic", price: "$7/mo", color: "bg-muted text-muted-foreground" },
     pro: { name: "Pro", price: "$9/mo", color: "bg-primary text-primary-foreground" },
-    team: { name: "Team", price: "$99/mo", color: "bg-accent text-accent-foreground" },
-    enterprise: { name: "Enterprise", price: "$249/mo", color: "bg-gradient-to-r from-primary to-accent text-white" },
+    business: { name: "Business", price: "$20/mo", color: "bg-accent text-accent-foreground" },
+    enterprise: { name: "Enterprise", price: "Custom", color: "bg-gradient-to-r from-primary to-accent text-white" },
 };
 
 const TABS = [
@@ -55,9 +55,9 @@ function SettingsContent() {
 
     // Default fallback if loading or no data
     const usage = userData || {
-        tier: "free" as const,
+        tier: "basic" as const,
         optimizationsUsed: 0,
-        optimizationsLimit: 10,
+        optimizationsLimit: 150,
         premiumCreditsUsed: 0,
         premiumCreditsLimit: 0,
         hasMcpAccess: false,
@@ -160,14 +160,14 @@ function SettingsContent() {
                                     <div>
                                         <p className="font-bold text-lg">{plan.price}</p>
                                         <p className="text-sm text-muted-foreground">
-                                            {usage.tier === "free" ? "Free forever" : "Billed monthly"}
+                                            {usage.tier === "basic" ? "Basic plan" : "Billed monthly"}
                                         </p>
                                     </div>
                                 </div>
-                                {usage.tier === "free" && (
+                                {usage.tier === "basic" && (
                                     <Button>Upgrade to Pro</Button>
                                 )}
-                                {usage.tier !== "free" && (
+                                {usage.tier !== "basic" && (
                                     <Button variant="outline">
                                         <ExternalLink className="h-4 w-4 mr-2" />
                                         Manage Subscription
@@ -222,9 +222,10 @@ function SettingsContent() {
                         </CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {(["free", "pro"] as const).map((tier) => {
+                                {(["basic", "pro", "business"] as const).map((tier) => {
                                     const tierPlan = PLAN_DETAILS[tier];
                                     const isCurrentPlan = usage.tier === tier;
+                                    const credits = tier === "basic" ? "150" : tier === "pro" ? "400" : "1000";
                                     return (
                                         <div
                                             key={tier}
@@ -238,15 +239,15 @@ function SettingsContent() {
                                             <ul className="space-y-2 text-sm text-muted-foreground">
                                                 <li className="flex items-center">
                                                     <Check className="h-4 w-4 text-success mr-2" />
-                                                    {tier === "free" ? "25" : "200"} protocol cycles
+                                                    {credits} credits/month
                                                 </li>
                                                 <li className="flex items-center">
                                                     <Check className="h-4 w-4 text-success mr-2" />
-                                                    {tier === "free" ? "Limited" : "Full"} model access
+                                                    {tier === "basic" ? "Email" : tier === "pro" ? "Priority" : "Dedicated"} support
                                                 </li>
                                                 <li className="flex items-center">
-                                                    <Check className={`h-4 w-4 mr-2 ${tier === "free" ? "text-muted" : "text-success"}`} />
-                                                    Prompt Archive access
+                                                    <Check className={`h-4 w-4 mr-2 ${tier === "basic" ? "text-muted" : "text-success"}`} />
+                                                    MCP/API access
                                                 </li>
                                             </ul>
                                         </div>

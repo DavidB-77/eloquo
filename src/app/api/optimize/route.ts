@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
         const settings = settingsData?.value || {};
         const isTestMode = settings.test_mode_enabled === true;
-        const freeLimit = typeof settings.free_plan_monthly_limit === 'number' ? settings.free_plan_monthly_limit : 10;
+        const basicLimit = typeof settings.basic_plan_monthly_limit === 'number' ? settings.basic_plan_monthly_limit : 150;
 
         // 2b. Re-Check usage limits with dynamic Free Tier limit
         const { data: profile } = await supabase
@@ -57,19 +57,19 @@ export async function POST(request: Request) {
             .eq('id', user.id)
             .single();
 
-        const userTier = (profile?.subscription_tier as 'free' | 'pro' | 'team' | 'enterprise') || 'free';
+        const userTier = (profile?.subscription_tier as 'basic' | 'pro' | 'business' | 'enterprise') || 'basic';
         const comprehensiveCreditsRemaining = profile?.comprehensive_credits_remaining ?? 3;
 
         // We run the standard check first to get usage stats
         const { canOptimize, usage } = await checkUsageLimits(user.id);
 
-        // Apply strict dynamic limit for free users
-        if (userTier === 'free') {
-            if (usage.optimizationsUsed >= freeLimit) {
+        // Apply strict dynamic limit for basic users
+        if (userTier === 'basic') {
+            if (usage.optimizationsUsed >= basicLimit) {
                 return NextResponse.json(
                     {
                         success: false,
-                        error: `Free plan limit of ${freeLimit} optimizations reached. Please upgrade to Pro.`,
+                        error: `Basic plan limit of ${basicLimit} optimizations reached. Please upgrade to Pro.`,
                         usage
                     },
                     { status: 429 }

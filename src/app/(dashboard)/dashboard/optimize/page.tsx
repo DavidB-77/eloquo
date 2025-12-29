@@ -77,7 +77,7 @@ export default function OptimizePage() {
 
     // User data from context
     const { userData, refreshUserData } = useUser();
-    const userTier = userData?.tier || "free";
+    const userTier = userData?.tier || "basic";
     const comprehensiveCredits = userData?.comprehensiveCreditsRemaining ?? null;
 
     const handleSubmit = async (data: OptimizeFormData, contextAnswers?: Record<string, string>, forceStandard?: boolean) => {
@@ -225,10 +225,10 @@ export default function OptimizePage() {
 
                 <div className="flex items-center gap-3">
                     <Badge
-                        variant={userTier === "free" ? "secondary" : "default"}
+                        variant={userTier === "basic" ? "secondary" : "default"}
                         className={cn(
                             "capitalize",
-                            userTier !== "free" && "bg-primary/10 text-primary border-primary/20"
+                            userTier !== "basic" && "bg-primary/10 text-primary border-primary/20"
                         )}
                     >
                         <Crown className="h-3 w-3 mr-1" />
@@ -242,7 +242,7 @@ export default function OptimizePage() {
                         </div>
                     )}
 
-                    {userTier === "free" && (
+                    {userTier === "basic" && (
                         <Button variant="outline" size="sm" asChild>
                             <Link href="/pricing">Upgrade</Link>
                         </Button>
@@ -330,7 +330,7 @@ export default function OptimizePage() {
                             onSubmit={(data) => handleSubmit(data)}
                             isLoading={false}
                             canOptimize={true}
-                            canOrchestrate={userTier !== "free"}
+                            canOrchestrate={userTier !== "basic"}
                             initialData={submittedData || undefined}
                         />
                     </div>

@@ -34,7 +34,7 @@ export function getKeyPrefix(key: string): string {
  * Extract tier from API key format
  */
 export function getTierFromKey(key: string): SubscriptionTier | null {
-    const match = key.match(/^elk_(free|pro|team|enterprise)_/);
+    const match = key.match(/^elk_(basic|pro|business|enterprise)_/);
     return match ? (match[1] as SubscriptionTier) : null;
 }
 
@@ -72,7 +72,7 @@ export async function validateApiKey(key: string): Promise<{
         .eq('id', apiKey.user_id)
         .single();
 
-    const tier = (profile?.subscription_tier as SubscriptionTier) || 'free';
+    const tier = (profile?.subscription_tier as SubscriptionTier) || 'basic';
     const hasMcpAccess = TIER_LIMITS[tier].hasMcpAccess;
 
     // Update last_used_at
@@ -105,7 +105,7 @@ export async function createApiKey(
         .eq('id', userId)
         .single();
 
-    const tier = (profile?.subscription_tier as SubscriptionTier) || 'free';
+    const tier = (profile?.subscription_tier as SubscriptionTier) || 'basic';
 
     // Check if user has MCP access
     if (!TIER_LIMITS[tier].hasMcpAccess) {

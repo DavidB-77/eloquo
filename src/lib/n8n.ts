@@ -22,7 +22,7 @@ export interface OptimizeRequest {
     additionalContext?: string;
     // New fields for n8n v2
     userId?: string;
-    userTier?: 'free' | 'pro' | 'team' | 'enterprise';
+    userTier?: 'basic' | 'pro' | 'business' | 'enterprise';
     contextFiles?: ContextFile[];
     contextAnswers?: Record<string, string> | null;
     comprehensiveCreditsRemaining?: number;
