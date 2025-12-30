@@ -98,6 +98,21 @@ export default function AdminOverviewPage() {
                     console.warn('Could not fetch OpenRouter balance');
                 }
 
+                // 5. Fetch Agent Metrics for Optimizations Today
+                try {
+                    const agentRes = await fetch('/api/admin/agent-metrics?endpoint=summary&period=today');
+                    const agentData = await agentRes.json();
+                    if (agentData && !agentData.error && agentData.overview?.total_requests !== undefined) {
+                        // Use agent data if available (overrides Supabase count)
+                        setStats(prev => ({
+                            ...prev,
+                            optimizations: agentData.overview.total_requests,
+                        }));
+                    }
+                } catch (e) {
+                    console.warn('Could not fetch agent metrics');
+                }
+
             } catch (error) {
                 console.error("Failed to fetch admin dashboard data:", error);
             } finally {

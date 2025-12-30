@@ -21,6 +21,7 @@ export default function AdminAnalyticsPage() {
 
     // Data states
     const [dashboardStats, setDashboardStats] = React.useState<any>(null);
+    const [agentMetrics, setAgentMetrics] = React.useState<any>(null);
     const [dailyData, setDailyData] = React.useState<any[]>([]);
     const [topUsers, setTopUsers] = React.useState<any[]>([]);
     const [modelStats, setModelStats] = React.useState<any[]>([]);
@@ -52,13 +53,16 @@ export default function AdminAnalyticsPage() {
         setLoading(true);
         try {
             const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : timeRange === "90d" ? 90 : 365;
+            const agentPeriod = timeRange === "7d" ? "week" : timeRange === "30d" ? "month" : "all";
 
-            const [dashRes, dailyRes, usersRes, modelsRes, balanceRes] = await Promise.all([
+            const [dashRes, dailyRes, usersRes, modelsRes, balanceRes, agentRes, agentTodayRes] = await Promise.all([
                 fetch('/api/admin/analytics?type=dashboard'),
                 fetch(`/api/admin/analytics?type=daily&days=${days}`),
                 fetch('/api/admin/analytics?type=users&limit=10'),
                 fetch('/api/admin/analytics?type=models'),
-                fetch('/api/admin/analytics?type=balance')
+                fetch('/api/admin/analytics?type=balance'),
+                fetch(`/api/admin/agent-metrics?endpoint=summary&period=${agentPeriod}`).catch(() => null),
+                fetch('/api/admin/agent-metrics?endpoint=summary&period=today').catch(() => null),
             ]);
 
             const dashData = await dashRes.json();
@@ -66,11 +70,22 @@ export default function AdminAnalyticsPage() {
             const users = await usersRes.json();
             const models = await modelsRes.json();
             const balance = await balanceRes.json();
+            const agentData = agentRes ? await agentRes.json() : null;
+            const agentTodayData = agentTodayRes ? await agentTodayRes.json() : null;
 
             if (dashData.success) setDashboardStats(dashData.data);
             if (daily.success) setDailyData(daily.data || []);
             if (users.success) setTopUsers(users.data || []);
             if (models.success) setModelStats(models.data || []);
+
+            // Merge agent metrics (if available)
+            if (agentData && !agentData.error) {
+                setAgentMetrics({
+                    ...agentData,
+                    today: agentTodayData && !agentTodayData.error ? agentTodayData : null,
+                });
+            }
+
             if (balance.success && balance.data) {
                 setBalanceData(balance.data);
                 setNewBalance(balance.data.balance !== null ? balance.data.balance.toString() : "0");
@@ -292,29 +307,27 @@ export default function AdminAnalyticsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
                     title="Total Optimizations"
-                    value={dashboardStats?.total_optimizations?.toLocaleString() || "0"}
+                    value={(agentMetrics?.overview?.total_requests ?? dashboardStats?.total_optimizations ?? 0).toLocaleString()}
                     icon={<Zap className="h-5 w-5" />}
                     loading={loading}
                 />
                 <StatCard
-                    title="Avg Tokens Saved"
-                    value={dashboardStats?.avg_tokens_saved?.toLocaleString() || "0"}
+                    title="Avg Quality Score"
+                    value={agentMetrics?.performance?.avg_quality_score ? `${agentMetrics.performance.avg_quality_score.toFixed(1)}/10` : (dashboardStats?.avg_tokens_saved?.toLocaleString() || "—")}
                     icon={<TrendingUp className="h-5 w-5" />}
                     loading={loading}
                 />
                 <StatCard
                     title="Optimizations Today"
-                    value={dashboardStats?.optimizations_today?.toLocaleString() || "0"}
-                    change={dashboardStats?.optimizations_yesterday > 0 ? {
-                        value: `${Math.round(((dashboardStats.optimizations_today - dashboardStats.optimizations_yesterday) / dashboardStats.optimizations_yesterday) * 100)}%`,
-                        positive: dashboardStats.optimizations_today >= dashboardStats.optimizations_yesterday
-                    } : undefined}
+                    value={(agentMetrics?.today?.overview?.total_requests ?? dashboardStats?.optimizations_today ?? 0).toLocaleString()}
                     icon={<Activity className="h-5 w-5" />}
                     loading={loading}
                 />
                 <StatCard
                     title="Avg Time"
-                    value={dashboardStats?.avg_processing_time_ms ? `${(dashboardStats.avg_processing_time_ms / 1000).toFixed(1)}s` : "0s"}
+                    value={agentMetrics?.performance?.avg_processing_time_ms
+                        ? `${(agentMetrics.performance.avg_processing_time_ms / 1000).toFixed(1)}s`
+                        : (dashboardStats?.avg_processing_time_ms ? `${(dashboardStats.avg_processing_time_ms / 1000).toFixed(1)}s` : "0s")}
                     icon={<Clock className="h-5 w-5" />}
                     loading={loading}
                 />
@@ -324,19 +337,21 @@ export default function AdminAnalyticsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
                     title="Total API Cost"
-                    value={`$${dashboardStats?.total_cost_usd?.toFixed(2) || "0.00"}`}
+                    value={`$${(agentMetrics?.costs?.total ?? dashboardStats?.total_cost_usd ?? 0).toFixed(4)}`}
                     icon={<DollarSign className="h-5 w-5" />}
                     loading={loading}
                 />
                 <StatCard
                     title="Avg Cost/Opt"
-                    value={`$${dashboardStats?.avg_cost_per_optimization?.toFixed(4) || "0.0000"}`}
+                    value={`$${agentMetrics?.overview?.total_requests > 0
+                        ? ((agentMetrics.costs?.total || 0) / agentMetrics.overview.total_requests).toFixed(4)
+                        : (dashboardStats?.avg_cost_per_optimization?.toFixed(4) || "0.0000")}`}
                     icon={<ArrowUpRight className="h-5 w-5" />}
                     loading={loading}
                 />
                 <StatCard
                     title="Today's Cost"
-                    value={`$${dashboardStats?.cost_today?.toFixed(4) || "0.0000"}`}
+                    value={`$${(agentMetrics?.today?.costs?.total ?? dashboardStats?.cost_today ?? 0).toFixed(4)}`}
                     icon={<DollarSign className="h-5 w-5" />}
                     loading={loading}
                 />
