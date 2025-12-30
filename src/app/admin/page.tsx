@@ -10,7 +10,6 @@ import { formatDistanceToNow } from "date-fns";
 const MOCK_FINANCIALS = {
     mrr: 4125,
     mrrGrowth: "+8%",
-    apiCredits: 47.82,
     grossMargin: 87,
 };
 
@@ -28,11 +27,13 @@ const MOCK_ALERTS = [
 export default function AdminOverviewPage() {
     const [stats, setStats] = React.useState({
         totalUsers: 0,
-        userGrowth: "+0%", // dynamic calculation requires historical data, keeping placeholder logic or 0 for now
+        userGrowth: "+0%",
         optimizations: 0,
     });
     const [recentSignups, setRecentSignups] = React.useState<any[]>([]);
     const [loading, setLoading] = React.useState(true);
+    const [openRouterBalance, setOpenRouterBalance] = React.useState<number | null>(null);
+
 
     React.useEffect(() => {
         const fetchData = async () => {
@@ -86,6 +87,17 @@ export default function AdminOverviewPage() {
                     })));
                 }
 
+                // 4. Fetch OpenRouter Balance
+                try {
+                    const balanceRes = await fetch('/api/admin/openrouter-balance');
+                    const balanceData = await balanceRes.json();
+                    if (balanceData.success && typeof balanceData.balance === 'number') {
+                        setOpenRouterBalance(balanceData.balance);
+                    }
+                } catch (e) {
+                    console.warn('Could not fetch OpenRouter balance');
+                }
+
             } catch (error) {
                 console.error("Failed to fetch admin dashboard data:", error);
             } finally {
@@ -125,9 +137,9 @@ export default function AdminOverviewPage() {
                 />
                 <StatCard
                     title="API Credits"
-                    value={`$${MOCK_FINANCIALS.apiCredits}`}
-                    warning={MOCK_FINANCIALS.apiCredits < 50}
-                    critical={MOCK_FINANCIALS.apiCredits < 20}
+                    value={`$${openRouterBalance !== null ? openRouterBalance.toFixed(2) : '...'}`}
+                    warning={(openRouterBalance ?? 0) < 50}
+                    critical={(openRouterBalance ?? 0) < 20}
                     icon={<CreditCard className="h-5 w-5" />}
                 />
                 <StatCard
@@ -233,8 +245,8 @@ export default function AdminOverviewPage() {
                 <div className="flex items-center divide-x divide-white/10">
                     <ServiceStatus
                         name="OpenRouter"
-                        status={MOCK_FINANCIALS.apiCredits < 20 ? "error" : MOCK_FINANCIALS.apiCredits < 50 ? "warning" : "healthy"}
-                        detail={`$${MOCK_FINANCIALS.apiCredits}`}
+                        status={(openRouterBalance ?? 0) < 20 ? "error" : (openRouterBalance ?? 0) < 50 ? "warning" : "healthy"}
+                        detail={`$${openRouterBalance !== null ? openRouterBalance.toFixed(2) : '...'}`}
                     />
                     <ServiceStatus name="Lemon Squeezy" status="healthy" />
                     <ServiceStatus name="Supabase" status="healthy" />

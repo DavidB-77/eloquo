@@ -42,25 +42,37 @@ export async function GET(request: NextRequest) {
         }
 
         const openRouterData = await response.json();
-        const limitRemaining = openRouterData?.data?.limit_remaining;
 
-        if (typeof limitRemaining !== 'number') {
-            return NextResponse.json({ error: 'Unexpected response format from OpenRouter' }, { status: 500 });
-        }
+        // OpenRouter returns usage (amount spent), NOT balance
+        // We need to calculate: balance = deposited - usage
+        const depositedAmount = parseFloat(process.env.OPENROUTER_DEPOSITED_AMOUNT || "20");
+        const usage = openRouterData?.data?.usage || 0;
+        const usageDaily = openRouterData?.data?.usage_daily || 0;
+        const usageWeekly = openRouterData?.data?.usage_weekly || 0;
+        const usageMonthly = openRouterData?.data?.usage_monthly || 0;
 
-        // 4. Update database
-        const { error: updateError } = await supabase.rpc('update_openrouter_balance', {
-            new_balance: limitRemaining
-        });
+        // Calculate remaining balance
+        const balance = Math.max(0, depositedAmount - usage);
 
-        if (updateError) {
-            console.error('Failed to update database balance:', updateError);
-            return NextResponse.json({ error: 'Failed to update database balance' }, { status: 500 });
+        // 4. Update database (optional - for caching)
+        try {
+            await supabase.rpc('update_openrouter_balance', {
+                new_balance: balance
+            });
+        } catch (updateError) {
+            console.warn('Could not update database balance:', updateError);
         }
 
         return NextResponse.json({
             success: true,
-            balance: limitRemaining,
+            balance: parseFloat(balance.toFixed(2)),
+            deposited: depositedAmount,
+            usage: {
+                total: parseFloat(usage.toFixed(4)),
+                daily: parseFloat(usageDaily.toFixed(6)),
+                weekly: parseFloat(usageWeekly.toFixed(4)),
+                monthly: parseFloat(usageMonthly.toFixed(4)),
+            },
             updatedAt: new Date().toISOString()
         });
 

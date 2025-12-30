@@ -75,7 +75,7 @@ export function HeroSection() {
                             </h1>
 
                             <p className="hero-description text-xl text-[#D0D0D0] mb-10 max-w-lg font-medium leading-relaxed">
-                                Eloquo optimizes your prompts for ChatGPT, Claude, and Gemini. Upload files, get AI-validated quality scores, and receive production-ready prompts every time.
+                                Stop the endless back-and-forth with AI. Eloquo transforms your rough ideas into precision-engineered prompts that get results on the first try.
                             </p>
 
                             <div className="hero-actions flex flex-col sm:flex-row items-center justify-start space-y-4 sm:space-y-0 sm:space-x-6 mb-12">
@@ -108,15 +108,15 @@ export function HeroSection() {
                             <div className="hero-stats flex items-center justify-start flex-wrap gap-4 text-[11px] font-bold text-white uppercase tracking-[0.1em]">
                                 <div className="flex items-center space-x-2 bg-electric-cyan/10 border border-electric-cyan/30 rounded-full px-4 py-2">
                                     <Target className="h-3.5 w-3.5 text-electric-cyan" />
-                                    <span>Multi-Model</span>
+                                    <span>One-Shot Accuracy</span>
                                 </div>
                                 <div className="flex items-center space-x-2 bg-electric-cyan/10 border border-electric-cyan/30 rounded-full px-4 py-2">
                                     <Star className="h-3.5 w-3.5 text-electric-cyan" />
-                                    <span>AI Quality Score</span>
+                                    <span>10x Faster Workflows</span>
                                 </div>
                                 <div className="flex items-center space-x-2 bg-electric-cyan/10 border border-electric-cyan/30 rounded-full px-4 py-2">
                                     <Paperclip className="h-3.5 w-3.5 text-electric-cyan" />
-                                    <span>File Analysis</span>
+                                    <span>Works With Any AI</span>
                                 </div>
                             </div>
                         </div>

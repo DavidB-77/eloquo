@@ -177,8 +177,8 @@ export default function AdminSettingsPage() {
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-white">Free Plan Monthly Limit</p>
-                            <p className="text-xs text-gray-500">Number of optimizations for free users</p>
+                            <p className="text-sm font-medium text-white">Basic Plan Monthly Limit</p>
+                            <p className="text-xs text-gray-500">Number of optimizations for basic tier users</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <Input

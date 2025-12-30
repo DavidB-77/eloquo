@@ -22,22 +22,22 @@ gsap.registerPlugin(ScrollTrigger);
 const FEATURES = [
     {
         title: "Prompt Analysis",
-        description: "Deep analysis of your prompt's structure, clarity, and effectiveness.",
+        description: "Understand exactly why your prompts work or don't—with actionable insights to improve.",
         icon: <BarChart3 className="h-6 w-6" />,
     },
     {
         title: "One-Click Optimization",
-        description: "Instantly transform loose ideas into high-performing, expert-level prompts.",
+        description: "Transform loose ideas into precision-engineered prompts that get results on the first try.",
         icon: <Wand2 className="h-6 w-6" />,
     },
     {
-        title: "Multi-Model Support",
-        description: "Get model-specific optimizations for ChatGPT, Claude, and Gemini.",
+        title: "Formatted For Your AI",
+        description: "Each AI thinks differently. Claude gets XML, ChatGPT gets markdown, Gemini gets clean prose.",
         icon: <Layers className="h-6 w-6" />,
     },
     {
         title: "Efficiency Insights",
-        description: "Track your prompt improvements and see how much time you're saving with better-structured prompts.",
+        description: "See exactly how your prompts improved. Track your optimization history and level up over time.",
         icon: <TrendingUp className="h-6 w-6" />,
     },
     {
@@ -47,7 +47,7 @@ const FEATURES = [
     },
     {
         title: "BMAD Integration",
-        description: "Generate structured prompts following the BMAD methodology. Get PM, Architect, and Developer prompts for complex projects.",
+        description: "Generate structured prompts following the BMAD methodology for complex projects.",
         icon: <GitBranch className="h-6 w-6" />,
     },
 ];

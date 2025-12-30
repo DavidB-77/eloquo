@@ -48,9 +48,9 @@ const MOCK_BANK_ACCOUNTS = [
 ];
 
 const MOCK_PLAN_BREAKDOWN = [
-    { plan: "Free", subscribers: 847, mrr: 0, percentage: 0 },
+    { plan: "Basic", subscribers: 847, mrr: 0, percentage: 0 },
     { plan: "Pro", subscribers: 42, mrr: 1218, percentage: 68 },
-    { plan: "Team", subscribers: 5, mrr: 495, percentage: 27 },
+    { plan: "Business", subscribers: 5, mrr: 495, percentage: 27 },
     { plan: "Enterprise", subscribers: 1, mrr: 89, percentage: 5 },
 ];
 
@@ -71,6 +71,11 @@ const MOCK_COSTS = {
 export default function AdminRevenuePage() {
     return (
         <div className="space-y-6">
+            {/* Demo Data Banner */}
+            <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3 flex items-center gap-2">
+                <span className="text-orange-400 text-sm font-medium">⚠️ Demo Data — Lemon Squeezy integration coming soon</span>
+            </div>
+
             {/* Revenue Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <StatCard

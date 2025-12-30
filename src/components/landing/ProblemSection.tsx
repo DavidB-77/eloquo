@@ -13,17 +13,17 @@ gsap.registerPlugin(ScrollTrigger);
 const PAIN_POINTS = [
     {
         title: "Inconsistent AI Outputs",
-        description: "Poorly structured prompts lead to unpredictable results, forcing you to retry and waste time.",
+        description: "Tired of getting completely different answers to the same question? Eloquo adds the structure that makes AI responses consistent and reliable.",
         icon: <ZapOff className="h-10 w-10 text-electric-cyan" />,
     },
     {
-        title: "Wasted API Credits",
-        description: "Verbose and inefficient prompts consume 2-3x more tokens than necessary, ballooning your bills.",
+        title: "Wasted Iterations",
+        description: "The average user sends 5-7 follow-up messages to get what they actually wanted. With Eloquo, you get it in one shot.",
         icon: <TrendingDown className="h-10 w-10 text-electric-cyan" />,
     },
     {
         title: "No Quality Assurance",
-        description: "Without validation, you don't know if your prompt will actually work until you try it. No feedback loop means wasted iterations.",
+        description: "Every optimized prompt comes with a quality score. Know it's going to work before you use it—no more guesswork.",
         icon: <AlertCircle className="h-10 w-10 text-electric-cyan" />,
     },
 ];
