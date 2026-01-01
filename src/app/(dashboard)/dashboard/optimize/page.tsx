@@ -291,51 +291,15 @@ export default function OptimizePage() {
     };
 
     return (
-        <div className="space-y-6">
-            {/* Optimization Modal with Mini-Games */}
+        <>
+            {/* Optimization Modal - always available */}
             <OptimizationModal
                 isOpen={showOptimizationModal}
                 isComplete={optimizationComplete}
                 onViewResults={handleViewResults}
             />
 
-            {/* Header with Tier Display */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold font-display tracking-tight">Optimize</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Transform your prompts for maximum effectiveness across any AI model.
-                    </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <Badge
-                        variant={userTier === "basic" ? "secondary" : "default"}
-                        className={cn(
-                            "capitalize",
-                            userTier !== "basic" && "bg-primary/10 text-primary border-primary/20"
-                        )}
-                    >
-                        <Crown className="h-3 w-3 mr-1" />
-                        {userTier} Plan
-                    </Badge>
-
-                    {comprehensiveCredits !== null && (
-                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <Zap className="h-4 w-4 text-primary" />
-                            <span>{comprehensiveCredits} comprehensive credits</span>
-                        </div>
-                    )}
-
-                    {userTier === "basic" && (
-                        <Button variant="outline" size="sm" asChild>
-                            <Link href="/pricing">Upgrade</Link>
-                        </Button>
-                    )}
-                </div>
-            </div>
-
-            {/* Upgrade Modal */}
+            {/* Upgrade Modal - always available */}
             {upgradeData && (
                 <UpgradeModal
                     isOpen={showUpgradeModal}
@@ -348,112 +312,151 @@ export default function OptimizePage() {
                 />
             )}
 
-            {/* Error State */}
-            {error && !result && !ppResult && (
-                <Card className="border-destructive bg-destructive/5">
-                    <CardContent className="py-6">
-                        <div className="flex items-start space-x-3">
-                            <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                            <div>
-                                <p className="font-medium text-destructive">Generation Failed</p>
-                                <p className="text-sm text-muted-foreground mt-1">{error}</p>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="mt-4"
-                                    onClick={handleStartNew}
-                                >
-                                    Try Again
-                                </Button>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* PP Loading State */}
-            {ppLoading && (
-                <div className="mt-8 p-8 border border-electric-cyan/30 rounded-xl bg-midnight/80 text-center">
-                    <div className="animate-spin w-12 h-12 border-4 border-electric-cyan border-t-transparent rounded-full mx-auto mb-4" />
-                    <p className="text-electric-cyan font-medium text-lg">🚀 Generating Project Documents...</p>
-                    <p className="text-white/50 text-sm mt-2">This takes 15-30 seconds. Creating PRD, Architecture, and Implementation Stories.</p>
-                </div>
-            )}
-
-            {/* PP Results - Full Page View */}
-            {ppResult && !ppLoading && (
+            {/* PP Results - Full Page View (replaces entire page) */}
+            {ppResult && !ppLoading ? (
                 <ProjectProtocolResults
                     result={ppResult}
                     onNewProject={handleStartNew}
                     onBack={() => setPpResult(null)}
                 />
-            )}
+            ) : (
+                /* Normal Optimize Page */
+                <div className="space-y-6">
+                    {/* Header with Tier Display */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h1 className="text-3xl font-bold font-display tracking-tight">Optimize</h1>
+                            <p className="text-muted-foreground mt-1">
+                                Transform your prompts for maximum effectiveness across any AI model.
+                            </p>
+                        </div>
 
-            {/* Results View */}
-            {result && !showOptimizationModal ? (
-                <div
-                    className={cn(
-                        "grid gap-6 animate-in slide-in-from-right-5 duration-300",
-                        "lg:grid-cols-[35%_1fr]"
-                    )}
-                >
-                    {/* Left: Input Summary */}
-                    {submittedData && (
-                        <InputSummary
-                            prompt={submittedData.prompt}
-                            targetModel={submittedData.targetModel}
-                            strength={submittedData.strength}
-                            context={submittedData.context}
-                            files={submittedData.contextFiles}
-                            onEdit={handleEdit}
-                        />
-                    )}
+                        <div className="flex items-center gap-3">
+                            <Badge
+                                variant={userTier === "basic" ? "secondary" : "default"}
+                                className={cn(
+                                    "capitalize",
+                                    userTier !== "basic" && "bg-primary/10 text-primary border-primary/20"
+                                )}
+                            >
+                                <Crown className="h-3 w-3 mr-1" />
+                                {userTier} Plan
+                            </Badge>
 
-                    {/* Right: Results */}
-                    <div className="space-y-4">
-                        <ResultsTabs
-                            results={result.results}
-                            metrics={getMetrics() || undefined}
-                            targetModel={submittedData?.targetModel || "universal"}
-                            onStartNew={handleStartNew}
-                            improvements={result.improvements}
-                            validation={result.validation}
-                        />
-                    </div>
-                </div>
-            ) : !showOptimizationModal ? (
-                /* Form + Questions Layout */
-                <div className={cn(
-                    "grid gap-6 transition-all duration-500",
-                    showQuestions ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 max-w-6xl mx-auto"
-                )}>
-                    {/* Left: Form */}
-                    <div className="w-full">
-                        <OptimizeForm
-                            onSubmit={(data) => handleSubmit(data)}
-                            isLoading={false}
-                            canOptimize={true}
-                            canOrchestrate={userTier !== "basic"}
-                            initialData={submittedData || undefined}
-                        />
+                            {comprehensiveCredits !== null && (
+                                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                    <Zap className="h-4 w-4 text-primary" />
+                                    <span>{comprehensiveCredits} comprehensive credits</span>
+                                </div>
+                            )}
+
+                            {userTier === "basic" && (
+                                <Button variant="outline" size="sm" asChild>
+                                    <Link href="/pricing">Upgrade</Link>
+                                </Button>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Right: Questions panel (appears when needed) */}
-                    {showQuestions && clarificationData && (
-                        <div className="w-full h-full animate-in slide-in-from-right duration-500">
-                            <QuestionsForm
-                                questions={clarificationData.questions}
-                                originalPrompt={clarificationData.originalPrompt}
-                                creditsWillUse={clarificationData.creditsWillUse}
-                                classification={clarificationData.classification}
-                                onSubmit={handleQuestionsSubmit}
-                                onCancel={handleQuestionsCancel}
-                                isSubmitting={isSubmittingQuestions}
-                            />
+                    {/* Error State */}
+                    {error && !result && (
+                        <Card className="border-destructive bg-destructive/5">
+                            <CardContent className="py-6">
+                                <div className="flex items-start space-x-3">
+                                    <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="font-medium text-destructive">Generation Failed</p>
+                                        <p className="text-sm text-muted-foreground mt-1">{error}</p>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="mt-4"
+                                            onClick={handleStartNew}
+                                        >
+                                            Try Again
+                                        </Button>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* PP Loading State */}
+                    {ppLoading && (
+                        <div className="mt-8 p-8 border border-electric-cyan/30 rounded-xl bg-midnight/80 text-center">
+                            <div className="animate-spin w-12 h-12 border-4 border-electric-cyan border-t-transparent rounded-full mx-auto mb-4" />
+                            <p className="text-electric-cyan font-medium text-lg">🚀 Generating Project Documents...</p>
+                            <p className="text-white/50 text-sm mt-2">This takes 15-30 seconds. Creating PRD, Architecture, and Implementation Stories.</p>
                         </div>
                     )}
+
+                    {/* Results View (Standard Optimization) */}
+                    {result && !showOptimizationModal ? (
+                        <div
+                            className={cn(
+                                "grid gap-6 animate-in slide-in-from-right-5 duration-300",
+                                "lg:grid-cols-[35%_1fr]"
+                            )}
+                        >
+                            {/* Left: Input Summary */}
+                            {submittedData && (
+                                <InputSummary
+                                    prompt={submittedData.prompt}
+                                    targetModel={submittedData.targetModel}
+                                    strength={submittedData.strength}
+                                    context={submittedData.context}
+                                    files={submittedData.contextFiles}
+                                    onEdit={handleEdit}
+                                />
+                            )}
+
+                            {/* Right: Results */}
+                            <div className="space-y-4">
+                                <ResultsTabs
+                                    results={result.results}
+                                    metrics={getMetrics() || undefined}
+                                    targetModel={submittedData?.targetModel || "universal"}
+                                    onStartNew={handleStartNew}
+                                    improvements={result.improvements}
+                                    validation={result.validation}
+                                />
+                            </div>
+                        </div>
+                    ) : !showOptimizationModal && !ppLoading ? (
+                        /* Form + Questions Layout */
+                        <div className={cn(
+                            "grid gap-6 transition-all duration-500",
+                            showQuestions ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 max-w-6xl mx-auto"
+                        )}>
+                            {/* Left: Form */}
+                            <div className="w-full">
+                                <OptimizeForm
+                                    onSubmit={(data) => handleSubmit(data)}
+                                    isLoading={false}
+                                    canOptimize={true}
+                                    canOrchestrate={userTier !== "basic"}
+                                    initialData={submittedData || undefined}
+                                />
+                            </div>
+
+                            {/* Right: Questions panel (appears when needed) */}
+                            {showQuestions && clarificationData && (
+                                <div className="w-full h-full animate-in slide-in-from-right duration-500">
+                                    <QuestionsForm
+                                        questions={clarificationData.questions}
+                                        originalPrompt={clarificationData.originalPrompt}
+                                        creditsWillUse={clarificationData.creditsWillUse}
+                                        classification={clarificationData.classification}
+                                        onSubmit={handleQuestionsSubmit}
+                                        onCancel={handleQuestionsCancel}
+                                        isSubmitting={isSubmittingQuestions}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    ) : null}
                 </div>
-            ) : null}
-        </div>
+            )}
+        </>
     );
 }
