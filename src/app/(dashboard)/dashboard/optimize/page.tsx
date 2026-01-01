@@ -8,10 +8,11 @@ import { InputSummary } from "@/components/optimize/InputSummary";
 import { QuestionsForm, type ClarificationQuestion } from "@/components/optimize/QuestionsForm";
 import { UpgradeModal, type UpgradeOption } from "@/components/optimize/UpgradeModal";
 import OptimizationModal from "@/components/OptimizationModal";
+import ProjectProtocolResults from "@/components/ProjectProtocolResults";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { AlertCircle, Zap, Crown, Copy, Download, Check } from "lucide-react";
+import { AlertCircle, Zap, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/providers/UserProvider";
 import { useAuth } from "@/providers/AuthProvider";
@@ -114,7 +115,6 @@ export default function OptimizePage() {
 
     // Project Protocol state
     const [ppResult, setPpResult] = React.useState<ProjectProtocolResponse | null>(null);
-    const [activeDocTab, setActiveDocTab] = React.useState<'prd' | 'architecture' | 'stories'>('prd');
     const [ppLoading, setPpLoading] = React.useState(false);
 
     const handleSubmit = async (data: OptimizeFormData, contextAnswers?: Record<string, string>, forceStandard?: boolean) => {
@@ -282,30 +282,6 @@ export default function OptimizePage() {
         setShowOptimizationModal(false);
         setOptimizationComplete(false);
         setPpResult(null);
-        setActiveDocTab('prd');
-    };
-
-    // PP helper functions
-    const [ppCopied, setPpCopied] = React.useState(false);
-
-    const copyDocToClipboard = async (docType: 'prd' | 'architecture' | 'stories') => {
-        if (!ppResult) return;
-        await navigator.clipboard.writeText(ppResult.documents[docType]);
-        setPpCopied(true);
-        setTimeout(() => setPpCopied(false), 2000);
-    };
-
-    const downloadPpDoc = (docType: 'prd' | 'architecture' | 'stories') => {
-        if (!ppResult) return;
-        const content = ppResult.documents[docType];
-        const filename = `${ppResult.project_name.replace(/\s+/g, '-').toLowerCase()}-${docType}.md`;
-        const blob = new Blob([content], { type: 'text/markdown' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
     };
 
     // Calculate metrics for display
@@ -404,81 +380,13 @@ export default function OptimizePage() {
                 </div>
             )}
 
-            {/* PP Results Display */}
+            {/* PP Results - Full Page View */}
             {ppResult && !ppLoading && (
-                <div className="mt-6 border border-electric-cyan/30 rounded-xl bg-midnight/80 overflow-hidden">
-                    {/* Header */}
-                    <div className="p-6 border-b border-electric-cyan/20 bg-electric-cyan/5">
-                        <div className="flex items-center gap-2 text-electric-cyan mb-2">
-                            <span>✅</span>
-                            <span className="font-semibold text-sm uppercase tracking-wider">PROJECT GENERATED</span>
-                        </div>
-                        <h2 className="text-2xl font-bold text-white">{ppResult.project_name}</h2>
-                        <p className="text-white/60 mt-1">{ppResult.project_summary}</p>
-                    </div>
-
-                    {/* Tabs */}
-                    <div className="flex border-b border-electric-cyan/20">
-                        {(['prd', 'architecture', 'stories'] as const).map((tab) => (
-                            <button
-                                key={tab}
-                                onClick={() => setActiveDocTab(tab)}
-                                className={`px-6 py-3 font-medium transition-colors ${activeDocTab === tab
-                                    ? 'text-electric-cyan border-b-2 border-electric-cyan bg-electric-cyan/10'
-                                    : 'text-white/50 hover:text-white'
-                                    }`}
-                            >
-                                {tab === 'prd' ? 'PRD' : tab === 'architecture' ? 'Architecture' : 'Stories'}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Document Content */}
-                    <div className="p-6 max-h-[600px] overflow-y-auto bg-midnight/50">
-                        <pre className="whitespace-pre-wrap font-mono text-sm text-white/80 leading-relaxed">
-                            {ppResult.documents[activeDocTab]}
-                        </pre>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="p-4 border-t border-electric-cyan/20 flex flex-col md:flex-row items-center justify-between gap-4 bg-midnight/80">
-                        <div className="flex gap-3">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => copyDocToClipboard(activeDocTab)}
-                                className="border-electric-cyan/50 text-electric-cyan hover:bg-electric-cyan/10"
-                            >
-                                {ppCopied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
-                                {ppCopied ? 'Copied!' : `Copy ${activeDocTab.toUpperCase()}`}
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => downloadPpDoc(activeDocTab)}
-                                className="border-electric-cyan/50 text-electric-cyan hover:bg-electric-cyan/10"
-                            >
-                                <Download className="h-4 w-4 mr-2" />
-                                Download
-                            </Button>
-                            <Button
-                                variant="default"
-                                size="sm"
-                                onClick={handleStartNew}
-                                className="bg-electric-cyan text-midnight hover:bg-electric-cyan/90"
-                            >
-                                New Project
-                            </Button>
-                        </div>
-
-                        {/* Metrics */}
-                        <div className="flex gap-6 text-sm text-white/50">
-                            <span>⏱ {ppResult.metrics.processing_time_sec.toFixed(1)}s</span>
-                            <span>📊 {ppResult.metrics.total_tokens.toLocaleString()} tokens</span>
-                            <span>🎫 {ppResult.credits_used} credits</span>
-                        </div>
-                    </div>
-                </div>
+                <ProjectProtocolResults
+                    result={ppResult}
+                    onNewProject={handleStartNew}
+                    onBack={() => setPpResult(null)}
+                />
             )}
 
             {/* Results View */}
