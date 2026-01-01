@@ -118,6 +118,12 @@ export default function OptimizePage() {
     const handleSubmit = async (data: OptimizeFormData, contextAnswers?: Record<string, string>, forceStandard?: boolean) => {
         // Check if Project Protocol mode
         if (data.isProjectProtocol) {
+            // Validate minimum character length
+            if (data.prompt.length < 20) {
+                setError('Project idea must be at least 20 characters. Please provide more detail about your project.');
+                return;
+            }
+
             setPpLoading(true);
             setPpResult(null);
             setError(null);
@@ -410,8 +416,8 @@ export default function OptimizePage() {
                                 key={tab}
                                 onClick={() => setActiveDocTab(tab)}
                                 className={`px-6 py-3 font-medium transition-colors ${activeDocTab === tab
-                                        ? 'text-electric-cyan border-b-2 border-electric-cyan bg-electric-cyan/10'
-                                        : 'text-white/50 hover:text-white'
+                                    ? 'text-electric-cyan border-b-2 border-electric-cyan bg-electric-cyan/10'
+                                    : 'text-white/50 hover:text-white'
                                     }`}
                             >
                                 {tab === 'prd' ? 'PRD' : tab === 'architecture' ? 'Architecture' : 'Stories'}

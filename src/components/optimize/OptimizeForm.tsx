@@ -169,6 +169,17 @@ export function OptimizeForm({
                                 </span>
                             </div>
                         </div>
+                        {/* PP minimum character notice */}
+                        {isProjectProtocol && (
+                            <div className="flex justify-between text-xs mt-2">
+                                <span className="text-white/40">
+                                    ℹ️ Minimum 20 characters for better results
+                                </span>
+                                <span className={prompt.length >= 20 ? 'text-electric-cyan' : 'text-sunset-orange'}>
+                                    {prompt.length} / 20 min
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Controls Section - Conditional based on mode */}
@@ -313,8 +324,8 @@ export function OptimizeForm({
                             type="submit"
                             size="lg"
                             className={`w-full md:w-auto h-14 px-12 rounded-xl text-lg tracking-widest uppercase glow-sm hover:glow-md active:scale-95 transition-all ${isProjectProtocol
-                                    ? "bg-electric-cyan hover:bg-electric-cyan/90 text-midnight"
-                                    : "btn-gradient"
+                                ? "bg-electric-cyan hover:bg-electric-cyan/90 text-midnight"
+                                : "btn-gradient"
                                 }`}
                             disabled={!canOptimize || !prompt.trim() || isLoading}
                         >
