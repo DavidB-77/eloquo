@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/Badge";
 import { AlertCircle, Zap, Crown, Copy, Download, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/providers/UserProvider";
+import { useAuth } from "@/providers/AuthProvider";
 
 // Response types from n8n
 interface SuccessResult {
@@ -107,6 +108,7 @@ export default function OptimizePage() {
 
     // User data from context
     const { userData, refreshUserData } = useUser();
+    const { user } = useAuth();
     const userTier = userData?.tier || "basic";
     const comprehensiveCredits = userData?.comprehensiveCreditsRemaining ?? null;
 
@@ -130,16 +132,22 @@ export default function OptimizePage() {
             setSubmittedData(data);
 
             try {
+                const payload = {
+                    project_idea: data.prompt,
+                    project_type: data.projectType || 'saas',
+                    tech_preferences: data.techPreferences || null,
+                    target_audience: data.targetAudience || null,
+                    additional_context: data.context || null,
+                    user_id: user?.id || '',
+                    user_tier: userData?.tier || 'basic',
+                };
+
+                console.log('Sending to Project Protocol:', payload);
+
                 const response = await fetch('https://agent.eloquo.io/project-protocol', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        project_idea: data.prompt,
-                        project_type: data.projectType || 'saas',
-                        tech_preferences: data.techPreferences || '',
-                        target_audience: data.targetAudience || '',
-                        additional_context: data.context || '',
-                    }),
+                    body: JSON.stringify(payload),
                 });
 
                 if (!response.ok) {
