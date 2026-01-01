@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/Button';
 import { ArrowLeft, RefreshCw, Copy, Download, Check } from 'lucide-react';
+import RatingStars from '@/components/RatingStars';
 
 interface ProjectProtocolResponse {
     success: boolean;
@@ -169,8 +170,8 @@ ${result.documents.stories}
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`px-4 md:px-6 py-3 font-medium transition-colors ${activeTab === tab.id
-                                    ? 'text-electric-cyan border-b-2 border-electric-cyan bg-electric-cyan/10'
-                                    : 'text-white/50 hover:text-white hover:bg-white/5'
+                                ? 'text-electric-cyan border-b-2 border-electric-cyan bg-electric-cyan/10'
+                                : 'text-white/50 hover:text-white hover:bg-white/5'
                                 }`}
                         >
                             {tab.label}
@@ -234,6 +235,11 @@ ${result.documents.stories}
                                 <span>{result.credits_used} credits</span>
                             </span>
                         </div>
+                    </div>
+
+                    {/* Rating Stars */}
+                    <div className="border-t border-electric-cyan/20 mt-4 pt-2">
+                        <RatingStars requestId={result.request_id} />
                     </div>
                 </div>
             </div>

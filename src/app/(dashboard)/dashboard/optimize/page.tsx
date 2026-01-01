@@ -126,6 +126,9 @@ export default function OptimizePage() {
                 return;
             }
 
+            // Show game modal during PP generation (takes 15-30 seconds)
+            setShowOptimizationModal(true);
+            setOptimizationComplete(false);
             setPpLoading(true);
             setPpResult(null);
             setError(null);
@@ -162,6 +165,7 @@ export default function OptimizePage() {
                 setError(err instanceof Error ? err.message : 'Project Protocol generation failed');
             } finally {
                 setPpLoading(false);
+                setShowOptimizationModal(false);
             }
             return;
         }
