@@ -11,7 +11,8 @@ import {
     DialogTitle
 } from '@/components/ui/dialog';
 import { formatDistanceToNow } from 'date-fns';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, Download, ChevronDown } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 
 interface Optimization {
     id: string;
@@ -44,6 +45,60 @@ export default function HistoryPage() {
     const [error, setError] = useState<string | null>(null);
     const [selectedItem, setSelectedItem] = useState<Optimization | null>(null);
     const [copied, setCopied] = useState(false);
+    const [showExportMenu, setShowExportMenu] = useState(false);
+
+    // Export functions
+    const exportToCSV = () => {
+        const headers = ['Date', 'Original Prompt', 'Target Model', 'Tokens Original', 'Tokens Optimized', 'Tokens Saved', 'Quality Score', 'Type'];
+        const rows = history.map(opt => [
+            new Date(opt.created_at).toISOString().split('T')[0],
+            `"${(opt.original_prompt || '').replace(/"/g, '""')}"`,
+            opt.target_model,
+            opt.tokens_original,
+            opt.tokens_optimized,
+            opt.tokens_saved,
+            opt.metrics?.qualityScore || '',
+            opt.was_orchestrated ? 'orchestrated' : 'standard'
+        ]);
+
+        const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+        downloadFile(csv, 'eloquo-history.csv', 'text/csv');
+        setShowExportMenu(false);
+    };
+
+    const exportToJSON = () => {
+        const data = {
+            exported_at: new Date().toISOString(),
+            total_records: history.length,
+            optimizations: history.map(opt => ({
+                id: opt.id,
+                created_at: opt.created_at,
+                original_prompt: opt.original_prompt,
+                optimized_prompt: opt.optimized_prompt,
+                target_model: opt.target_model,
+                tokens_original: opt.tokens_original,
+                tokens_optimized: opt.tokens_optimized,
+                tokens_saved: opt.tokens_saved,
+                quality_score: opt.metrics?.qualityScore || null,
+                type: opt.was_orchestrated ? 'orchestrated' : 'standard'
+            }))
+        };
+
+        downloadFile(JSON.stringify(data, null, 2), 'eloquo-history.json', 'application/json');
+        setShowExportMenu(false);
+    };
+
+    const downloadFile = (content: string, filename: string, mimeType: string) => {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
 
     useEffect(() => {
         fetchHistory();
@@ -119,11 +174,48 @@ export default function HistoryPage() {
 
     return (
         <div className="space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold font-display tracking-tight">Optimization History</h1>
-                <p className="text-white/60 mt-1">
-                    View your past optimizations and track token savings.
-                </p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold font-display tracking-tight">Optimization History</h1>
+                    <p className="text-white/60 mt-1">
+                        View your past optimizations and track token savings.
+                    </p>
+                </div>
+
+                {/* Export Button */}
+                {history.length > 0 && (
+                    <div className="relative">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowExportMenu(!showExportMenu)}
+                            className="flex items-center gap-2 border-electric-cyan/30 hover:bg-electric-cyan/10"
+                        >
+                            <Download className="h-4 w-4" />
+                            Export
+                            <ChevronDown className="h-3 w-3" />
+                        </Button>
+
+                        {showExportMenu && (
+                            <div className="absolute right-0 top-full mt-2 bg-midnight border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+                                <button
+                                    onClick={exportToCSV}
+                                    className="w-full px-4 py-2 text-sm text-left text-white hover:bg-electric-cyan/10 flex items-center gap-2"
+                                >
+                                    <Download className="h-4 w-4" />
+                                    Export as CSV
+                                </button>
+                                <button
+                                    onClick={exportToJSON}
+                                    className="w-full px-4 py-2 text-sm text-left text-white hover:bg-electric-cyan/10 flex items-center gap-2"
+                                >
+                                    <Download className="h-4 w-4" />
+                                    Export as JSON
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Stats Cards */}

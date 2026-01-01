@@ -24,6 +24,11 @@ export interface OptimizeFormData {
     context: string;
     contextFiles: ContextFile[];
     useOrchestration: boolean;
+    // Project Protocol fields
+    isProjectProtocol?: boolean;
+    projectType?: string;
+    targetAudience?: string;
+    techPreferences?: string;
 }
 
 interface OptimizeFormProps {
@@ -47,6 +52,11 @@ export function OptimizeForm({
     const [context, setContext] = React.useState(initialData?.context || "");
     const [contextFiles, setContextFiles] = React.useState<ContextFile[]>(initialData?.contextFiles || []);
     const [useOrchestration, setUseOrchestration] = React.useState(initialData?.useOrchestration || false);
+    // Project Protocol state
+    const [isProjectProtocol, setIsProjectProtocol] = React.useState(initialData?.isProjectProtocol || false);
+    const [projectType, setProjectType] = React.useState(initialData?.projectType || "saas");
+    const [targetAudience, setTargetAudience] = React.useState(initialData?.targetAudience || "");
+    const [techPreferences, setTechPreferences] = React.useState(initialData?.techPreferences || "");
 
     // Update form when initialData changes (for edit mode)
     React.useEffect(() => {
@@ -71,6 +81,10 @@ export function OptimizeForm({
             context,
             contextFiles,
             useOrchestration,
+            isProjectProtocol,
+            projectType,
+            targetAudience,
+            techPreferences,
         });
     };
 
@@ -94,8 +108,38 @@ export function OptimizeForm({
                         <div className="h-px flex-1 bg-gradient-to-r from-electric-cyan/50 to-transparent" />
                     </div>
                     <p className="text-white/60 text-sm font-medium tracking-wide">
-                        ENTER YOUR PROMPT BELOW FOR BIOLUMINESCENT OPTIMIZATION
+                        {isProjectProtocol ? "DESCRIBE YOUR PROJECT FOR FULL DOCUMENTATION" : "ENTER YOUR PROMPT BELOW FOR AI-POWERED OPTIMIZATION"}
                     </p>
+                </div>
+
+                {/* Project Protocol Toggle */}
+                <div
+                    className={`p-4 rounded-xl border transition-all cursor-pointer ${isProjectProtocol
+                        ? "bg-electric-cyan/10 border-electric-cyan/40 shadow-[0_0_15px_rgba(9,183,180,0.2)]"
+                        : "bg-white/5 border-white/10 hover:border-white/20"
+                        }`}
+                    onClick={() => setIsProjectProtocol(!isProjectProtocol)}
+                >
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <span className="text-xl">🚀</span>
+                            <div>
+                                <p className="text-sm font-bold text-white">PROJECT PROTOCOL</p>
+                                <p className="text-xs text-white/60">Generate PRD, Architecture & Implementation Stories</p>
+                            </div>
+                        </div>
+                        <div className={`w-12 h-6 rounded-full transition-colors relative ${isProjectProtocol ? "bg-electric-cyan" : "bg-white/20"
+                            }`}>
+                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isProjectProtocol ? "left-7" : "left-1"
+                                }`} />
+                        </div>
+                    </div>
+                    {isProjectProtocol && (
+                        <div className="mt-3 pt-3 border-t border-electric-cyan/20 flex items-center gap-2">
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-electric-cyan/20 text-electric-cyan font-bold">5 CREDITS</span>
+                            <span className="text-[10px] text-white/40">Generates complete project documentation</span>
+                        </div>
+                    )}
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8">
@@ -103,7 +147,7 @@ export function OptimizeForm({
                     <div className="space-y-4">
                         <div className="flex justify-between items-end">
                             <label className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em]">
-                                Input Prompt <span className="text-terracotta">*</span>
+                                {isProjectProtocol ? "Project Idea" : "Input Prompt"} <span className="text-terracotta">*</span>
                             </label>
                             <span className="text-[10px] text-white/40 flex items-center gap-1.5 uppercase tracking-wider">
                                 <Globe className="h-3 w-3" />
@@ -113,10 +157,10 @@ export function OptimizeForm({
 
                         <div className="relative group">
                             <Textarea
-                                placeholder="What would you like to build today?"
+                                placeholder={isProjectProtocol ? "Describe your project idea in detail..." : "What would you like to optimize?"}
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
-                                rows={6}
+                                rows={isProjectProtocol ? 8 : 6}
                                 className="resize-none bg-midnight border-electric-cyan/20 focus:border-electric-cyan focus:ring-4 focus:ring-electric-cyan/5 text-white placeholder:text-white/20 rounded-xl transition-all duration-300 py-4 px-5 text-lg leading-relaxed shadow-inner"
                             />
                             <div className="absolute bottom-4 right-4 flex items-center space-x-4">
@@ -127,48 +171,95 @@ export function OptimizeForm({
                         </div>
                     </div>
 
-                    {/* Controls Section */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
-                        <div className="space-y-4">
-                            <label className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em]">
-                                Target Model
-                            </label>
-                            <div className="relative">
-                                <Select
-                                    value={targetModel}
-                                    onChange={(e) => setTargetModel(e.target.value)}
-                                    className="w-full bg-deep-teal/20 border-electric-cyan/20 text-white rounded-xl h-12 hover:bg-deep-teal/40 transition-colors cursor-pointer"
-                                >
-                                    {TARGET_MODELS.map((model) => (
-                                        <option key={model.value} value={model.value} className="bg-midnight">
-                                            {model.icon} {model.label}
-                                        </option>
+                    {/* Controls Section - Conditional based on mode */}
+                    {!isProjectProtocol ? (
+                        // Standard Optimization Controls
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em]">
+                                    Target Model
+                                </label>
+                                <div className="relative">
+                                    <Select
+                                        value={targetModel}
+                                        onChange={(e) => setTargetModel(e.target.value)}
+                                        className="w-full bg-deep-teal/20 border-electric-cyan/20 text-white rounded-xl h-12 hover:bg-deep-teal/40 transition-colors cursor-pointer"
+                                    >
+                                        {TARGET_MODELS.map((model) => (
+                                            <option key={model.value} value={model.value} className="bg-midnight">
+                                                {model.icon} {model.label}
+                                            </option>
+                                        ))}
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em]">
+                                    Optimization Strength
+                                </label>
+                                <div className="flex bg-deep-teal/20 border border-electric-cyan/20 p-1 rounded-xl h-12">
+                                    {STRENGTH_OPTIONS.map((option) => (
+                                        <button
+                                            key={option.value}
+                                            type="button"
+                                            onClick={() => setStrength(option.value)}
+                                            className={`flex-1 rounded-lg text-xs font-bold uppercase tracking-widest transition-all duration-300 ${strength === option.value
+                                                ? "bg-electric-cyan text-midnight shadow-[0_0_15px_rgba(9,183,180,0.4)]"
+                                                : "text-white/60 hover:text-white"
+                                                }`}
+                                        >
+                                            {option.label}
+                                        </button>
                                     ))}
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        // Project Protocol Controls
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em]">
+                                    Project Type
+                                </label>
+                                <Select
+                                    value={projectType}
+                                    onChange={(e) => setProjectType(e.target.value)}
+                                    className="w-full bg-deep-teal/20 border-electric-cyan/20 text-white rounded-xl h-12"
+                                >
+                                    <option value="saas" className="bg-midnight">SaaS Application</option>
+                                    <option value="web_app" className="bg-midnight">Web Application</option>
+                                    <option value="mobile_app" className="bg-midnight">Mobile App</option>
+                                    <option value="api" className="bg-midnight">API / Backend</option>
+                                    <option value="tool" className="bg-midnight">Tool / Utility</option>
                                 </Select>
                             </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <label className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em]">
-                                Optimization Strength
-                            </label>
-                            <div className="flex bg-deep-teal/20 border border-electric-cyan/20 p-1 rounded-xl h-12">
-                                {STRENGTH_OPTIONS.map((option) => (
-                                    <button
-                                        key={option.value}
-                                        type="button"
-                                        onClick={() => setStrength(option.value)}
-                                        className={`flex-1 rounded-lg text-xs font-bold uppercase tracking-widest transition-all duration-300 ${strength === option.value
-                                            ? "bg-electric-cyan text-midnight shadow-[0_0_15px_rgba(9,183,180,0.4)]"
-                                            : "text-white/60 hover:text-white"
-                                            }`}
-                                    >
-                                        {option.label}
-                                    </button>
-                                ))}
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em]">
+                                    Target Audience <span className="text-white/40">(optional)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={targetAudience}
+                                    onChange={(e) => setTargetAudience(e.target.value)}
+                                    placeholder="e.g., Small businesses, developers"
+                                    className="w-full bg-deep-teal/20 border border-electric-cyan/20 text-white rounded-xl h-12 px-4 placeholder:text-white/20"
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em]">
+                                    Tech Preferences <span className="text-white/40">(optional)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={techPreferences}
+                                    onChange={(e) => setTechPreferences(e.target.value)}
+                                    placeholder="e.g., React, Node.js, PostgreSQL"
+                                    className="w-full bg-deep-teal/20 border border-electric-cyan/20 text-white rounded-xl h-12 px-4 placeholder:text-white/20"
+                                />
                             </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Context and Files */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
@@ -200,7 +291,11 @@ export function OptimizeForm({
                         <div className="flex flex-col">
                             <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.1em]">Cost Structure</span>
                             <div className="flex items-center mt-1">
-                                {useOrchestration ? (
+                                {isProjectProtocol ? (
+                                    <span className="flex items-center text-xs text-electric-cyan font-bold">
+                                        🚀 5 PROJECT PROTOCOL CREDITS
+                                    </span>
+                                ) : useOrchestration ? (
                                     <span className="flex items-center text-xs text-electric-cyan font-bold">
                                         <Sparkles className="h-3 w-3 mr-1.5" />
                                         PREMIUM ORCHESTRATION ACTIVE
@@ -217,12 +312,21 @@ export function OptimizeForm({
                         <Button
                             type="submit"
                             size="lg"
-                            className="w-full md:w-auto h-14 px-12 rounded-xl btn-gradient text-lg tracking-widest uppercase glow-sm hover:glow-md active:scale-95 transition-all"
+                            className={`w-full md:w-auto h-14 px-12 rounded-xl text-lg tracking-widest uppercase glow-sm hover:glow-md active:scale-95 transition-all ${isProjectProtocol
+                                    ? "bg-electric-cyan hover:bg-electric-cyan/90 text-midnight"
+                                    : "btn-gradient"
+                                }`}
                             disabled={!canOptimize || !prompt.trim() || isLoading}
                         >
                             <div className="flex items-center">
-                                <Zap className="h-5 w-5 mr-3 fill-current" />
-                                Optimize
+                                {isProjectProtocol ? (
+                                    <>🚀 Generate Project</>
+                                ) : (
+                                    <>
+                                        <Zap className="h-5 w-5 mr-3 fill-current" />
+                                        Optimize
+                                    </>
+                                )}
                             </div>
                         </Button>
                     </div>
