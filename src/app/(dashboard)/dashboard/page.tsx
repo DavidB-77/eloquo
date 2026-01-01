@@ -9,7 +9,8 @@ import {
     History,
     ArrowRight,
     Settings,
-    LayoutDashboard
+    LayoutDashboard,
+    Star
 } from "lucide-react";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -55,16 +56,17 @@ export default function DashboardPage() {
 
     const recentPrompts = historyData?.history || [];
 
-    // Time saved estimate: 10 mins per optimization
-    const timeSavedHours = (totalOptimizations * 10) / 60;
+    // Calculate avg quality score and ratings count from stats
+    const avgQualityScore = stats.avg_quality_score || 0;
+    const ratingsGiven = stats.ratings_given || 0;
 
     return (
         <div className="space-y-8">
             {/* Welcome Header */}
             <div>
-                <h1 className="text-4xl font-display text-white glow-sm tracking-tighter">OPERATIONAL NEXUS</h1>
+                <h1 className="text-4xl font-display text-white glow-sm tracking-tighter">Dashboard</h1>
                 <p className="text-white/60 mt-2 font-medium tracking-wide border-l-2 border-electric-cyan pl-4">
-                    AUTHENTICATED. STATUS: <span className="text-electric-cyan animate-pulse">ACTIVE</span>
+                    Welcome back
                 </p>
             </div>
 
@@ -74,25 +76,25 @@ export default function DashboardPage() {
                     title="Total Optimizations"
                     value={totalOptimizations.toLocaleString()}
                     icon={Zap}
-                    description="Total protocol cycles"
+                    description="All-time optimizations"
                 />
                 <StatsCard
-                    title="Tokens Saved"
-                    value={`${(tokensSaved / 1000).toFixed(1)}K`}
+                    title="Avg Quality Score"
+                    value={avgQualityScore > 0 ? avgQualityScore.toFixed(1) : "—"}
                     icon={Activity}
-                    description={`Avg. ${Math.round(avgSavingsPercent)}% per prompt`}
+                    description="Across all optimizations"
                 />
                 <StatsCard
                     title="Active Models"
                     value={userData ? "6+" : "0"}
                     icon={Users}
-                    description="Multi-model support active"
+                    description="Multi-model support"
                 />
                 <StatsCard
-                    title="Time Saved"
-                    value={`${timeSavedHours.toFixed(1)}h`}
-                    icon={Clock}
-                    description="Protocol efficiency gain"
+                    title="Ratings Given"
+                    value={ratingsGiven.toLocaleString()}
+                    icon={Star}
+                    description="Help improve Eloquo"
                 />
             </div>
 
@@ -101,11 +103,11 @@ export default function DashboardPage() {
                 <Card className="lg:col-span-2 glass border-electric-cyan/10 overflow-hidden">
                     <CardHeader className="flex flex-row items-center justify-between border-b border-electric-cyan/10 bg-midnight/20">
                         <CardTitle className="text-white font-display uppercase tracking-widest text-lg">
-                            Archive Records
+                            Recent Optimizations
                         </CardTitle>
                         <Button variant="ghost" size="sm" asChild className="text-electric-cyan hover:bg-electric-cyan/10">
                             <Link href="/dashboard/history" className="flex items-center">
-                                Access Full History <ArrowRight className="ml-2 h-4 w-4" />
+                                View History <ArrowRight className="ml-2 h-4 w-4" />
                             </Link>
                         </Button>
                     </CardHeader>
@@ -123,7 +125,7 @@ export default function DashboardPage() {
                                 {isLoading ? (
                                     <TableRow>
                                         <TableCell colSpan={4} className="text-center py-12 text-white/20 italic">
-                                            Scanning neural archive...
+                                            Loading history...
                                         </TableCell>
                                     </TableRow>
                                 ) : recentPrompts.length > 0 ? (
@@ -150,7 +152,7 @@ export default function DashboardPage() {
                                 ) : (
                                     <TableRow>
                                         <TableCell colSpan={4} className="text-center py-12 text-white/20 italic">
-                                            No optimizations found in archive. Initialize your first protocol.
+                                            No optimizations yet. Start optimizing to see your history.
                                         </TableCell>
                                     </TableRow>
                                 )}
@@ -164,7 +166,7 @@ export default function DashboardPage() {
 
                     <Card className="glass border-electric-cyan/10">
                         <CardHeader className="pb-4">
-                            <CardTitle className="text-sm font-display uppercase tracking-[0.2em] text-white">System Nodes</CardTitle>
+                            <CardTitle className="text-sm font-display uppercase tracking-[0.2em] text-white">Quick Actions</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <Link href="/dashboard/history" className="flex items-center p-4 rounded-xl border border-electric-cyan/5 bg-deep-teal/10 hover:bg-electric-cyan/5 hover:border-electric-cyan/20 transition-all cursor-pointer group">
@@ -172,8 +174,8 @@ export default function DashboardPage() {
                                     <History className="h-4 w-4 text-sunset-orange" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-xs font-bold text-white uppercase tracking-wider">Prompt Archive</p>
-                                    <p className="text-[10px] text-white/20 uppercase tracking-tighter opacity-60">View all optimization history</p>
+                                    <p className="text-xs font-bold text-white uppercase tracking-wider">View History</p>
+                                    <p className="text-[10px] text-white/20 uppercase tracking-tighter opacity-60">See all past optimizations</p>
                                 </div>
                                 <ArrowRight className="h-3 w-3 text-electric-cyan opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                             </Link>
@@ -182,7 +184,7 @@ export default function DashboardPage() {
                                     <Settings className="h-4 w-4 text-electric-cyan" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-xs font-bold text-white uppercase tracking-wider">Protocol Config</p>
+                                    <p className="text-xs font-bold text-white uppercase tracking-wider">Settings</p>
                                     <p className="text-[10px] text-white/20 uppercase tracking-tighter opacity-60">Manage account settings</p>
                                 </div>
                                 <ArrowRight className="h-3 w-3 text-electric-cyan opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />

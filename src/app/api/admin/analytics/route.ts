@@ -72,6 +72,77 @@ export async function GET(request: NextRequest) {
                 data = balanceData;
                 break;
 
+            case 'financial':
+                // Fetch from financial_summary view
+                const { data: financialData, error: financialError } = await supabase
+                    .from('financial_summary')
+                    .select('*')
+                    .single();
+
+                // Also get standard and bmad summaries
+                const { data: standardData } = await supabase
+                    .from('standard_optimization_summary')
+                    .select('*')
+                    .single();
+
+                const { data: bmadData } = await supabase
+                    .from('bmad_summary')
+                    .select('*')
+                    .single();
+
+                data = {
+                    totals: financialData || {},
+                    standard: standardData || {},
+                    bmad: bmadData || {}
+                };
+                break;
+
+            case 'bmad':
+                // Fetch BMAD/Project Protocol summary
+                const { data: bmadSummary, error: bmadError } = await supabase
+                    .from('bmad_summary')
+                    .select('*')
+                    .single();
+                if (bmadError && bmadError.code !== 'PGRST116') throw bmadError;
+                data = bmadSummary || {
+                    total_generations: 0,
+                    total_tokens: 0,
+                    total_credits: 0,
+                    total_api_cost: 0,
+                    avg_cost_per_generation: 0,
+                    avg_processing_ms: 0,
+                    total_revenue: 0,
+                    total_profit: 0
+                };
+                break;
+
+            case 'models_cost':
+                // Fetch model cost comparison with percentages
+                const { data: modelCostData, error: modelCostError } = await supabase
+                    .from('model_cost_comparison')
+                    .select('*')
+                    .order('total_cost', { ascending: false });
+                if (modelCostError) throw modelCostError;
+
+                // Calculate cost percentages
+                const totalCost = (modelCostData || []).reduce((sum: number, m: any) => sum + (m.total_cost || 0), 0);
+                data = (modelCostData || []).map((m: any) => ({
+                    ...m,
+                    cost_pct: totalCost > 0 ? Math.round((m.total_cost / totalCost) * 1000) / 10 : 0
+                }));
+                break;
+
+            case 'daily_financial':
+                // Fetch daily financial breakdown
+                const { data: dailyFinancial, error: dailyFinError } = await supabase
+                    .from('daily_financial_breakdown')
+                    .select('*')
+                    .gte('date', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+                    .order('date', { ascending: true });
+                if (dailyFinError) throw dailyFinError;
+                data = dailyFinancial || [];
+                break;
+
             default:
                 return NextResponse.json({ error: 'Invalid type parameter' }, { status: 400 });
         }

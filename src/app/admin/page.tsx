@@ -186,6 +186,50 @@ export default function AdminOverviewPage() {
                 </div>
             </div>
 
+            {/* Adaptive Intelligence Stats */}
+            <div>
+                <h2 className="text-lg font-semibold text-white mb-4">🧠 Adaptive Intelligence Stats</h2>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-4">
+                        <p className="text-sm text-gray-400">Training Runs</p>
+                        <p className="text-2xl font-bold text-white">—</p>
+                        <p className="text-xs text-gray-500">Total completed</p>
+                    </div>
+                    <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-4">
+                        <p className="text-sm text-gray-400">Prompts Improved</p>
+                        <p className="text-2xl font-bold text-white">—</p>
+                        <p className="text-xs text-gray-500">Via self-learning</p>
+                    </div>
+                    <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-4">
+                        <p className="text-sm text-gray-400">Avg Quality Improvement</p>
+                        <p className="text-2xl font-bold text-electric-cyan">—%</p>
+                        <p className="text-xs text-gray-500">After training</p>
+                    </div>
+                    <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-4">
+                        <p className="text-sm text-gray-400">Training Cost</p>
+                        <p className="text-2xl font-bold text-white">$—</p>
+                        <p className="text-xs text-gray-500">Total API cost</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* User Ratings Distribution */}
+            <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5">
+                <h3 className="text-sm font-medium text-white mb-4">⭐ User Ratings Distribution</h3>
+                <div className="space-y-2">
+                    {[5, 4, 3, 2, 1].map((stars) => (
+                        <div key={stars} className="flex items-center gap-3">
+                            <span className="text-sm text-white w-16">{stars} stars</span>
+                            <div className="flex-1 h-3 bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-full bg-electric-cyan/50 rounded-full" style={{ width: '0%' }} />
+                            </div>
+                            <span className="text-sm text-gray-400 w-12 text-right">—</span>
+                        </div>
+                    ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-3">Training data not yet available</p>
+            </div>
+
             {/* Charts Row - Placeholders */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5">

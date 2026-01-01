@@ -27,6 +27,8 @@ export default function AdminAnalyticsPage() {
     const [modelStats, setModelStats] = React.useState<any[]>([]);
     const [balanceData, setBalanceData] = React.useState<any>(null);
     const [newBalance, setNewBalance] = React.useState("");
+    const [bmadData, setBmadData] = React.useState<any>(null);
+    const [financialData, setFinancialData] = React.useState<any>(null);
 
     const syncBalance = React.useCallback(async () => {
         setSyncingBalance(true);
@@ -84,6 +86,20 @@ export default function AdminAnalyticsPage() {
                     ...agentData,
                     today: agentTodayData && !agentTodayData.error ? agentTodayData : null,
                 });
+            }
+
+            // Fetch financial and BMAD data
+            try {
+                const [financialRes, bmadRes] = await Promise.all([
+                    fetch('/api/admin/analytics?type=financial'),
+                    fetch('/api/admin/analytics?type=bmad'),
+                ]);
+                const finData = await financialRes.json();
+                const bmData = await bmadRes.json();
+                if (finData.success) setFinancialData(finData.data);
+                if (bmData.success) setBmadData(bmData.data);
+            } catch (e) {
+                console.warn('Could not fetch financial/bmad data');
             }
 
             if (balance.success && balance.data) {
@@ -361,6 +377,125 @@ export default function AdminAnalyticsPage() {
                     icon={<DollarSign className="h-5 w-5" />}
                     loading={loading}
                 />
+            </div>
+
+            {/* Project Protocol Metrics Row */}
+            <div className="bg-[#1a1a1a] border border-electric-cyan/20 rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-4">
+                    <span className="text-lg">🚀</span>
+                    <h3 className="text-sm font-medium text-white">Project Protocol Metrics</h3>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-electric-cyan/20 text-electric-cyan uppercase tracking-wider">BMAD</span>
+                </div>
+                {(bmadData?.total_generations ?? 0) > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="bg-midnight/50 rounded-lg p-4 border border-white/5">
+                            <p className="text-xs text-white/50 mb-1">PP Generations</p>
+                            <p className="text-2xl font-bold text-white">{bmadData?.total_generations || 0}</p>
+                        </div>
+                        <div className="bg-midnight/50 rounded-lg p-4 border border-white/5">
+                            <p className="text-xs text-white/50 mb-1">PP Revenue</p>
+                            <p className="text-2xl font-bold text-electric-cyan">${(bmadData?.total_revenue || 0).toFixed(2)}</p>
+                        </div>
+                        <div className="bg-midnight/50 rounded-lg p-4 border border-white/5">
+                            <p className="text-xs text-white/50 mb-1">PP Cost</p>
+                            <p className="text-2xl font-bold text-sunset-orange">${(bmadData?.total_api_cost || 0).toFixed(4)}</p>
+                        </div>
+                        <div className="bg-midnight/50 rounded-lg p-4 border border-white/5">
+                            <p className="text-xs text-white/50 mb-1">PP Profit</p>
+                            <p className="text-2xl font-bold text-green-400">${(bmadData?.total_profit || 0).toFixed(2)}</p>
+                            <p className="text-[10px] text-white/40 mt-1">
+                                {bmadData?.total_revenue > 0
+                                    ? `${((bmadData.total_profit / bmadData.total_revenue) * 100).toFixed(0)}% margin`
+                                    : '—'}
+                            </p>
+                        </div>
+                    </div>
+                ) : (
+                    <p className="text-sm text-white/40 italic">No Project Protocol generations yet</p>
+                )}
+            </div>
+
+            {/* Request Breakdown */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5">
+                    <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2">
+                        <Layers className="h-4 w-4 text-electric-cyan" />
+                        Request Breakdown
+                    </h3>
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 bg-midnight/50 rounded-lg border border-white/5">
+                            <div className="flex items-center gap-3">
+                                <div className="w-3 h-3 rounded-full bg-electric-cyan" />
+                                <span className="text-sm text-white">Standard Optimizations</span>
+                            </div>
+                            <div className="text-right">
+                                <span className="text-sm font-bold text-white">{financialData?.standard?.total_optimizations || 0}</span>
+                                <span className="text-xs text-white/40 ml-2">
+                                    ${(financialData?.standard?.total_api_cost || 0).toFixed(4)} cost
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-midnight/50 rounded-lg border border-electric-cyan/20">
+                            <div className="flex items-center gap-3">
+                                <div className="w-3 h-3 rounded-full bg-sunset-orange" />
+                                <span className="text-sm text-white">Project Protocol</span>
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-sunset-orange/20 text-sunset-orange uppercase">Premium</span>
+                            </div>
+                            <div className="text-right">
+                                <span className="text-sm font-bold text-white">{financialData?.bmad?.total_generations || bmadData?.total_generations || 0}</span>
+                                <span className="text-xs text-white/40 ml-2">
+                                    ${(financialData?.bmad?.total_api_cost || bmadData?.total_api_cost || 0).toFixed(4)} cost
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Business Health (Revenue/Profit) */}
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5">
+                    <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-green-400" />
+                        Revenue & Profit
+                    </h3>
+                    <div className="grid grid-cols-3 gap-3">
+                        <div className="bg-midnight/50 rounded-lg p-3 border border-white/5 text-center">
+                            <p className="text-[10px] text-white/50 uppercase tracking-wider mb-1">Revenue/Opt</p>
+                            <p className="text-lg font-bold text-electric-cyan">
+                                ${financialData?.totals?.total_requests > 0
+                                    ? (financialData.totals.total_revenue / financialData.totals.total_requests).toFixed(3)
+                                    : '0.000'}
+                            </p>
+                        </div>
+                        <div className="bg-midnight/50 rounded-lg p-3 border border-white/5 text-center">
+                            <p className="text-[10px] text-white/50 uppercase tracking-wider mb-1">Profit/Opt</p>
+                            <p className="text-lg font-bold text-green-400">
+                                ${financialData?.totals?.total_requests > 0
+                                    ? (financialData.totals.total_profit / financialData.totals.total_requests).toFixed(3)
+                                    : '0.000'}
+                            </p>
+                        </div>
+                        <div className="bg-midnight/50 rounded-lg p-3 border border-white/5 text-center">
+                            <p className="text-[10px] text-white/50 uppercase tracking-wider mb-1">Profit Margin</p>
+                            <p className="text-lg font-bold text-white">
+                                {financialData?.totals?.profit_margin_pct?.toFixed(1) || '—'}%
+                            </p>
+                        </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-white/5 grid grid-cols-3 gap-3 text-center">
+                        <div>
+                            <p className="text-[10px] text-white/40">Total Revenue</p>
+                            <p className="text-sm font-semibold text-electric-cyan">${(financialData?.totals?.total_revenue || 0).toFixed(2)}</p>
+                        </div>
+                        <div>
+                            <p className="text-[10px] text-white/40">Total Cost</p>
+                            <p className="text-sm font-semibold text-sunset-orange">${(financialData?.totals?.total_api_cost || 0).toFixed(4)}</p>
+                        </div>
+                        <div>
+                            <p className="text-[10px] text-white/40">Net Profit</p>
+                            <p className="text-sm font-semibold text-green-400">${(financialData?.totals?.total_profit || 0).toFixed(2)}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Charts Section */}
