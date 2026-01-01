@@ -66,16 +66,16 @@ export function HeroSection() {
                         <div className="hero-content text-left">
                             <div className="hero-badge inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-electric-cyan/10 border border-electric-cyan text-electric-cyan text-xs font-bold mb-8 uppercase tracking-widest shadow-[0_0_15px_rgba(0,255,255,0.3)]">
                                 <Sparkles className="h-3 w-3" />
-                                <span>Transform Your AI Workflow</span>
+                                <span>Powered by Adaptive Intelligence</span>
                             </div>
 
-                            <h1 className="hero-title text-5xl md:text-7xl lg:text-8xl font-normal font-display mb-8 text-white leading-[1.05] drop-shadow-lg">
-                                Transform <span className="text-electric-cyan glow-sm italic">Prompts</span> Into <br />
-                                <span className="text-white">Power</span>
+                            <h1 className="hero-title text-5xl md:text-6xl lg:text-7xl font-normal font-display mb-8 text-white leading-[1.1] drop-shadow-lg">
+                                The Prompt Optimizer <br />
+                                <span className="text-electric-cyan glow-sm italic">That Learns</span>
                             </h1>
 
                             <p className="hero-description text-xl text-[#D0D0D0] mb-10 max-w-lg font-medium leading-relaxed">
-                                Stop the endless back-and-forth with AI. Eloquo transforms your rough ideas into precision-engineered prompts that get results on the first try.
+                                Eloquo doesn&apos;t just optimize—it learns from every interaction. Our AI continuously evolves based on real user feedback, delivering better results than any static tool ever could.
                             </p>
 
                             <div className="hero-actions flex flex-col sm:flex-row items-center justify-start space-y-4 sm:space-y-0 sm:space-x-6 mb-12">
@@ -90,7 +90,7 @@ export function HeroSection() {
                                 ) : (
                                     <Button size="lg" className="w-full sm:w-auto h-14 px-10 rounded-xl bg-neon-orange hover:bg-neon-orange/90 text-[#0A0A0A] border-none text-lg font-bold tracking-widest uppercase glow-sm hover:glow-md transition-all group" asChild>
                                         <Link href={isLoggedIn ? "/dashboard" : "/signup"}>
-                                            {isLoggedIn ? "Go to Dashboard" : "Start Optimizing"} <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                            {isLoggedIn ? "Go to Dashboard" : "Start Optimizing Free"} <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                                         </Link>
                                     </Button>
                                 )}
@@ -100,23 +100,23 @@ export function HeroSection() {
                                     className="w-full sm:w-auto h-14 px-10 rounded-xl border-electric-cyan text-electric-cyan hover:bg-electric-cyan/10 text-lg font-bold tracking-widest uppercase transition-all shadow-[0_0_15px_rgba(0,255,255,0.2)] hover:shadow-[0_0_25px_rgba(0,255,255,0.4)]"
                                     onClick={scrollToDemo}
                                 >
-                                    See It In Action ↓
+                                    See How It Works ↓
                                 </Button>
                             </div>
 
-                            {/* Updated badges */}
+                            {/* Trust Pills */}
                             <div className="hero-stats flex items-center justify-start flex-wrap gap-4 text-[11px] font-bold text-white uppercase tracking-[0.1em]">
                                 <div className="flex items-center space-x-2 bg-electric-cyan/10 border border-electric-cyan/30 rounded-full px-4 py-2">
                                     <Target className="h-3.5 w-3.5 text-electric-cyan" />
-                                    <span>One-Shot Accuracy</span>
+                                    <span>Continuously Improving AI</span>
                                 </div>
                                 <div className="flex items-center space-x-2 bg-electric-cyan/10 border border-electric-cyan/30 rounded-full px-4 py-2">
                                     <Star className="h-3.5 w-3.5 text-electric-cyan" />
-                                    <span>10x Faster Workflows</span>
+                                    <span>Works With Any LLM</span>
                                 </div>
                                 <div className="flex items-center space-x-2 bg-electric-cyan/10 border border-electric-cyan/30 rounded-full px-4 py-2">
                                     <Paperclip className="h-3.5 w-3.5 text-electric-cyan" />
-                                    <span>Works With Any AI</span>
+                                    <span>Your History, Exportable</span>
                                 </div>
                             </div>
                         </div>

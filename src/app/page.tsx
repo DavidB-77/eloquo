@@ -3,11 +3,13 @@
 import * as React from "react";
 import { Navbar } from "@/components/landing/Navbar";
 import { HeroSection } from "@/components/landing/HeroSection";
+import { WhyEloquoIsDifferentSection } from "@/components/landing/WhyEloquoIsDifferentSection";
 import { WhatEloquoDoesSection } from "@/components/landing/WhatEloquoDoesSection";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { EloquoProtocolSection } from "@/components/landing/EloquoProtocolSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
+import { UseEloquoYourWaySection } from "@/components/landing/UseEloquoYourWaySection";
 import { ProjectProtocolSection } from "@/components/landing/ProjectProtocolSection";
 import { BMADSection } from "@/components/landing/BMADSection";
 import { BuiltForProfessionalsSection } from "@/components/landing/BuiltForProfessionalsSection";
@@ -37,37 +39,43 @@ export default function LandingPage() {
         {/* 1. Hero with animated demo */}
         <HeroSection />
 
-        {/* 2. What Eloquo Does - Feature overview */}
+        {/* 2. Why Eloquo Is Different - Adaptive Intelligence */}
+        <WhyEloquoIsDifferentSection />
+
+        {/* 3. What Eloquo Does - Feature overview */}
         <WhatEloquoDoesSection />
 
-        {/* 3. Problems we solve */}
+        {/* 4. Problems we solve */}
         <ProblemSection />
 
-        {/* 4. How it works - 3-step simple explanation */}
+        {/* 5. How it works - 3-step simple explanation */}
         <HowItWorksSection />
 
-        {/* 5. The Eloquo Protocol - 4-stage pipeline detail */}
+        {/* 6. The Eloquo Protocol - 4-stage pipeline detail */}
         <EloquoProtocolSection />
 
-        {/* 6. Core Matrix Modules - Features grid */}
+        {/* 7. Core Features grid */}
         <FeaturesSection />
 
-        {/* 7. Project Protocol for developers */}
+        {/* 8. Use Eloquo Your Way - Integrations */}
+        <UseEloquoYourWaySection />
+
+        {/* 9. Project Protocol for developers */}
         <ProjectProtocolSection />
 
-        {/* 8. BMAD for developers */}
+        {/* 10. BMAD for developers */}
         <BMADSection />
 
-        {/* 8. Built for Professionals - Persona cards */}
+        {/* 11. Built for Professionals - Persona cards */}
         <BuiltForProfessionalsSection />
 
-        {/* 9. Pricing */}
+        {/* 12. Pricing */}
         <PricingSection />
 
-        {/* 10. FAQ / Knowledge Base */}
+        {/* 13. FAQ / Knowledge Base */}
         <FAQSection />
 
-        {/* 11. Footer CTA */}
+        {/* 14. Footer CTA */}
         <CTASection />
       </main>
       <Footer />
