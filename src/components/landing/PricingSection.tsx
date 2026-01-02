@@ -76,9 +76,32 @@ export function PricingSection() {
     const handleCheckout = async (planKey: string) => {
         setLoadingPlan(planKey);
         try {
-            router.push(`/signup?plan=${planKey}&billing=${isAnnual ? "annual" : "monthly"}`);
+            // Check if user is authenticated by trying to call checkout
+            const res = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    plan: planKey,
+                    billing: isAnnual ? 'annual' : 'monthly'
+                }),
+            });
+            const data = await res.json();
+
+            if (data.success && data.checkoutUrl) {
+                // User is logged in - redirect to checkout
+                window.location.href = data.checkoutUrl;
+            } else if (res.status === 401) {
+                // Not logged in - redirect to signup
+                router.push(`/signup?plan=${planKey}&billing=${isAnnual ? "annual" : "monthly"}`);
+            } else {
+                console.error('Checkout failed:', data.error);
+                // Fallback to signup
+                router.push(`/signup?plan=${planKey}&billing=${isAnnual ? "annual" : "monthly"}`);
+            }
         } catch (error) {
-            console.error(error);
+            console.error('Checkout error:', error);
+            // Fallback to signup
+            router.push(`/signup?plan=${planKey}&billing=${isAnnual ? "annual" : "monthly"}`);
         } finally {
             setLoadingPlan(null);
         }

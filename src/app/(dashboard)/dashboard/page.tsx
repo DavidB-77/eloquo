@@ -43,6 +43,27 @@ export default function DashboardPage() {
         };
 
         fetchHistory();
+
+        // Post-signup checkout flow - check URL params
+        const params = new URLSearchParams(window.location.search);
+        const plan = params.get('plan');
+        const billing = params.get('billing');
+
+        if (plan && billing) {
+            // User signed up with a plan selected - trigger checkout
+            fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plan, billing }),
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.checkoutUrl) {
+                        window.location.href = data.checkoutUrl;
+                    }
+                })
+                .catch(err => console.error('Post-signup checkout error:', err));
+        }
     }, []);
 
     const stats = historyData?.stats || {};

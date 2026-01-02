@@ -50,6 +50,8 @@ function SettingsContent() {
     // Form state
     const [fullName, setFullName] = React.useState(user?.user_metadata?.full_name || "");
     const [isSaving, setIsSaving] = React.useState(false);
+    const [isUpgrading, setIsUpgrading] = React.useState(false);
+    const [isLoadingPortal, setIsLoadingPortal] = React.useState(false);
 
     const { userData, isLoading } = useUser();
 
@@ -82,6 +84,44 @@ function SettingsContent() {
         // TODO: Call API to revoke key
         await new Promise(resolve => setTimeout(resolve, 500));
         return true;
+    };
+
+    const handleUpgrade = async (plan: string = 'pro') => {
+        setIsUpgrading(true);
+        try {
+            const res = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plan, billing: 'monthly' }),
+            });
+            const data = await res.json();
+            if (data.success && data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+            } else {
+                console.error('Checkout failed:', data.error);
+            }
+        } catch (error) {
+            console.error('Checkout error:', error);
+        } finally {
+            setIsUpgrading(false);
+        }
+    };
+
+    const handleManageSubscription = async () => {
+        setIsLoadingPortal(true);
+        try {
+            const res = await fetch('/api/customer-portal');
+            const data = await res.json();
+            if (data.success && data.portalUrl) {
+                window.open(data.portalUrl, '_blank');
+            } else {
+                console.error('Portal failed:', data.error);
+            }
+        } catch (error) {
+            console.error('Portal error:', error);
+        } finally {
+            setIsLoadingPortal(false);
+        }
     };
 
     return (
@@ -165,12 +205,14 @@ function SettingsContent() {
                                     </div>
                                 </div>
                                 {usage.tier === "basic" && (
-                                    <Button>Upgrade to Pro</Button>
+                                    <Button onClick={() => handleUpgrade('pro')} disabled={isUpgrading}>
+                                        {isUpgrading ? 'Loading...' : 'Upgrade to Pro'}
+                                    </Button>
                                 )}
                                 {usage.tier !== "basic" && (
-                                    <Button variant="outline">
+                                    <Button variant="outline" onClick={handleManageSubscription} disabled={isLoadingPortal}>
                                         <ExternalLink className="h-4 w-4 mr-2" />
-                                        Manage Subscription
+                                        {isLoadingPortal ? 'Loading...' : 'Manage Subscription'}
                                     </Button>
                                 )}
                             </div>
