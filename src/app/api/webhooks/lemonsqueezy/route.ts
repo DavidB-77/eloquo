@@ -5,7 +5,7 @@ import {
     getSubscriptionTierFromVariant
 } from '@/lib/lemon-squeezy';
 
-// Use admin client to create users (requires SUPABASE_SERVICE_ROLE_KEY)
+// Use admin client for database operations
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -48,59 +48,31 @@ export async function POST(request: Request) {
 
                 // Check if this is a new signup (payment-first flow)
                 if (customData.signup_intent === true || customData.signup_intent === 'true') {
-                    console.log('Processing new signup for:', userEmail);
+                    console.log('Recording pending signup for:', userEmail);
 
-                    // Check if user already exists
-                    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-                    const existingUser = existingUsers?.users?.find(u => u.email === userEmail);
-
-                    if (existingUser) {
-                        // User exists, just update their profile
-                        console.log('User already exists, updating profile:', existingUser.id);
-                        await supabaseAdmin
-                            .from('profiles')
-                            .update({
-                                subscription_tier: tier,
-                                subscription_status: 'active',
-                                lemon_squeezy_customer_id: customerId,
-                                is_founding_member: true,
-                                updated_at: new Date().toISOString(),
-                            })
-                            .eq('id', existingUser.id);
-                    } else {
-                        // Create new user - they'll use password from sessionStorage or reset
-                        const tempPassword = crypto.randomUUID();
-
-                        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-                            email: userEmail,
-                            password: tempPassword,
-                            email_confirm: true, // Auto-confirm since they paid
+                    // DON'T create user here - just record the payment
+                    // The success page will create the user with the correct password
+                    const { error } = await supabaseAdmin
+                        .from('pending_signups')
+                        .upsert({
+                            email: userEmail.toLowerCase(),
+                            lemon_squeezy_customer_id: customerId,
+                            subscription_tier: tier,
+                            is_founding_member: true,
+                            founding_wave: 1,
+                            payment_completed_at: new Date().toISOString(),
+                            account_created: false,
+                        }, {
+                            onConflict: 'email'
                         });
 
-                        if (createError) {
-                            console.error('Failed to create user:', createError);
-                            return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
-                        }
-
-                        console.log('Created new user:', newUser.user.id);
-
-                        // Wait for trigger to create profile
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-
-                        // Update the profile
-                        await supabaseAdmin
-                            .from('profiles')
-                            .update({
-                                subscription_tier: tier,
-                                subscription_status: 'active',
-                                lemon_squeezy_customer_id: customerId,
-                                is_founding_member: true,
-                                updated_at: new Date().toISOString(),
-                            })
-                            .eq('id', newUser.user.id);
+                    if (error) {
+                        console.error('Failed to record pending signup:', error);
+                    } else {
+                        console.log('Recorded pending signup for:', userEmail, 'tier:', tier);
                     }
                 } else {
-                    // Existing user upgrading - use user_id from custom data
+                    // Existing user upgrading - update their profile directly
                     const userId = customData.user_id;
                     if (userId && userId !== 'pending_signup') {
                         console.log('Updating existing user subscription:', userId);
