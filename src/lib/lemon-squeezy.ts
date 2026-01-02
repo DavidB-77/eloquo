@@ -7,6 +7,8 @@ const LEMON_SQUEEZY_API_URL = 'https://api.lemonsqueezy.com/v1';
 
 // Product variant IDs (configure in Lemon Squeezy dashboard)
 export const PRODUCT_VARIANTS = {
+    basic_monthly: process.env.LEMON_SQUEEZY_BASIC_MONTHLY_VARIANT_ID || '',
+    basic_annual: process.env.LEMON_SQUEEZY_BASIC_ANNUAL_VARIANT_ID || '',
     pro_monthly: process.env.LEMON_SQUEEZY_PRO_MONTHLY_VARIANT_ID || '',
     pro_annual: process.env.LEMON_SQUEEZY_PRO_ANNUAL_VARIANT_ID || '',
     team_monthly: process.env.LEMON_SQUEEZY_TEAM_MONTHLY_VARIANT_ID || '',
@@ -131,6 +133,7 @@ export async function getCustomerPortalUrl(customerId: string): Promise<string |
 export function getSubscriptionTierFromVariant(variantId: string): string {
     for (const [key, id] of Object.entries(PRODUCT_VARIANTS)) {
         if (id === variantId) {
+            if (key.startsWith('basic')) return 'basic';
             if (key.startsWith('pro')) return 'pro';
             if (key.startsWith('team')) return 'team';
             if (key.startsWith('enterprise')) return 'enterprise';

@@ -30,6 +30,14 @@ export default function SignupPage() {
             setRegistrationAllowed(settings.allow_new_signups);
             setCheckingSettings(false);
         });
+
+        // Save selected plan to localStorage for after email confirmation
+        const params = new URLSearchParams(window.location.search);
+        const plan = params.get('plan');
+        const billing = params.get('billing');
+        if (plan && billing) {
+            localStorage.setItem('eloquo_pending_plan', JSON.stringify({ plan, billing }));
+        }
     }, []);
 
     const handleSignup = async (e: React.FormEvent) => {

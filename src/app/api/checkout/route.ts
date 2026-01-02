@@ -60,7 +60,7 @@ export async function POST(request: Request) {
             );
         }
 
-        return NextResponse.json({ success: true, data: { checkoutUrl } });
+        return NextResponse.json({ success: true, checkoutUrl });
 
     } catch (error) {
         console.error('Checkout API error:', error);
