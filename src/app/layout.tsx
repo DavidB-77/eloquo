@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/providers/AuthProvider";
 import QueryProvider from "@/providers/QueryProvider";
@@ -8,6 +8,12 @@ import { UserProvider } from "@/providers/UserProvider";
 import { OverlayManager } from "@/components/layout/OverlayManager";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["100", "200", "300", "400"],
+  variable: "--font-outfit",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Eloquo | AI Prompt Optimization SaaS",
@@ -24,7 +30,8 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
-          inter.variable
+          inter.variable,
+          outfit.variable
         )}
       >
         <QueryProvider>

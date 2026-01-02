@@ -59,6 +59,7 @@ const config: Config = {
             fontFamily: {
                 sans: ["var(--font-sans)"],
                 display: ["Comodo", "var(--font-display)"],
+                outfit: ["var(--font-outfit)", "sans-serif"],
             },
             keyframes: {
                 gradient: {
