@@ -5,6 +5,7 @@ import { Users, DollarSign, Zap, CreditCard, TrendingUp, Loader2 } from "lucide-
 import { StatCard, BankAccountCard, AlertItem, ServiceStatus } from "@/components/admin/StatCards";
 import { createClient } from "@/lib/supabase/client";
 import { formatDistanceToNow } from "date-fns";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Mock data (Financials / External APIs placeholders)
 const MOCK_FINANCIALS = {
@@ -34,6 +35,8 @@ export default function AdminOverviewPage() {
     const [loading, setLoading] = React.useState(true);
     const [openRouterBalance, setOpenRouterBalance] = React.useState<number | null>(null);
     const [ratingsDistribution, setRatingsDistribution] = React.useState<any>(null);
+    const [dailyOptData, setDailyOptData] = React.useState<{ date: string; count: number }[]>([]);
+    const [dailyRevenueData, setDailyRevenueData] = React.useState<{ date: string; revenue: number }[]>([]);
 
 
     React.useEffect(() => {
@@ -123,6 +126,55 @@ export default function AdminOverviewPage() {
                     }
                 } catch (e) {
                     console.warn('Could not fetch ratings distribution');
+                }
+
+                // 7. Fetch daily chart data (last 30 days)
+                try {
+                    const thirtyDaysAgo = new Date();
+                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                    const startDate = thirtyDaysAgo.toISOString();
+
+                    // Get from optimizations table
+                    const { data: stdOpts } = await supabase
+                        .from('optimizations')
+                        .select('created_at')
+                        .gte('created_at', startDate);
+
+                    // Get from agent_requests table
+                    const { data: agentReqs } = await supabase
+                        .from('agent_requests')
+                        .select('created_at, credits_used')
+                        .gte('created_at', startDate);
+
+                    // Aggregate by day for optimizations chart
+                    const allDates = [
+                        ...(stdOpts || []).map(d => new Date(d.created_at).toISOString().split('T')[0]),
+                        ...(agentReqs || []).map(d => new Date(d.created_at).toISOString().split('T')[0])
+                    ];
+                    const dailyCounts = allDates.reduce((acc, date) => {
+                        acc[date] = (acc[date] || 0) + 1;
+                        return acc;
+                    }, {} as Record<string, number>);
+
+                    const optChartData = Object.entries(dailyCounts)
+                        .map(([date, count]) => ({ date, count: count as number }))
+                        .sort((a, b) => a.date.localeCompare(b.date));
+                    setDailyOptData(optChartData);
+
+                    // Aggregate by day for revenue chart (credits * $0.0375)
+                    const dailyRev = (agentReqs || []).reduce((acc, req) => {
+                        const date = new Date(req.created_at).toISOString().split('T')[0];
+                        const revenue = (req.credits_used || 1) * 0.0375;
+                        acc[date] = (acc[date] || 0) + revenue;
+                        return acc;
+                    }, {} as Record<string, number>);
+
+                    const revChartData = Object.entries(dailyRev)
+                        .map(([date, revenue]) => ({ date, revenue: Number((revenue as number).toFixed(2)) }))
+                        .sort((a, b) => a.date.localeCompare(b.date));
+                    setDailyRevenueData(revChartData);
+                } catch (e) {
+                    console.warn('Could not fetch daily chart data');
                 }
 
             } catch (error) {
@@ -252,19 +304,66 @@ export default function AdminOverviewPage() {
                 )}
             </div>
 
-            {/* Charts Row - Placeholders */}
+            {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5">
                     <h3 className="text-sm font-medium text-white mb-4">📈 Revenue (30 days)</h3>
-                    <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
-                        Chart coming soon (Recharts integration)
-                    </div>
+                    {dailyRevenueData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={180}>
+                            <BarChart data={dailyRevenueData}>
+                                <XAxis
+                                    dataKey="date"
+                                    tick={{ fill: '#666', fontSize: 9 }}
+                                    tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    interval="preserveStartEnd"
+                                />
+                                <YAxis
+                                    tick={{ fill: '#666', fontSize: 9 }}
+                                    tickFormatter={(v) => `$${v}`}
+                                    width={40}
+                                />
+                                <Tooltip
+                                    formatter={(v) => [`$${v}`, 'Revenue']}
+                                    contentStyle={{ background: '#1a1a1a', border: '1px solid #333' }}
+                                    labelStyle={{ color: '#999' }}
+                                />
+                                <Bar dataKey="revenue" fill="#09B7B4" radius={[3, 3, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="h-44 flex items-center justify-center text-gray-500 text-sm">
+                            No revenue data yet
+                        </div>
+                    )}
                 </div>
                 <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5">
                     <h3 className="text-sm font-medium text-white mb-4">⚡ Optimizations (30 days)</h3>
-                    <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
-                        Chart coming soon (Recharts integration)
-                    </div>
+                    {dailyOptData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={180}>
+                            <BarChart data={dailyOptData}>
+                                <XAxis
+                                    dataKey="date"
+                                    tick={{ fill: '#666', fontSize: 9 }}
+                                    tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    interval="preserveStartEnd"
+                                />
+                                <YAxis
+                                    tick={{ fill: '#666', fontSize: 9 }}
+                                    width={30}
+                                />
+                                <Tooltip
+                                    formatter={(v) => [v, 'Optimizations']}
+                                    contentStyle={{ background: '#1a1a1a', border: '1px solid #333' }}
+                                    labelStyle={{ color: '#999' }}
+                                />
+                                <Bar dataKey="count" fill="#09B7B4" radius={[3, 3, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="h-44 flex items-center justify-center text-gray-500 text-sm">
+                            No optimization data yet
+                        </div>
+                    )}
                 </div>
             </div>
 
