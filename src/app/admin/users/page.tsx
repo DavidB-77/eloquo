@@ -236,7 +236,7 @@ export default function AdminUsersPage() {
                                     <tr key={user.id} className="hover:bg-white/5 transition-colors group">
                                         <td className="px-6 py-4">
                                             <div>
-                                                <p className="text-sm font-medium text-white">{user.full_name || user.display_name || "Unknown User"}</p>
+                                                <p className="text-sm font-medium text-white">{user.full_name || user.display_name || user.email?.split('@')[0] || "Unknown User"}</p>
                                                 <p className="text-xs text-gray-500">{user.email || "No email"}</p>
                                             </div>
                                         </td>

@@ -329,7 +329,9 @@ export default function AdminAnalyticsPage() {
                 />
                 <StatCard
                     title="Avg Quality Score"
-                    value={agentMetrics?.performance?.avg_quality_score ? `${agentMetrics.performance.avg_quality_score.toFixed(1)}/10` : (dashboardStats?.avg_tokens_saved?.toLocaleString() || "—")}
+                    value={agentMetrics?.performance?.avg_quality_score
+                        ? `${agentMetrics.performance.avg_quality_score.toFixed(1)}/10`
+                        : (dashboardStats?.avg_quality_score ? `${dashboardStats.avg_quality_score.toFixed(1)}/10` : "—")}
                     icon={<TrendingUp className="h-5 w-5" />}
                     loading={loading}
                 />

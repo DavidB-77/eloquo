@@ -33,6 +33,7 @@ export default function AdminOverviewPage() {
     const [recentSignups, setRecentSignups] = React.useState<any[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [openRouterBalance, setOpenRouterBalance] = React.useState<number | null>(null);
+    const [ratingsDistribution, setRatingsDistribution] = React.useState<any>(null);
 
 
     React.useEffect(() => {
@@ -80,7 +81,7 @@ export default function AdminOverviewPage() {
                 if (recentUsers) {
                     setRecentSignups(recentUsers.map(user => ({
                         id: user.id,
-                        name: user.full_name || user.display_name || "Unknown User",
+                        name: user.full_name || user.display_name || user.email?.split('@')[0] || "Unknown User",
                         email: user.email || "No email",
                         plan: user.subscription_tier ? capitalize(user.subscription_tier) : "None",
                         signedUp: user.created_at ? formatDistanceToNow(new Date(user.created_at), { addSuffix: true }) : "Unknown"
@@ -111,6 +112,17 @@ export default function AdminOverviewPage() {
                     }
                 } catch (e) {
                     console.warn('Could not fetch agent metrics');
+                }
+
+                // 6. Fetch Ratings Distribution from dashboard stats
+                try {
+                    const dashRes = await fetch('/api/admin/analytics?type=dashboard');
+                    const dashData = await dashRes.json();
+                    if (dashData.success && dashData.data?.ratings_distribution) {
+                        setRatingsDistribution(dashData.data.ratings_distribution);
+                    }
+                } catch (e) {
+                    console.warn('Could not fetch ratings distribution');
                 }
 
             } catch (error) {
@@ -217,17 +229,27 @@ export default function AdminOverviewPage() {
             <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5">
                 <h3 className="text-sm font-medium text-white mb-4">⭐ User Ratings Distribution</h3>
                 <div className="space-y-2">
-                    {[5, 4, 3, 2, 1].map((stars) => (
-                        <div key={stars} className="flex items-center gap-3">
-                            <span className="text-sm text-white w-16">{stars} stars</span>
-                            <div className="flex-1 h-3 bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-electric-cyan/50 rounded-full" style={{ width: '0%' }} />
+                    {[5, 4, 3, 2, 1].map((stars) => {
+                        const count = ratingsDistribution?.[`${stars}_star`] || 0;
+                        const total = ratingsDistribution?.total || 1;
+                        const percent = total > 0 ? (count / total) * 100 : 0;
+                        return (
+                            <div key={stars} className="flex items-center gap-3">
+                                <span className="text-sm text-white w-16">{stars} stars</span>
+                                <div className="flex-1 h-3 bg-white/5 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-electric-cyan/50 rounded-full transition-all duration-300"
+                                        style={{ width: `${percent}%` }}
+                                    />
+                                </div>
+                                <span className="text-sm text-gray-400 w-12 text-right">{count}</span>
                             </div>
-                            <span className="text-sm text-gray-400 w-12 text-right">—</span>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
-                <p className="text-xs text-gray-500 mt-3">Training data not yet available</p>
+                {(!ratingsDistribution || ratingsDistribution.total === 0) && (
+                    <p className="text-xs text-gray-500 mt-3">No ratings yet</p>
+                )}
             </div>
 
             {/* Charts Row - Placeholders */}
