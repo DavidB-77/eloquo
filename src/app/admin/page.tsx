@@ -117,15 +117,27 @@ export default function AdminOverviewPage() {
                     console.warn('Could not fetch agent metrics');
                 }
 
-                // 6. Fetch Ratings Distribution from dashboard stats
+                // 6. Fetch Ratings Distribution and Recent Signups from dashboard stats
                 try {
                     const dashRes = await fetch('/api/admin/analytics?type=dashboard');
                     const dashData = await dashRes.json();
-                    if (dashData.success && dashData.data?.ratings_distribution) {
-                        setRatingsDistribution(dashData.data.ratings_distribution);
+                    if (dashData.success && dashData.data) {
+                        if (dashData.data.ratings_distribution) {
+                            setRatingsDistribution(dashData.data.ratings_distribution);
+                        }
+                        // Use recent_signups from RPC (bypasses RLS issues)
+                        if (dashData.data.recent_signups && dashData.data.recent_signups.length > 0) {
+                            setRecentSignups(dashData.data.recent_signups.map((user: any) => ({
+                                id: user.id,
+                                name: user.full_name || user.display_name || user.email?.split('@')[0] || "Unknown User",
+                                email: user.email || "No email",
+                                plan: user.subscription_tier ? capitalize(user.subscription_tier) : "None",
+                                signedUp: user.created_at ? formatDistanceToNow(new Date(user.created_at), { addSuffix: true }) : "Unknown"
+                            })));
+                        }
                     }
                 } catch (e) {
-                    console.warn('Could not fetch ratings distribution');
+                    console.warn('Could not fetch dashboard stats');
                 }
 
                 // 7. Fetch daily chart data (last 30 days)
