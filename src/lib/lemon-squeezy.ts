@@ -25,6 +25,7 @@ interface CheckoutOptions {
     userEmail: string;
     userName?: string;
     redirectUrl?: string;
+    customData?: Record<string, any>;
 }
 
 /**
@@ -56,6 +57,7 @@ export async function createCheckoutUrl(options: CheckoutOptions): Promise<strin
                             name: options.userName,
                             custom: {
                                 user_id: options.userId,
+                                ...options.customData,
                             },
                         },
                         product_options: {

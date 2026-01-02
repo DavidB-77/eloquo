@@ -102,7 +102,7 @@ export function Navbar() {
                                                     <Link href="/login">Sign In</Link>
                                                 </Button>
                                                 <Button size="sm" asChild className="btn-gradient px-6 rounded-lg text-xs font-bold uppercase tracking-widest glow-sm hover:glow-md">
-                                                    <Link href="/signup">Initialize</Link>
+                                                    <Link href="/signup">Get Started</Link>
                                                 </Button>
                                             </>
                                         )}
@@ -147,7 +147,7 @@ export function Navbar() {
                                     <>
                                         <Link href="/login" className="text-lg font-medium" onClick={() => setIsOpen(false)}>Sign In</Link>
                                         <Button asChild onClick={() => setIsOpen(false)}>
-                                            <Link href="/signup">Initialize</Link>
+                                            <Link href="/signup">Get Started</Link>
                                         </Button>
                                     </>
                                 )}

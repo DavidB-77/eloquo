@@ -19,6 +19,7 @@ import { CTASection } from "@/components/landing/CTASection";
 import { Footer } from "@/components/landing/Footer";
 import { ContactModal } from "@/components/landing/ContactModal";
 import { ParticlesBackground } from "@/components/landing/ParticlesBackground";
+import { ScrollToTop } from "@/components/landing/ScrollToTop";
 
 export default function LandingPage() {
   const [isContactOpen, setIsContactOpen] = React.useState(false);
@@ -83,6 +84,7 @@ export default function LandingPage() {
         isOpen={isContactOpen}
         onClose={() => setIsContactOpen(false)}
       />
+      <ScrollToTop />
     </div>
   );
 }

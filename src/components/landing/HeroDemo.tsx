@@ -204,7 +204,7 @@ export function HeroDemo() {
                                     <div className="h-px flex-1 bg-gradient-to-r from-electric-cyan/50 to-transparent" />
                                 </div>
                                 <p className="text-white/60 text-xs font-medium tracking-wide">
-                                    ENTER YOUR PROMPT BELOW FOR BIOLUMINESCENT OPTIMIZATION
+                                    ENTER YOUR PROMPT BELOW FOR ADAPTIVE AI OPTIMIZATION
                                 </p>
                             </div>
 

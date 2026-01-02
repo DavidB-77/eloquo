@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import {
     verifyWebhookSignature,
     getSubscriptionTierFromVariant
 } from '@/lib/lemon-squeezy';
+
+// Use admin client to create users (requires SUPABASE_SERVICE_ROLE_KEY)
+const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+);
 
 /**
  * POST /api/webhooks/lemonsqueezy
@@ -28,114 +35,166 @@ export async function POST(request: Request) {
         const event = JSON.parse(payload);
         const eventName = event.meta?.event_name;
         const customData = event.meta?.custom_data || {};
-        const userId = customData.user_id;
 
-        if (!userId) {
-            console.error('No user_id in webhook custom data');
-            return NextResponse.json({ received: true });
-        }
-
-        const supabase = await createClient();
+        console.log('Webhook received:', eventName, customData);
 
         switch (eventName) {
-            case 'subscription_created':
-            case 'subscription_updated': {
-                const subscription = event.data.attributes;
+            case 'order_created':
+            case 'subscription_created': {
                 const variantId = String(event.data.attributes.variant_id);
                 const tier = getSubscriptionTierFromVariant(variantId);
                 const customerId = String(event.data.attributes.customer_id);
+                const userEmail = event.data.attributes.user_email || customData.email;
 
-                // Determine subscription status
-                let status = 'active';
-                if (subscription.status === 'cancelled') {
-                    status = 'canceled';
-                } else if (subscription.status === 'past_due') {
-                    status = 'past_due';
-                } else if (subscription.status === 'on_trial') {
-                    status = 'trialing';
-                }
+                // Check if this is a new signup (payment-first flow)
+                if (customData.signup_intent === true || customData.signup_intent === 'true') {
+                    console.log('Processing new signup for:', userEmail);
 
-                // Update user's subscription in database
-                const { error } = await supabase
-                    .from('profiles')
-                    .update({
-                        subscription_tier: tier,
-                        subscription_status: status,
-                        lemon_squeezy_customer_id: customerId,
-                        updated_at: new Date().toISOString(),
-                    })
-                    .eq('id', userId);
+                    // Check if user already exists
+                    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+                    const existingUser = existingUsers?.users?.find(u => u.email === userEmail);
 
-                if (error) {
-                    console.error('Failed to update subscription:', error);
+                    if (existingUser) {
+                        // User exists, just update their profile
+                        console.log('User already exists, updating profile:', existingUser.id);
+                        await supabaseAdmin
+                            .from('profiles')
+                            .update({
+                                subscription_tier: tier,
+                                subscription_status: 'active',
+                                lemon_squeezy_customer_id: customerId,
+                                is_founding_member: true,
+                                updated_at: new Date().toISOString(),
+                            })
+                            .eq('id', existingUser.id);
+                    } else {
+                        // Create new user - they'll use password from sessionStorage or reset
+                        const tempPassword = crypto.randomUUID();
+
+                        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+                            email: userEmail,
+                            password: tempPassword,
+                            email_confirm: true, // Auto-confirm since they paid
+                        });
+
+                        if (createError) {
+                            console.error('Failed to create user:', createError);
+                            return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
+                        }
+
+                        console.log('Created new user:', newUser.user.id);
+
+                        // Wait for trigger to create profile
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+
+                        // Update the profile
+                        await supabaseAdmin
+                            .from('profiles')
+                            .update({
+                                subscription_tier: tier,
+                                subscription_status: 'active',
+                                lemon_squeezy_customer_id: customerId,
+                                is_founding_member: true,
+                                updated_at: new Date().toISOString(),
+                            })
+                            .eq('id', newUser.user.id);
+                    }
                 } else {
-                    console.log(`Updated user ${userId} to ${tier} (${status})`);
+                    // Existing user upgrading - use user_id from custom data
+                    const userId = customData.user_id;
+                    if (userId && userId !== 'pending_signup') {
+                        console.log('Updating existing user subscription:', userId);
+                        await supabaseAdmin
+                            .from('profiles')
+                            .update({
+                                subscription_tier: tier,
+                                subscription_status: 'active',
+                                lemon_squeezy_customer_id: customerId,
+                                updated_at: new Date().toISOString(),
+                            })
+                            .eq('id', userId);
+                    }
+                }
+                break;
+            }
+
+            case 'subscription_updated': {
+                const userId = customData.user_id;
+                const variantId = String(event.data.attributes.variant_id);
+                const tier = getSubscriptionTierFromVariant(variantId);
+                const status = event.data.attributes.status;
+
+                let subscriptionStatus = 'active';
+                if (status === 'cancelled') subscriptionStatus = 'canceled';
+                if (status === 'past_due') subscriptionStatus = 'past_due';
+                if (status === 'on_trial') subscriptionStatus = 'trialing';
+
+                if (userId && userId !== 'pending_signup') {
+                    await supabaseAdmin
+                        .from('profiles')
+                        .update({
+                            subscription_tier: tier,
+                            subscription_status: subscriptionStatus,
+                            updated_at: new Date().toISOString(),
+                        })
+                        .eq('id', userId);
                 }
                 break;
             }
 
             case 'subscription_cancelled': {
-                // Mark subscription as cancelled but don't downgrade immediately
-                // User keeps access until end of billing period
-                const { error } = await supabase
-                    .from('profiles')
-                    .update({
-                        subscription_status: 'canceled',
-                        updated_at: new Date().toISOString(),
-                    })
-                    .eq('id', userId);
-
-                if (error) {
-                    console.error('Failed to update subscription status:', error);
+                const userId = customData.user_id;
+                if (userId && userId !== 'pending_signup') {
+                    await supabaseAdmin
+                        .from('profiles')
+                        .update({
+                            subscription_status: 'canceled',
+                            updated_at: new Date().toISOString(),
+                        })
+                        .eq('id', userId);
                 }
                 break;
             }
 
             case 'subscription_expired': {
-                // Subscription has fully expired, downgrade to basic
-                const { error } = await supabase
-                    .from('profiles')
-                    .update({
-                        subscription_tier: 'basic',
-                        subscription_status: 'active',
-                        updated_at: new Date().toISOString(),
-                    })
-                    .eq('id', userId);
-
-                if (error) {
-                    console.error('Failed to downgrade subscription:', error);
+                const userId = customData.user_id;
+                if (userId && userId !== 'pending_signup') {
+                    await supabaseAdmin
+                        .from('profiles')
+                        .update({
+                            subscription_tier: 'basic',
+                            subscription_status: 'active',
+                            updated_at: new Date().toISOString(),
+                        })
+                        .eq('id', userId);
                 }
                 break;
             }
 
             case 'subscription_payment_success': {
-                // Payment successful, ensure status is active
-                const { error } = await supabase
-                    .from('profiles')
-                    .update({
-                        subscription_status: 'active',
-                        updated_at: new Date().toISOString(),
-                    })
-                    .eq('id', userId);
-
-                if (error) {
-                    console.error('Failed to update payment status:', error);
+                const userId = customData.user_id;
+                if (userId && userId !== 'pending_signup') {
+                    await supabaseAdmin
+                        .from('profiles')
+                        .update({
+                            subscription_status: 'active',
+                            updated_at: new Date().toISOString(),
+                        })
+                        .eq('id', userId);
                 }
                 break;
             }
 
             case 'subscription_payment_failed': {
-                // Payment failed, mark as past_due
-                const { error } = await supabase
-                    .from('profiles')
-                    .update({
-                        subscription_status: 'past_due',
-                        updated_at: new Date().toISOString(),
-                    })
-                    .eq('id', userId);
-
-                if (error) {
-                    console.error('Failed to update payment status:', error);
+                const userId = customData.user_id;
+                if (userId && userId !== 'pending_signup') {
+                    await supabaseAdmin
+                        .from('profiles')
+                        .update({
+                            subscription_status: 'past_due',
+                            updated_at: new Date().toISOString(),
+                        })
+                        .eq('id', userId);
                 }
                 break;
             }

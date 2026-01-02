@@ -60,7 +60,7 @@ export function HeroSection() {
         <>
             <section ref={containerRef} className="relative pt-20 pb-20 md:pt-24 md:pb-32 overflow-hidden">
                 <Container className="relative">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(400px,_1.1fr)] gap-12 lg:gap-16 items-center">
 
                         {/* Left Column: Content */}
                         <div className="hero-content text-left">
