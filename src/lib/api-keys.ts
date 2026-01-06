@@ -72,7 +72,7 @@ export async function validateApiKey(key: string): Promise<{
         .eq('id', apiKey.user_id)
         .single();
 
-    const tier = (profile?.subscription_tier as SubscriptionTier) || 'basic';
+    const tier = (profile?.subscription_tier as SubscriptionTier) || 'free';
     const hasMcpAccess = TIER_LIMITS[tier].hasMcpAccess;
 
     // Update last_used_at
@@ -105,7 +105,7 @@ export async function createApiKey(
         .eq('id', userId)
         .single();
 
-    const tier = (profile?.subscription_tier as SubscriptionTier) || 'basic';
+    const tier = (profile?.subscription_tier as SubscriptionTier) || 'free';
 
     // Check if user has MCP access
     if (!TIER_LIMITS[tier].hasMcpAccess) {

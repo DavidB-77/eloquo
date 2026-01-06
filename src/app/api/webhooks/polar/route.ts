@@ -57,7 +57,15 @@ export async function POST(request: Request) {
                     return NextResponse.json({ received: true });
                 }
 
-                const tier = getSubscriptionTierFromProduct(productId);
+                let tier = getSubscriptionTierFromProduct(productId);
+
+                // Explicit check for Free Tier to prevent any mapping errors
+                if (productId === '2a415251-2cfd-4d0a-85e6-e59276422e95') {
+                    console.log('Force-mapping Free Tier Product ID');
+                    tier = 'free';
+                }
+
+                console.log(`Determined tier for product ${productId}: ${tier}`);
 
                 if (!tier) {
                     console.log('Unknown product ID, skipping tier assignment:', productId);
@@ -122,7 +130,15 @@ export async function POST(request: Request) {
                     return NextResponse.json({ received: true });
                 }
 
-                const tier = getSubscriptionTierFromProduct(productId);
+                let tier = getSubscriptionTierFromProduct(productId);
+
+                // Explicit check for Free Tier to prevent any mapping errors
+                if (productId === '2a415251-2cfd-4d0a-85e6-e59276422e95') {
+                    console.log('Force-mapping Free Tier Product ID');
+                    tier = 'free';
+                }
+
+                console.log(`Determined tier for product ${productId}: ${tier}`);
 
                 if (!tier) {
                     console.log('Unknown product ID, skipping tier assignment:', productId);
@@ -184,7 +200,15 @@ export async function POST(request: Request) {
 
                 if (!productId || !customerId) break;
 
-                const tier = getSubscriptionTierFromProduct(productId);
+                let tier = getSubscriptionTierFromProduct(productId);
+
+                // Explicit check for Free Tier to prevent any mapping errors
+                if (productId === '2a415251-2cfd-4d0a-85e6-e59276422e95') {
+                    console.log('Force-mapping Free Tier Product ID');
+                    tier = 'free';
+                }
+
+                console.log(`Determined tier for product ${productId}: ${tier}`);
 
                 if (!tier) {
                     console.log('Unknown product ID, skipping tier assignment:', productId);
@@ -237,7 +261,15 @@ export async function POST(request: Request) {
 
                 if (!productId) break;
 
-                const tier = getSubscriptionTierFromProduct(productId);
+                let tier = getSubscriptionTierFromProduct(productId);
+
+                // Explicit check for Free Tier to prevent any mapping errors
+                if (productId === '2a415251-2cfd-4d0a-85e6-e59276422e95') {
+                    console.log('Force-mapping Free Tier Product ID');
+                    tier = 'free';
+                }
+
+                console.log(`Determined tier for product ${productId}: ${tier}`);
 
                 if (!tier) {
                     console.log('Unknown product ID, skipping tier assignment:', productId);

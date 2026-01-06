@@ -259,7 +259,7 @@ export async function callOptimize(request: OptimizeRequest): Promise<OptimizeRe
             'business': 'business',
             'enterprise': 'business',
         };
-        const v3Tier = tierMap[request.userTier || 'basic'] || 'basic';
+        const v3Tier = tierMap[request.userTier || 'free'] || 'basic';
 
         // Build V3 request
         const v3Request = {
@@ -344,7 +344,7 @@ export async function callAnalyze(prompt: string): Promise<AnalyzeResponse> {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 prompt: prompt,
-                user_tier: 'basic',
+                user_tier: 'free',
             }),
         });
 
@@ -395,7 +395,7 @@ export async function callRefine(request: RefineRequest): Promise<RefineResponse
             body: JSON.stringify({
                 original_prompt: request.originalPrompt,
                 instruction: request.instruction,
-                user_tier: (request.userTier === 'enterprise' ? 'business' : request.userTier) || 'basic',
+                user_tier: (request.userTier === 'enterprise' ? 'business' : request.userTier) || 'free',
             }),
         });
 

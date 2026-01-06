@@ -30,7 +30,7 @@ export async function POST(request: Request) {
         const response = await callRefine({
             originalPrompt,
             instruction,
-            userTier: userTier || 'basic',
+            userTier: userTier || 'free',
         });
 
         return NextResponse.json(response);
