@@ -21,7 +21,7 @@ export interface OptimizeRequest {
     strength: 'light' | 'medium' | 'aggressive';
     additionalContext?: string;
     userId?: string;
-    userTier?: 'basic' | 'pro' | 'business' | 'enterprise';
+    userTier?: 'free' | 'basic' | 'pro' | 'business' | 'enterprise';
     contextFiles?: ContextFile[];
     contextAnswers?: Record<string, string> | null;
     comprehensiveCreditsRemaining?: number;
@@ -229,7 +229,7 @@ function mapV3ToLegacyResponse(
         },
         classification: {
             complexity: v3Response.stages_used.length > 2 ? 'complex' :
-                        v3Response.stages_used.length > 1 ? 'moderate' : 'simple',
+                v3Response.stages_used.length > 1 ? 'moderate' : 'simple',
             domain: v3Response.domain || 'general',
         },
         validation: {
@@ -359,7 +359,7 @@ export async function callAnalyze(prompt: string): Promise<AnalyzeResponse> {
             success: true,
             data: {
                 complexity: v3Response.stages_used.length > 2 ? 'complex' :
-                           v3Response.stages_used.length > 1 ? 'moderate' : 'simple',
+                    v3Response.stages_used.length > 1 ? 'moderate' : 'simple',
                 domains: [v3Response.domain || 'general'],
                 recommendations: v3Response.improvements || [],
                 suggestedModel: 'claude',
@@ -408,7 +408,7 @@ export async function callRefine(request: RefineRequest): Promise<RefineResponse
         if (data.status === 'success') {
             // Parse the refined prompt - it may contain extra text
             let refinedPrompt = data.refined_prompt || '';
-            
+
             // If the response contains "Refined prompt:" prefix, extract just the prompt
             if (refinedPrompt.includes('Refined prompt:')) {
                 refinedPrompt = refinedPrompt.split('Refined prompt:')[1];
@@ -421,7 +421,7 @@ export async function callRefine(request: RefineRequest): Promise<RefineResponse
                 }
                 refinedPrompt = refinedPrompt.trim();
             }
-            
+
             return {
                 success: true,
                 refinedPrompt: refinedPrompt,
