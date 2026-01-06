@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 
 // Tier limits
 export const TIER_LIMITS = {
+    free: { optimizations: 12, premiumCredits: 0, hasMcpAccess: false },
     basic: { optimizations: 150, premiumCredits: 0, hasMcpAccess: false },
     pro: { optimizations: 400, premiumCredits: 100, hasMcpAccess: true },
     business: { optimizations: 1000, premiumCredits: 500, hasMcpAccess: true },
@@ -78,8 +79,8 @@ export async function getUserUsage(userId: string): Promise<UsageStats> {
     // If RPC works, use that data
     if (!rpcError && rpcData) {
         const stats = Array.isArray(rpcData) ? rpcData[0] : rpcData;
-        const tier = (stats.tier || stats.subscription_tier) as SubscriptionTier || 'basic';
-        const tierLimits = TIER_LIMITS[tier] || TIER_LIMITS.basic;
+        const tier = (stats.tier || stats.subscription_tier) as SubscriptionTier || 'free';
+        const tierLimits = TIER_LIMITS[tier] || TIER_LIMITS.free;
         const optimizationsUsed = stats.used || stats.optimizations_used || 0;
         const optimizationsLimit = stats.limit || stats.optimizations_limit || tierLimits.optimizations;
         const premiumCreditsUsed = stats.premium_credits_used || 0;
@@ -93,7 +94,7 @@ export async function getUserUsage(userId: string): Promise<UsageStats> {
             premiumCreditsLimit,
             canOptimize: optimizationsUsed < optimizationsLimit || tier === 'enterprise',
             canOrchestrate: tier === 'enterprise' || (premiumCreditsUsed < premiumCreditsLimit),
-            hasMcpAccess: stats.has_mcp_access || tier !== 'basic',
+            hasMcpAccess: stats.has_mcp_access || (tier !== 'basic' && tier !== 'free'),
             comprehensiveCreditsRemaining: stats.comprehensive_credits_remaining ?? 3,
             subscriptionStatus: stats.subscription_status || "active",
         };
@@ -112,9 +113,9 @@ export async function getUserUsage(userId: string): Promise<UsageStats> {
         console.error('Failed to fetch profile:', profileError);
     }
 
-    // Get tier from database or default to basic
-    const tier = (profile?.subscription_tier as SubscriptionTier) || 'basic';
-    const tierLimits = TIER_LIMITS[tier] || TIER_LIMITS.basic;
+    // Get tier from database or default to free
+    const tier = (profile?.subscription_tier as SubscriptionTier) || 'free';
+    const tierLimits = TIER_LIMITS[tier] || TIER_LIMITS.free;
     const optimizationsUsed = profile?.optimizations_used || 0;
     const optimizationsLimit = tier === 'enterprise' ? 999999 : tierLimits.optimizations;
 
@@ -126,7 +127,7 @@ export async function getUserUsage(userId: string): Promise<UsageStats> {
         premiumCreditsLimit: tierLimits.premiumCredits,
         canOptimize: optimizationsUsed < optimizationsLimit || tier === 'enterprise',
         canOrchestrate: tier === 'enterprise' || tier === 'business',
-        hasMcpAccess: profile?.has_mcp_access || tier !== 'basic',
+        hasMcpAccess: profile?.has_mcp_access || (tier !== 'basic' && tier !== 'free'),
         comprehensiveCreditsRemaining: profile?.comprehensive_credits_remaining ?? 3,
         subscriptionStatus: profile?.subscription_status || "active",
     };

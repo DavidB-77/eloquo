@@ -19,7 +19,7 @@ const supabaseAdmin = createClient(
 export async function POST(request: Request) {
     try {
         const payload = await request.text();
-        
+
         // Log for debugging
         console.log('Polar webhook received - raw payload length:', payload.length);
 
@@ -36,13 +36,13 @@ export async function POST(request: Request) {
             case 'checkout.updated': {
                 const status = data.status;
                 console.log('Checkout status:', status);
-                
+
                 // Only process completed checkouts
                 if (status !== 'succeeded' && status !== 'confirmed') {
                     console.log('Checkout not completed yet, skipping');
                     return NextResponse.json({ received: true });
                 }
-                
+
                 // Process as order
                 const productId = data.product_id || data.product?.id;
                 const customerId = data.customer_id || data.customer?.id;
@@ -58,6 +58,11 @@ export async function POST(request: Request) {
                 }
 
                 const tier = getSubscriptionTierFromProduct(productId);
+
+                if (!tier) {
+                    console.log('Unknown product ID, skipping tier assignment:', productId);
+                    return NextResponse.json({ received: true });
+                }
 
                 if (signupIntent === true || signupIntent === 'true') {
                     console.log('Recording pending signup for:', customerEmail, 'tier:', tier);
@@ -83,7 +88,7 @@ export async function POST(request: Request) {
                     }
                 } else if (userId && userId !== 'pending_signup') {
                     console.log('Updating existing user:', userId);
-                    
+
                     const { error } = await supabaseAdmin
                         .from('profiles')
                         .update({
@@ -101,7 +106,7 @@ export async function POST(request: Request) {
                 }
                 break;
             }
-            
+
             case 'order.created':
             case 'order.paid': {
                 const productId = data.product_id || data.product?.id;
@@ -118,6 +123,11 @@ export async function POST(request: Request) {
                 }
 
                 const tier = getSubscriptionTierFromProduct(productId);
+
+                if (!tier) {
+                    console.log('Unknown product ID, skipping tier assignment:', productId);
+                    return NextResponse.json({ received: true });
+                }
 
                 if (signupIntent === true || signupIntent === 'true') {
                     console.log('Recording pending signup for:', customerEmail, 'tier:', tier);
@@ -143,7 +153,7 @@ export async function POST(request: Request) {
                     }
                 } else if (userId && userId !== 'pending_signup') {
                     console.log('Updating existing user:', userId);
-                    
+
                     const { error } = await supabaseAdmin
                         .from('profiles')
                         .update({
@@ -175,6 +185,11 @@ export async function POST(request: Request) {
                 if (!productId || !customerId) break;
 
                 const tier = getSubscriptionTierFromProduct(productId);
+
+                if (!tier) {
+                    console.log('Unknown product ID, skipping tier assignment:', productId);
+                    break;
+                }
 
                 // Handle new signup via subscription event
                 if (signupIntent === true || signupIntent === 'true') {
@@ -223,6 +238,11 @@ export async function POST(request: Request) {
                 if (!productId) break;
 
                 const tier = getSubscriptionTierFromProduct(productId);
+
+                if (!tier) {
+                    console.log('Unknown product ID, skipping tier assignment:', productId);
+                    break;
+                }
 
                 let subscriptionStatus = 'active';
                 if (status === 'canceled') subscriptionStatus = 'canceled';

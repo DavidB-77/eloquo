@@ -114,7 +114,7 @@ export default function OptimizePage() {
     // User data from context
     const { userData, refreshUserData } = useUser();
     const { user } = useAuth();
-    const userTier = userData?.tier || "basic";
+    const userTier = userData?.tier || "free";
     const comprehensiveCredits = userData?.comprehensiveCreditsRemaining ?? null;
 
     // Free Tier Status
@@ -174,7 +174,7 @@ export default function OptimizePage() {
                     target_audience: data.targetAudience || null,
                     additional_context: data.context || null,
                     user_id: user?.id || '',
-                    user_tier: userData?.tier || 'basic',
+                    user_tier: userData?.tier || 'free',
                 };
 
                 console.log('Sending to Project Protocol:', payload);
@@ -417,10 +417,10 @@ export default function OptimizePage() {
 
                         <div className="flex items-center gap-3">
                             <Badge
-                                variant={userTier === "basic" ? "secondary" : "default"}
+                                variant={(userTier === "basic" || userTier === "free") ? "secondary" : "default"}
                                 className={cn(
                                     "capitalize",
-                                    userTier !== "basic" && "bg-primary/10 text-primary border-primary/20"
+                                    (userTier !== "basic" && userTier !== "free") && "bg-primary/10 text-primary border-primary/20"
                                 )}
                             >
                                 <Crown className="h-3 w-3 mr-1" />
@@ -434,7 +434,7 @@ export default function OptimizePage() {
                                 </div>
                             )}
 
-                            {userTier === "basic" && (
+                            {(userTier === "basic" || userTier === "free") && (
                                 <Button variant="outline" size="sm" asChild>
                                     <Link href="/pricing">Upgrade</Link>
                                 </Button>

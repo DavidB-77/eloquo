@@ -21,6 +21,7 @@ export const DISCOUNT_IDS = {
 
 // Tier limits
 export const TIER_LIMITS: Record<string, number> = {
+    free: 12, // 3 per week * 4 weeks (handled separately by free_tier_tracking, but good for reference)
     basic: 150,
     pro: 400,
     business: 1000,
@@ -133,13 +134,13 @@ export async function getCustomerPortalUrl(customerId: string): Promise<string |
 /**
  * Map product ID to subscription tier
  */
-export function getSubscriptionTierFromProduct(productId: string): string {
+export function getSubscriptionTierFromProduct(productId: string): string | null {
     for (const [tier, id] of Object.entries(PRODUCT_IDS)) {
         if (id === productId) {
             return tier;
         }
     }
-    return 'basic';
+    return null;
 }
 
 /**
