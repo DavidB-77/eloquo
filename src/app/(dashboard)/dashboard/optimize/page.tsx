@@ -12,10 +12,12 @@ import ProjectProtocolResults from "@/components/ProjectProtocolResults";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { FreeTierBadge } from "@/components/FreeTierIndicator";
 import { AlertCircle, Zap, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/providers/UserProvider";
 import { useAuth } from "@/providers/AuthProvider";
+import { useFreeTierStatus } from "@/hooks/useFingerprint";
 
 // Response types from n8n
 interface SuccessResult {
@@ -115,11 +117,30 @@ export default function OptimizePage() {
     const userTier = userData?.tier || "basic";
     const comprehensiveCredits = userData?.comprehensiveCreditsRemaining ?? null;
 
+    // Free Tier Status
+    const {
+        canOptimize,
+        isPaidUser,
+        remaining,
+        recordUsage,
+        isLoading: statusLoading
+    } = useFreeTierStatus(user?.id || null);
+
     // Project Protocol state
     const [ppResult, setPpResult] = React.useState<ProjectProtocolResponse | null>(null);
     const [ppLoading, setPpLoading] = React.useState(false);
 
     const handleSubmit = async (data: OptimizeFormData, contextAnswers?: Record<string, string>, forceStandard?: boolean) => {
+        setError(null);
+
+        // 1. Check Free Tier Limits (if standard flow)
+        // Note: Project Protocol might have different limits, but prompt implied general optimize.
+        // We'll enforce for standard optimize first.
+        if (!data.isProjectProtocol && !isPaidUser && !canOptimize) {
+            setError("Free tier weekly limit reached. Please upgrade to continue.");
+            return;
+        }
+
         // Check if Project Protocol mode
         if (data.isProjectProtocol) {
             // Validate minimum character length
@@ -137,6 +158,15 @@ export default function OptimizePage() {
             setSubmittedData(data);
 
             try {
+                // Determine if we should record usage for PP? Ideally yes, but sticking to prompt instructions for "Optimize API".
+                if (!isPaidUser) {
+                    // Optionally track PP usage here too if desired, keeping consistent with request
+                    const allowed = await recordUsage();
+                    if (!allowed) {
+                        throw new Error("Weekly limit reached during processing.");
+                    }
+                }
+
                 const payload = {
                     project_idea: data.prompt,
                     project_type: data.projectType || 'saas',
@@ -173,6 +203,16 @@ export default function OptimizePage() {
         }
 
         // Standard optimization flow
+
+        // 2. Record Usage (if free)
+        if (!isPaidUser) {
+            const result = await recordUsage();
+            if (!result) { // result is boolean from hook
+                setError("Weekly limit reached. Upgrade to continue."); // Detailed message shown below via error state
+                return;
+            }
+        }
+
         setShowOptimizationModal(true);
         setOptimizationComplete(false);
         setResult(null);
@@ -280,7 +320,7 @@ export default function OptimizePage() {
 
     const handleRefine = async (instruction: string) => {
         if (!result?.results?.full) return;
-        
+
         setIsRefining(true);
         try {
             const res = await fetch("/api/refine", {
@@ -293,7 +333,7 @@ export default function OptimizePage() {
                 }),
             });
             const response = await res.json();
-            
+
             if (response.success && response.refinedPrompt) {
                 setResult(prev => prev ? {
                     ...prev,
@@ -366,7 +406,10 @@ export default function OptimizePage() {
                     {/* Header with Tier Display */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl font-bold font-display tracking-tight">Optimize</h1>
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-3xl font-bold font-display tracking-tight">Optimize</h1>
+                                <FreeTierBadge />
+                            </div>
                             <p className="text-muted-foreground mt-1">
                                 Transform your prompts for maximum effectiveness across any AI model.
                             </p>
@@ -399,6 +442,27 @@ export default function OptimizePage() {
                         </div>
                     </div>
 
+                    {/* Free Tier Warnings */}
+                    {!isPaidUser && !statusLoading && (
+                        <>
+                            {remaining === 1 && (
+                                <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/20 px-4 py-3 text-sm text-yellow-500 flex items-center gap-2">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <span>Last free optimization this week!</span>
+                                </div>
+                            )}
+                            {remaining === 0 && (
+                                <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <AlertCircle className="h-4 w-4" />
+                                        <span>Weekly free limit reached.</span>
+                                    </div>
+                                    <Link href="/pricing" className="underline hover:text-red-300 font-medium">Upgrade to Pro</Link>
+                                </div>
+                            )}
+                        </>
+                    )}
+
                     {/* Error State */}
                     {error && !result && (
                         <Card className="border-destructive bg-destructive/5">
@@ -406,16 +470,28 @@ export default function OptimizePage() {
                                 <div className="flex items-start space-x-3">
                                     <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
                                     <div>
-                                        <p className="font-medium text-destructive">Generation Failed</p>
+                                        <p className="font-medium text-destructive">Optimization Stopped</p>
                                         <p className="text-sm text-muted-foreground mt-1">{error}</p>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="mt-4"
-                                            onClick={handleStartNew}
-                                        >
-                                            Try Again
-                                        </Button>
+                                        {!error.includes("limit reached") && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="mt-4"
+                                                onClick={handleStartNew}
+                                            >
+                                                Try Again
+                                            </Button>
+                                        )}
+                                        {error.includes("limit reached") && (
+                                            <Button
+                                                variant="default"
+                                                size="sm"
+                                                className="mt-4 bg-[#09B7B4] text-black hover:bg-[#09B7B4]/90"
+                                                asChild
+                                            >
+                                                <Link href="/pricing">View Plans</Link>
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             </CardContent>
@@ -477,7 +553,11 @@ export default function OptimizePage() {
                                 <OptimizeForm
                                     onSubmit={(data) => handleSubmit(data)}
                                     isLoading={false}
-                                    canOptimize={true}
+                                    canOptimize={isPaidUser || canOptimize} // Pass free tier status: block form if !canOptimize? Or allow submit to show error?
+                                    // User flow: If remaining=0, form should probably be disabled OR handling submit shows error.
+                                    // Assuming OptimizeForm takes `canOptimize` to disable button.
+                                    // But wait, existing code passed `canOptimize={true}` before.
+                                    // I'll update it to respect logic, ensuring consistency.
                                     canOrchestrate={userTier !== "basic"}
                                     initialData={submittedData || undefined}
                                 />

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
 import { useAuth } from "@/providers/AuthProvider";
+import { FreeTierIndicator } from '@/components/FreeTierIndicator';
 import Link from "next/link";
 
 export function DashboardHeader() {
@@ -31,6 +32,8 @@ export function DashboardHeader() {
 
             {/* Right Actions */}
             <div className="flex items-center space-x-2">
+                <FreeTierIndicator compact className="hidden md:flex mr-4" />
+
                 <Button variant="ghost" size="icon" className="relative text-white/60 hover:text-white hover:bg-electric-cyan/10">
                     <Bell className="h-5 w-5" />
                     <span className="absolute top-2.5 right-2.5 h-2 w-2 bg-electric-cyan rounded-full border-2 border-midnight shadow-[0_0_8px_rgba(9,183,180,0.8)]" />

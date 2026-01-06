@@ -68,3 +68,20 @@ insert into system_settings (key, value) values
   "percent": 17
 }')
 on conflict (key) do nothing;
+
+-- Free Tier Tracking Table
+create table if not exists free_tier_tracking (
+  fingerprint_hash text primary key,
+  user_id uuid references auth.users(id),
+  ip_hash text not null,
+  weekly_usage int default 0,
+  week_start timestamp with time zone not null,
+  flagged boolean default false,
+  metadata jsonb default '{}'::jsonb,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+create index if not exists idx_free_tier_user_id on free_tier_tracking(user_id);
+
+alter table free_tier_tracking enable row level security;
+

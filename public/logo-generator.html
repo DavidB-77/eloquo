@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EQ Logo Generator</title>
+    <style>
+        @font-face {
+            font-family: 'Comodo';
+            src: url('./fonts/Comodo-Regular.woff2') format('woff2');
+        }
+
+        :root {
+            --electric-cyan: #09B7B4;
+            --neon-magenta: #FF00FF;
+            --midnight: #030711;
+        }
+
+        body {
+            background-color: #1a1a1a;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            padding: 40px;
+            font-family: 'Comodo', sans-serif;
+            justify-content: center;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .label {
+            color: white;
+            font-family: sans-serif;
+            margin-bottom: 10px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .canvas {
+            width: 512px;
+            height: 512px;
+            background-color: var(--midnight);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border-radius: 40px;
+            /* Rounded for social/store look */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* VARIANT 1: NEON CORE */
+        .v1 .text {
+            font-size: 280px;
+            color: #fff;
+            text-shadow:
+                0 0 10px var(--electric-cyan),
+                0 0 20px var(--electric-cyan),
+                0 0 40px var(--electric-cyan),
+                0 0 80px var(--electric-cyan),
+                0 0 120px rgba(9, 183, 180, 0.5);
+            line-height: 1;
+            z-index: 2;
+        }
+
+        .v1 .bg-glow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(9, 183, 180, 0.2) 0%, transparent 70%);
+            z-index: 1;
+        }
+
+        /* VARIANT 2: CYBERPUNK GLITCH */
+        .v2 .text {
+            font-size: 280px;
+            color: white;
+            position: relative;
+            z-index: 2;
+            line-height: 1;
+        }
+
+        .v2 .text::before,
+        .v2 .text::after {
+            content: "EQ";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .v2 .text::before {
+            color: var(--neon-magenta);
+            transform: translate(-4px, 0);
+            opacity: 0.7;
+            filter: blur(1px);
+        }
+
+        .v2 .text::after {
+            color: var(--electric-cyan);
+            transform: translate(4px, 0);
+            opacity: 0.7;
+            filter: blur(1px);
+        }
+
+        .v2 .scanlines {
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(to bottom,
+                    transparent 0px,
+                    transparent 4px,
+                    rgba(0, 0, 0, 0.3) 4px,
+                    rgba(0, 0, 0, 0.3) 8px);
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        /* VARIANT 3: GRADIENT DUOTONE */
+        .v3 .text {
+            font-size: 300px;
+            background: linear-gradient(135deg, var(--electric-cyan), #ffffff, var(--neon-magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 30px rgba(9, 183, 180, 0.4));
+            line-height: 1;
+        }
+
+        .v3 .circle {
+            position: absolute;
+            width: 420px;
+            height: 420px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+
+        /* VARIANT 4: BORDERED BADGE */
+        .v4 {
+            border: 4px solid var(--electric-cyan);
+            box-shadow: inset 0 0 50px rgba(9, 183, 180, 0.2);
+        }
+
+        .v4 .text {
+            font-size: 220px;
+            color: var(--electric-cyan);
+            line-height: 1;
+            letter-spacing: -10px;
+            filter: drop-shadow(0 0 15px rgba(9, 183, 180, 0.8));
+        }
+
+        .v4 .subtext {
+            position: absolute;
+            bottom: 80px;
+            font-family: sans-serif;
+            font-weight: bold;
+            letter-spacing: 4px;
+            font-size: 14px;
+            color: white;
+            opacity: 0.6;
+            text-transform: uppercase;
+        }
+
+        /* VARIANT 5: VOID CUT (Negative Space) */
+        .v5 {
+            background-color: var(--electric-cyan);
+        }
+
+        .v5 .text {
+            font-size: 320px;
+            color: var(--midnight);
+            font-weight: 900;
+            letter-spacing: -15px;
+            line-height: 1;
+        }
+
+        /* VARIANT 6: KINETIC BLUR */
+        .v6 .text {
+            font-size: 280px;
+            color: white;
+            position: relative;
+            line-height: 1;
+            transform: skewX(-10deg);
+        }
+
+        .v6 .text::before {
+            content: "EQ";
+            position: absolute;
+            top: 0;
+            left: -40px;
+            color: var(--electric-cyan);
+            opacity: 0.3;
+            filter: blur(8px);
+            z-index: -1;
+        }
+
+        .v6 .text::after {
+            content: "EQ";
+            position: absolute;
+            top: 0;
+            left: -20px;
+            color: var(--electric-cyan);
+            opacity: 0.5;
+            filter: blur(4px);
+            z-index: -1;
+        }
+
+        /* VARIANT 7: GLASS BADGE */
+        .v7 .glass-container {
+            width: 350px;
+            height: 350px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow:
+                0 4px 30px rgba(0, 0, 0, 0.5),
+                inset 0 0 20px rgba(9, 183, 180, 0.1);
+        }
+
+        .v7 .text {
+            font-size: 200px;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(9, 183, 180, 0.6);
+            line-height: 1;
+        }
+
+        /* VARIANT 8: WIREFRAME GRID */
+        .v8 {
+            background-image:
+                linear-gradient(rgba(9, 183, 180, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(9, 183, 180, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .v8 .text {
+            font-size: 300px;
+            color: transparent;
+            -webkit-text-stroke: 4px var(--electric-cyan);
+            position: relative;
+            line-height: 1;
+            filter: drop-shadow(0 0 5px var(--electric-cyan));
+        }
+
+        /* VARIANT 9: THE ESSENTIAL (Luxury Minimal) */
+        .v9 .text {
+            font-size: 140px;
+            /* Small size = Luxury */
+            color: white;
+            letter-spacing: 10px;
+            line-height: 1;
+        }
+
+        /* VARIANT 10: THE ANCHOR (Underline) */
+        .v10 .text {
+            font-size: 240px;
+            color: white;
+            position: relative;
+            line-height: 1;
+        }
+
+        .v10 .text::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 10%;
+            width: 80%;
+            height: 8px;
+            background-color: var(--electric-cyan);
+            border-radius: 4px;
+        }
+
+        /* VARIANT 11: THE ORBIT (Thin Circle) */
+        .v11 .orbit-ring {
+            width: 380px;
+            height: 380px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .v11 .text {
+            font-size: 180px;
+            color: white;
+            line-height: 1;
+        }
+
+        /* VARIANT 12: THE PERIOD (Brand Mark) */
+        .v12 .text {
+            font-size: 260px;
+            color: white;
+            line-height: 1;
+            display: flex;
+            align-items: baseline;
+        }
+
+        .v12 .dot {
+            width: 30px;
+            height: 30px;
+            background-color: var(--electric-cyan);
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        /* VARIANT 13: THE SHADES (Greyscale) */
+        .v13 .text {
+            font-size: 280px;
+            line-height: 1;
+        }
+
+        .v13 .char-e {
+            color: white;
+        }
+
+        .v13 .char-q {
+            color: #444;
+        }
+
+        /* VARIANT 14: THE SLICE (Diagonal) */
+        .v14 {
+            background: linear-gradient(135deg, var(--midnight) 45%, #051818 45%, #051818 55%, var(--midnight) 55%);
+        }
+
+        .v14 .text {
+            font-size: 280px;
+            color: white;
+            line-height: 1;
+        }
+
+        /* VARIANT 15: VOID PERIOD (Black) */
+        .v15 {
+            background-color: var(--electric-cyan);
+        }
+
+        .v15 .text {
+            font-size: 260px;
+            color: var(--midnight);
+            line-height: 1;
+            display: flex;
+            align-items: baseline;
+            font-weight: 900;
+        }
+
+        .v15 .dot {
+            width: 30px;
+            height: 30px;
+            background-color: var(--midnight);
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        /* VARIANT 16: VOID PERIOD (White) */
+        .v16 {
+            background-color: var(--electric-cyan);
+        }
+
+        .v16 .text {
+            font-size: 260px;
+            color: white;
+            line-height: 1;
+            display: flex;
+            align-items: baseline;
+            font-weight: 900;
+        }
+
+        .v16 .dot {
+            width: 30px;
+            height: 30px;
+            background-color: white;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        /* VARIANT 17: ORANGE DOT (Black Text) */
+        .v17 {
+            background-color: var(--electric-cyan);
+        }
+
+        .v17 .text {
+            font-size: 260px;
+            color: var(--midnight);
+            line-height: 1;
+            display: flex;
+            align-items: baseline;
+            font-weight: 900;
+        }
+
+        .v17 .dot {
+            width: 30px;
+            height: 30px;
+            background-color: var(--neon-orange);
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        /* VARIANT 18: ORANGE DOT (White Text) */
+        .v18 {
+            background-color: var(--electric-cyan);
+        }
+
+        .v18 .text {
+            font-size: 260px;
+            color: white;
+            line-height: 1;
+            display: flex;
+            align-items: baseline;
+            font-weight: 900;
+        }
+
+        .v18 .dot {
+            width: 30px;
+            height: 30px;
+            background-color: var(--neon-orange);
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        /* VARIANT 19: ORANGE TEXT (White Dot) */
+        .v19 {
+            background-color: var(--electric-cyan);
+        }
+
+        .v19 .text {
+            font-size: 260px;
+            color: var(--neon-orange);
+            line-height: 1;
+            display: flex;
+            align-items: baseline;
+            font-weight: 900;
+        }
+
+        .v19 .dot {
+            width: 30px;
+            height: 30px;
+            background-color: white;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        /* VARIANT 20: THE UNDERLINE (Orange Bar) */
+        .v20 {
+            background-color: var(--electric-cyan);
+            position: relative;
+        }
+
+        .v20 .text {
+            font-size: 240px;
+            color: white;
+            line-height: 1;
+            font-weight: 900;
+            z-index: 2;
+        }
+
+        .v20::after {
+            content: '';
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 12px;
+            background-color: var(--neon-orange);
+        }
+
+        /* VARIANT 21: THE CORNER (Geometric) */
+        .v21 {
+            background-color: var(--electric-cyan);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .v21 .text {
+            font-size: 280px;
+            color: white;
+            line-height: 1;
+            font-weight: 900;
+            z-index: 2;
+        }
+
+        .v21 .corner-shape {
+            position: absolute;
+            bottom: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background-color: var(--neon-orange);
+            transform: rotate(45deg);
+            z-index: 1;
+        }
+
+        /* VARIANT 22: THE STROKE (Outline) */
+        .v22 {
+            background-color: var(--electric-cyan);
+        }
+
+        .v22 .text {
+            font-size: 300px;
+            color: transparent;
+            -webkit-text-stroke: 6px var(--neon-orange);
+            line-height: 1;
+            font-weight: 900;
+        }
+
+        /* VARIANT 23: DUOTONE PERIOD */
+        .v23 {
+            background-color: var(--electric-cyan);
+        }
+
+        .v23 .text {
+            font-size: 260px;
+            color: white;
+            line-height: 1;
+            display: flex;
+            align-items: baseline;
+            font-weight: 900;
+        }
+
+        .v23 .dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-left: 10px;
+            background: linear-gradient(90deg, var(--neon-orange) 50%, white 50%);
+        }
+
+        /* VARIANT 24: HARD SHADOW */
+        .v24 {
+            background-color: var(--electric-cyan);
+        }
+
+        .v24 .text {
+            font-size: 280px;
+            color: white;
+            line-height: 1;
+            font-weight: 900;
+            filter: drop-shadow(10px 10px 0px var(--neon-orange));
+        }
+
+
+        /* VARIANT 25: THE PERIOD (Pure Black) */
+        .v25 {
+            background-color: #000000;
+        }
+
+        .v25 .text {
+            font-size: 180px;
+            color: white;
+            line-height: 1;
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            font-weight: 900;
+        }
+
+        .v25 .dot {
+            width: 24px;
+            height: 24px;
+            background-color: var(--electric-cyan);
+            border-radius: 50%;
+            margin-left: 15px;
+            position: relative;
+            top: -5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="label">v1: Neon Core</div>
+        <div class="canvas v1" id="v1">
+            <div class="bg-glow"></div>
+            <div class="text">EQ</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v2: Cyber Glitch</div>
+        <div class="canvas v2" id="v2">
+            <div class="scanlines"></div>
+            <div class="text">EQ</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v3: Prism Duotone</div>
+        <div class="canvas v3" id="v3">
+            <div class="circle"></div>
+            <div class="text">EQ</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v4: Protocol Link</div>
+        <div class="canvas v4" id="v4">
+            <div class="text">EQ</div>
+            <div class="subtext">ELOQUO</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v5: Void Cut</div>
+        <div class="canvas v5" id="v5">
+            <div class="text">EQ</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v6: Kinetic Blur</div>
+        <div class="canvas v6" id="v6">
+            <div class="text">EQ</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v7: Glass Badge</div>
+        <div class="canvas v7" id="v7">
+            <div class="glass-container">
+                <div class="text">EQ</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v8: Wireframe Grid</div>
+        <div class="canvas v8" id="v8">
+            <div class="text">EQ</div>
+        </div>
+    </div>
+
+
+    <div class="container">
+        <div class="label">v9: The Essential</div>
+        <div class="canvas v9" id="v9">
+            <div class="text">EQ</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v10: The Anchor</div>
+        <div class="canvas v10" id="v10">
+            <div class="text">EQ</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v11: The Orbit</div>
+        <div class="canvas v11" id="v11">
+            <div class="orbit-ring">
+                <div class="text">EQ</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v12: The Period</div>
+        <div class="canvas v12" id="v12">
+            <div class="text">EQ<div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v13: The Shades</div>
+        <div class="canvas v13" id="v13">
+            <div class="text">
+                <span class="char-e">E</span><span class="char-q">Q</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v14: The Slice</div>
+        <div class="canvas v14" id="v14">
+            <div class="text">EQ</div>
+        </div>
+    </div>
+
+
+    <div class="container">
+        <div class="label">v15: Void Period (Black)</div>
+        <div class="canvas v15" id="v15">
+            <div class="text">EQ<div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v16: Void Period (White)</div>
+        <div class="canvas v16" id="v16">
+            <div class="text">EQ<div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="container">
+        <div class="label">v17: Orange Dot (Black)</div>
+        <div class="canvas v17" id="v17">
+            <div class="text">EQ<div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v18: Orange Dot (White)</div>
+        <div class="canvas v18" id="v18">
+            <div class="text">EQ<div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v19: Orange Text (White Dot)</div>
+        <div class="canvas v19" id="v19">
+            <div class="text">EQ<div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v20: The Underline</div>
+        <div class="canvas v20" id="v20">
+            <div class="text">EQ</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v21: The Corner</div>
+        <div class="canvas v21" id="v21">
+            <div class="text">EQ</div>
+            <div class="corner-shape"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v22: The Stroke</div>
+        <div class="canvas v22" id="v22">
+            <div class="text">EQ</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v23: Duotone Period</div>
+        <div class="canvas v23" id="v23">
+            <div class="text">EQ<div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="label">v24: Hard Shadow</div>
+        <div class="canvas v24" id="v24">
+            <div class="text">EQ</div>
+        </div>
+    </div>
+
+
+    <div class="container">
+        <div class="label">v25: The Period (Pure Black)</div>
+        <div class="canvas v25" id="v25">
+            <div class="text">EQ<div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

@@ -25,6 +25,8 @@ import { useUser } from "@/providers/UserProvider";
 
 import { UsageBar } from "@/components/dashboard/UsageBar";
 
+import { FreeTierIndicator } from '@/components/FreeTierIndicator';
+
 const NAV_LINKS = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
     { href: "/dashboard/optimize", icon: Zap, label: "Optimize" },
@@ -107,6 +109,9 @@ export function DashboardSidebar() {
                         </div>
                     </div>
                 )}
+
+                {/* Free Tier Indicator */}
+                {!isCollapsed && <FreeTierIndicator className="mx-3 mb-4" />}
 
                 {/* Footer/User */}
                 <div className="border-t border-electric-cyan/10 p-4">
