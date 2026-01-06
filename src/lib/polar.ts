@@ -10,6 +10,7 @@ export const PRODUCT_IDS = {
     basic: '084c7e20-e6b9-4d15-8657-05d04fd9dfd2',
     pro: 'c9fcd252-f88a-4e71-b1d2-21f49b1d890d',
     business: '3234e13e-a589-4aba-ab54-3c0bbcec97ee',
+    free: '2a415251-2cfd-4d0a-85e6-e59276422e95',
 } as const;
 
 // Discount codes for founding members

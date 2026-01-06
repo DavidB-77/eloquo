@@ -13,6 +13,12 @@ import { ArrowLeft, Loader2, Check, Shield, AlertTriangle } from "lucide-react";
 import { getGeneralSettings } from "@/lib/settings";
 
 const PLANS = {
+    free: {
+        name: "Free",
+        price: "$0",
+        foundingPrice: "$0",
+        features: ["3 optimizations per week", "Standard AI models", "Basic prompt analysis", "Community support"],
+    },
     basic: {
         name: "Basic",
         price: "$7",
@@ -259,6 +265,12 @@ function SignupPageContent() {
                                 <Shield className="h-3 w-3" />
                                 Secure payment via Stripe
                             </div>
+
+                            {planKey === 'free' && (
+                                <div className="text-[10px] text-center text-white/40 -mt-2">
+                                    Card required for verification
+                                </div>
+                            )}
 
                             <div className="text-sm text-center text-white/60">
                                 Already have an account?{" "}
