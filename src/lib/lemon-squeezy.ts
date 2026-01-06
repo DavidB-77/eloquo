@@ -12,7 +12,9 @@ export const PRODUCT_VARIANTS = {
     pro_monthly: process.env.LEMON_SQUEEZY_PRO_MONTHLY_VARIANT_ID || '',
     pro_annual: process.env.LEMON_SQUEEZY_PRO_ANNUAL_VARIANT_ID || '',
     team_monthly: process.env.LEMON_SQUEEZY_TEAM_MONTHLY_VARIANT_ID || '',
+    business_monthly: process.env.LEMON_SQUEEZY_TEAM_MONTHLY_VARIANT_ID || '',
     team_annual: process.env.LEMON_SQUEEZY_TEAM_ANNUAL_VARIANT_ID || '',
+    business_annual: process.env.LEMON_SQUEEZY_TEAM_ANNUAL_VARIANT_ID || '',
     enterprise_monthly: process.env.LEMON_SQUEEZY_ENTERPRISE_MONTHLY_VARIANT_ID || '',
     enterprise_annual: process.env.LEMON_SQUEEZY_ENTERPRISE_ANNUAL_VARIANT_ID || '',
 } as const;
@@ -26,6 +28,7 @@ interface CheckoutOptions {
     userName?: string;
     redirectUrl?: string;
     customData?: Record<string, any>;
+    discountCode?: string;
 }
 
 /**
@@ -54,11 +57,12 @@ export async function createCheckoutUrl(options: CheckoutOptions): Promise<strin
                     attributes: {
                         checkout_data: {
                             email: options.userEmail,
-                            name: options.userName,
+                            ...(options.userName && { name: options.userName }),
                             custom: {
                                 user_id: options.userId,
                                 ...options.customData,
                             },
+                            ...(options.discountCode && { discount_code: options.discountCode }),
                         },
                         product_options: {
                             redirect_url: options.redirectUrl || `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?tab=subscription`,
@@ -137,7 +141,8 @@ export function getSubscriptionTierFromVariant(variantId: string): string {
         if (id === variantId) {
             if (key.startsWith('basic')) return 'basic';
             if (key.startsWith('pro')) return 'pro';
-            if (key.startsWith('team')) return 'team';
+            if (key.startsWith('team')) return 'business';
+            if (key.startsWith('business')) return 'business';
             if (key.startsWith('enterprise')) return 'enterprise';
         }
     }

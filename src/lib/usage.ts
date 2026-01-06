@@ -16,6 +16,7 @@ export const TIER_LIMITS = {
 export type SubscriptionTier = keyof typeof TIER_LIMITS;
 
 export interface UsageStats {
+    subscriptionStatus: string;
     tier: SubscriptionTier;
     optimizationsUsed: number;
     optimizationsLimit: number;
@@ -94,6 +95,7 @@ export async function getUserUsage(userId: string): Promise<UsageStats> {
             canOrchestrate: tier === 'enterprise' || (premiumCreditsUsed < premiumCreditsLimit),
             hasMcpAccess: stats.has_mcp_access || tier !== 'basic',
             comprehensiveCreditsRemaining: stats.comprehensive_credits_remaining ?? 3,
+            subscriptionStatus: stats.subscription_status || "active",
         };
     }
 
@@ -102,7 +104,7 @@ export async function getUserUsage(userId: string): Promise<UsageStats> {
 
     const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('subscription_tier, optimizations_used, comprehensive_credits_remaining, has_mcp_access')
+        .select('subscription_tier, subscription_status, optimizations_used, comprehensive_credits_remaining, has_mcp_access')
         .eq('id', userId)
         .single();
 
@@ -126,6 +128,7 @@ export async function getUserUsage(userId: string): Promise<UsageStats> {
         canOrchestrate: tier === 'enterprise' || tier === 'business',
         hasMcpAccess: profile?.has_mcp_access || tier !== 'basic',
         comprehensiveCreditsRemaining: profile?.comprehensive_credits_remaining ?? 3,
+        subscriptionStatus: profile?.subscription_status || "active",
     };
 }
 

@@ -242,7 +242,7 @@ export default function AdminUsersPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={cn("text-xs px-2 py-1 rounded-full font-medium capitalize", planStyle)}>
-                                                {user.subscription_tier || "None"}
+                                                {user.subscription_tier === "enterprise" ? "Business" : user.subscription_tier || "None"}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">

@@ -4,7 +4,7 @@ import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Copy, Check, ChevronDown, FileText, FileCode, FileJson, File, Lightbulb, CheckCircle, Sparkles } from "lucide-react";
+import { Copy, Check, ChevronDown, FileText, FileCode, FileJson, File, Lightbulb, CheckCircle, Sparkles, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TokenInfoTooltip } from "./TokenInfoTooltip";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,6 +28,9 @@ interface ResultsTabsProps {
     targetModel: string;
     onStartNew: () => void;
     improvements?: string[];
+    techniques_applied?: string[];
+    onRefine?: (instruction: string) => void;
+    isRefining?: boolean;
     validation?: {
         approved: boolean;
         score: number;
@@ -55,9 +58,14 @@ export function ResultsTabs({
     targetModel,
     onStartNew,
     improvements,
+    techniques_applied,
+    onRefine,
+    isRefining = false,
     validation,
 }: ResultsTabsProps) {
     const [activeTab, setActiveTab] = React.useState<TabType>("full");
+    const [refineInput, setRefineInput] = React.useState("");
+    const [showRefineInput, setShowRefineInput] = React.useState(false);
     const [showDownloadMenu, setShowDownloadMenu] = React.useState(false);
     const [copied, setCopied] = React.useState(false);
     const [showImprovements, setShowImprovements] = React.useState(false);
@@ -191,7 +199,7 @@ export function ResultsTabs({
                                     >
                                         {validation.score.toFixed(1)}
                                     </motion.span>
-                                    <span className="text-white/40 text-xs font-bold">/ 5.0</span>
+                                    <span className="text-white/40 text-xs font-bold">/ 10</span>
                                 </div>
                             </div>
                         )}
@@ -205,6 +213,20 @@ export function ResultsTabs({
                         </div>
                     </div>
                 </div>
+                {/* Compact Techniques Row */}
+                {techniques_applied && techniques_applied.length > 0 && (
+                    <div className="flex items-center gap-2 px-6 py-2 flex-wrap border-t border-electric-cyan/10">
+                        <span className="text-electric-cyan text-[10px] font-bold uppercase tracking-widest">⚡ Techniques:</span>
+                        {techniques_applied.map((technique, i) => (
+                            <span
+                                key={i}
+                                className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-electric-cyan/10 text-electric-cyan border border-electric-cyan/20"
+                            >
+                                {technique.replace('Domain persona: ', '').replace('Structured output format (Identity→Instructions→Context→Request)', 'Structured Format')}
+                            </span>
+                        ))}
+                    </div>
+                )}
             </CardHeader>
 
             <CardContent className="flex-1 flex flex-col p-0">
@@ -242,6 +264,7 @@ export function ResultsTabs({
                             </div>
                         </motion.div>
                     </AnimatePresence>
+
                 </div>
 
                 {/* Improvements Section */}
@@ -282,6 +305,50 @@ export function ResultsTabs({
                     </div>
                 )}
 
+                {/* Refine Section */}
+                {onRefine && (
+                    <div className="px-6 pb-4">
+                        {!showRefineInput ? (
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowRefineInput(true)}
+                                disabled={isRefining}
+                                className="w-full border-electric-cyan/30 bg-electric-cyan/5 text-electric-cyan hover:bg-electric-cyan/10 font-bold uppercase tracking-widest text-xs py-3 rounded-xl disabled:opacity-70"
+                            >
+                                <RefreshCw className={`h-4 w-4 mr-2 ${isRefining ? 'animate-spin' : ''}`} />
+                                {isRefining ? 'Refining Prompt...' : 'Refine This Prompt'}
+                            </Button>
+                        ) : (
+                            <div className="space-y-3">
+                                <div className="flex flex-wrap gap-2">
+                                    {["More formal", "More casual", "More detailed", "Shorter", "Add examples"].map((quick) => (
+                                        <button
+                                            key={quick}
+                                            onClick={() => { onRefine(quick); setShowRefineInput(false); }}
+                                            disabled={isRefining}
+                                            className="px-3 py-1.5 text-[10px] font-bold uppercase bg-electric-cyan/10 text-electric-cyan border border-electric-cyan/20 rounded-full hover:bg-electric-cyan/20 disabled:opacity-50"
+                                        >
+                                            {quick}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={refineInput}
+                                        onChange={(e) => setRefineInput(e.target.value)}
+                                        placeholder="Or describe how to improve..."
+                                        className="flex-1 px-3 py-2 bg-midnight/50 border border-electric-cyan/20 rounded-lg text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-electric-cyan/50"
+                                    />
+                                    <Button onClick={() => { if(refineInput.trim()) { onRefine(refineInput); setShowRefineInput(false); setRefineInput(""); }}} disabled={!refineInput.trim() || isRefining} className="bg-electric-cyan text-midnight font-bold px-4">
+                                        {isRefining ? <RefreshCw className="h-4 w-4 animate-spin" /> : "Refine"}
+                                    </Button>
+                                    <Button variant="ghost" onClick={() => setShowRefineInput(false)} className="text-white/50 hover:text-white px-2">✕</Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
                 {/* Action Buttons */}
                 <div className="flex gap-4 p-6 border-t border-electric-cyan/10 bg-midnight/20">
                     <Button

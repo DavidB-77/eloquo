@@ -26,6 +26,7 @@ interface SuccessResult {
         snippet: string;
     };
     improvements: string[];
+    techniques_applied?: string[];
     metrics: {
         originalTokens: number;
         optimizedTokens: number;
@@ -91,6 +92,7 @@ interface ProjectProtocolResponse {
 export default function OptimizePage() {
     // Core state
     const [result, setResult] = React.useState<SuccessResult | null>(null);
+    const [isRefining, setIsRefining] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
     const [submittedData, setSubmittedData] = React.useState<OptimizeFormData | null>(null);
 
@@ -276,6 +278,41 @@ export default function OptimizePage() {
         setResult(null);
     };
 
+    const handleRefine = async (instruction: string) => {
+        if (!result?.results?.full) return;
+        
+        setIsRefining(true);
+        try {
+            const res = await fetch("/api/refine", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    originalPrompt: result.results.full,
+                    instruction,
+                    userTier: userTier,
+                }),
+            });
+            const response = await res.json();
+            
+            if (response.success && response.refinedPrompt) {
+                setResult(prev => prev ? {
+                    ...prev,
+                    results: {
+                        ...prev.results,
+                        full: response.refinedPrompt,
+                    },
+                    improvements: [...(prev.improvements || []), ...(response.changesMade || [])],
+                } : null);
+            } else {
+                console.error('Refine failed:', response.error);
+            }
+        } catch (error) {
+            console.error('Refine error:', error);
+        } finally {
+            setIsRefining(false);
+        }
+    };
+
     const handleStartNew = () => {
         setResult(null);
         setError(null);
@@ -344,7 +381,7 @@ export default function OptimizePage() {
                                 )}
                             >
                                 <Crown className="h-3 w-3 mr-1" />
-                                {userTier} Plan
+                                {userTier === "enterprise" ? "Business" : userTier} Plan
                             </Badge>
 
                             {comprehensiveCredits !== null && (
@@ -422,7 +459,10 @@ export default function OptimizePage() {
                                     targetModel={submittedData?.targetModel || "universal"}
                                     onStartNew={handleStartNew}
                                     improvements={result.improvements}
+                                    techniques_applied={result.techniques_applied}
                                     validation={result.validation}
+                                    onRefine={handleRefine}
+                                    isRefining={isRefining}
                                 />
                             </div>
                         </div>

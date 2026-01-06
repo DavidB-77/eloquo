@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 
 import * as React from "react";
 import Link from "next/link";
@@ -33,7 +34,7 @@ const PLANS = {
     },
 };
 
-export default function SignupPage() {
+function SignupPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -98,7 +99,7 @@ export default function SignupPage() {
             const data = await res.json();
 
             if (data.success && data.checkoutUrl) {
-                // Redirect to Lemon Squeezy checkout
+                // Redirect to Polar checkout
                 window.location.href = data.checkoutUrl;
             } else {
                 setError(data.error || "Failed to create checkout session");
@@ -256,7 +257,7 @@ export default function SignupPage() {
 
                             <div className="flex items-center justify-center gap-2 text-xs text-white/40">
                                 <Shield className="h-3 w-3" />
-                                Secure payment via Lemon Squeezy
+                                Secure payment via Stripe
                             </div>
 
                             <div className="text-sm text-center text-white/60">
@@ -270,5 +271,13 @@ export default function SignupPage() {
                 </Card>
             </Container>
         </div>
+    );
+}
+
+export default function SignupPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-midnight flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-electric-cyan" /></div>}>
+            <SignupPageContent />
+        </Suspense>
     );
 }

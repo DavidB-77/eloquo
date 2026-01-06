@@ -92,7 +92,7 @@ export function DashboardSidebar() {
                             </div>
                             <div className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em] mb-4">Subscription Tier</div>
                             <div className="font-display text-md mb-4 capitalize text-white flex items-center gap-2">
-                                {userData.tier}
+                                {userData.tier === "enterprise" ? "Business" : userData.tier}
                                 <Badge variant="pro" className="py-0 px-1.5 h-4">Active</Badge>
                             </div>
                             <UsageBar

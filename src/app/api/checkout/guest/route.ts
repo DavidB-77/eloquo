@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createCheckoutUrl, PRODUCT_VARIANTS, PlanVariant } from '@/lib/lemon-squeezy';
+import { createCheckoutUrl, PRODUCT_IDS, DISCOUNT_IDS, PlanType } from '@/lib/polar';
 
 /**
  * POST /api/checkout/guest - Create checkout for new signups (no auth required)
@@ -7,11 +7,11 @@ import { createCheckoutUrl, PRODUCT_VARIANTS, PlanVariant } from '@/lib/lemon-sq
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { email, plan, billing } = body;
+        const { email, plan } = body;
 
-        if (!email || !plan || !billing) {
+        if (!email || !plan) {
             return NextResponse.json(
-                { success: false, error: 'Email, plan, and billing period required' },
+                { success: false, error: 'Email and plan required' },
                 { status: 400 }
             );
         }
@@ -25,27 +25,28 @@ export async function POST(request: Request) {
             );
         }
 
-        // Get variant ID for selected plan
-        const variantKey = `${plan}_${billing}` as PlanVariant;
-        const variantId = PRODUCT_VARIANTS[variantKey];
-
-        if (!variantId) {
+        // Get product ID
+        const productId = PRODUCT_IDS[plan as PlanType];
+        if (!productId) {
             return NextResponse.json(
-                { success: false, error: 'Invalid plan or billing period' },
+                { success: false, error: 'Invalid plan' },
                 { status: 400 }
             );
         }
 
+        // Get discount code if applicable
+        const discountCode = DISCOUNT_IDS[plan as keyof typeof DISCOUNT_IDS];
+
         // Create checkout URL with signup intent in custom data
         const checkoutUrl = await createCheckoutUrl({
-            variantId,
+            productId,
             userId: 'pending_signup',
             userEmail: email,
+            discountCode,
             customData: {
-                signup_intent: true,
+                signup_intent: 'true',
                 email: email,
                 plan: plan,
-                billing: billing,
             },
             redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/signup/success`,
         });

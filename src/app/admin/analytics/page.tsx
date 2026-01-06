@@ -431,7 +431,7 @@ export default function AdminAnalyticsPage() {
                                 <span className="text-sm text-white">Standard Optimizations</span>
                             </div>
                             <div className="text-right">
-                                <span className="text-sm font-bold text-white">{financialData?.standard?.total_optimizations || 0}</span>
+                                <span className="text-sm font-bold text-white">{dashboardStats?.standard_count || dashboardStats?.standard_count || dashboardStats?.standard_count || dashboardStats?.standard_count || dashboardStats?.standard_count || financialData?.standard?.total_optimizations || 0}</span>
                                 <span className="text-xs text-white/40 ml-2">
                                     ${(financialData?.standard?.total_api_cost || 0).toFixed(4)} cost
                                 </span>
@@ -654,7 +654,7 @@ export default function AdminAnalyticsPage() {
                                             <p className="text-sm text-white font-medium truncate max-w-[120px] md:max-w-none">{user.email}</p>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-electric-cyan/10 text-electric-cyan font-bold uppercase border border-electric-cyan/20">
-                                                    {user.subscription_tier}
+                                                    {user.subscription_tier === "enterprise" ? "Business" : user.subscription_tier}
                                                 </span>
                                                 <span className="text-[9px] text-white/40">ID: {user.user_id.slice(0, 6)}...</span>
                                             </div>

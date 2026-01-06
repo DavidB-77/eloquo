@@ -111,7 +111,9 @@ export default function SignupSuccessPage() {
                 sessionStorage.removeItem('eloquo_signup_intent');
 
                 setStatus('success');
-                setMessage('Account created! Redirecting to dashboard...');
+                setMessage('Please check your email to confirm your account, then log in.');
+                // Don't auto-redirect - let user confirm email first
+                return;
 
                 // Auto sign in if we just signed up
                 const { data: { user } } = await supabase.auth.getUser();
@@ -147,6 +149,11 @@ export default function SignupSuccessPage() {
                         <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
                         <h1 className="text-2xl font-bold text-white">Welcome to Eloquo!</h1>
                         <p className="text-white/60">{message}</p>
+                        <div className="pt-4">
+                            <Button onClick={() => router.push('/login')} className="w-full">
+                                Go to Login
+                            </Button>
+                        </div>
                     </div>
                 )}
 

@@ -113,7 +113,7 @@ export function Navbar() {
 
                         {/* Mobile Menu Toggle */}
                         <button
-                            className="md:hidden p-2 text-muted-foreground"
+                            aria-label="Toggle menu" className="md:hidden p-2 text-muted-foreground"
                             onClick={() => setIsOpen(!isOpen)}
                         >
                             {isOpen ? <X /> : <Menu />}

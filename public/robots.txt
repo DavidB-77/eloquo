@@ -1,0 +1,16 @@
+# Eloquo - AI Prompt Optimization Platform
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /signup
+Disallow: /reset-password
+Disallow: /forgot-password
+
+# Sitemaps
+Sitemap: https://eloquo.io/sitemap.xml
+
+# Crawl-delay for politeness
+Crawl-delay: 1

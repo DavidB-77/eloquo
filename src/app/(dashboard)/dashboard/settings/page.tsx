@@ -31,7 +31,7 @@ const PLAN_DETAILS: Record<string, { name: string; price: string; color: string 
     basic: { name: "Basic", price: "$7/mo", color: "bg-muted text-muted-foreground" },
     pro: { name: "Pro", price: "$9/mo", color: "bg-primary text-primary-foreground" },
     business: { name: "Business", price: "$20/mo", color: "bg-accent text-accent-foreground" },
-    enterprise: { name: "Enterprise", price: "Custom", color: "bg-gradient-to-r from-primary to-accent text-white" },
+    enterprise: { name: "Business", price: "Custom", color: "bg-gradient-to-r from-primary to-accent text-white" },
 };
 
 const TABS = [

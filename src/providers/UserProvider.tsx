@@ -13,6 +13,7 @@ interface UserData {
     canOrchestrate: boolean;
     hasMcpAccess: boolean;
     comprehensiveCreditsRemaining: number;
+    subscriptionStatus?: string;
 }
 
 interface UserContextType {

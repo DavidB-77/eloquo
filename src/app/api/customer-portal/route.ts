@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getCustomerPortalUrl } from '@/lib/lemon-squeezy';
+import { getCustomerPortalUrl } from '@/lib/polar';
 
-/**
- * GET /api/customer-portal - Get Lemon Squeezy customer portal URL
- */
-export async function GET(request: Request) {
+export async function POST() {
     try {
         const supabase = await createClient();
         const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -17,21 +14,21 @@ export async function GET(request: Request) {
             );
         }
 
-        // Get user's Lemon Squeezy customer ID
-        const { data: profile } = await supabase
+        // Get user's Polar customer ID
+        const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('lemon_squeezy_customer_id')
+            .select('polar_customer_id')
             .eq('id', user.id)
             .single();
 
-        if (!profile?.lemon_squeezy_customer_id) {
+        if (profileError || !profile?.polar_customer_id) {
             return NextResponse.json(
-                { success: false, error: 'No active subscription' },
+                { success: false, error: 'No active subscription found' },
                 { status: 404 }
             );
         }
 
-        const portalUrl = await getCustomerPortalUrl(profile.lemon_squeezy_customer_id);
+        const portalUrl = await getCustomerPortalUrl(profile.polar_customer_id);
 
         if (!portalUrl) {
             return NextResponse.json(
@@ -40,10 +37,10 @@ export async function GET(request: Request) {
             );
         }
 
-        return NextResponse.json({ success: true, data: { portalUrl } });
+        return NextResponse.json({ success: true, portalUrl });
 
     } catch (error) {
-        console.error('Customer portal API error:', error);
+        console.error('Customer portal error:', error);
         return NextResponse.json(
             { success: false, error: 'Internal server error' },
             { status: 500 }

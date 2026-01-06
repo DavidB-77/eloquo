@@ -19,9 +19,9 @@ export function Footer() {
                             Eloquo: The prompt optimizer that learns. Built for professionals who want AI that gets better over time.
                         </p>
                         <div className="flex space-x-6">
-                            <Link href="#" className="text-white/40 hover:text-electric-cyan transition-colors"><Twitter className="h-5 w-5" /></Link>
-                            <Link href="#" className="text-white/40 hover:text-electric-cyan transition-colors"><Linkedin className="h-5 w-5" /></Link>
-                            <Link href="#" className="text-white/40 hover:text-electric-cyan transition-colors"><Github className="h-5 w-5" /></Link>
+                            <Link href="https://twitter.com/eloquo_io" aria-label="Twitter" className="text-white/60 hover:text-electric-cyan transition-colors"><Twitter className="h-5 w-5" /></Link>
+                            <Link href="https://linkedin.com/company/eloquo" aria-label="LinkedIn" className="text-white/60 hover:text-electric-cyan transition-colors"><Linkedin className="h-5 w-5" /></Link>
+                            <Link href="https://github.com/eloquo" aria-label="GitHub" className="text-white/60 hover:text-electric-cyan transition-colors"><Github className="h-5 w-5" /></Link>
                         </div>
                     </div>
 
@@ -46,10 +46,10 @@ export function Footer() {
                 </div>
 
                 <div className="pt-10 border-t border-electric-cyan/10 flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
-                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">
+                    <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em]">
                         © 2025 ELOQUO. ALL RIGHTS RESERVED.
                     </p>
-                    <div className="flex space-x-8 text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">
+                    <div className="flex space-x-8 text-[10px] font-bold text-white/60 uppercase tracking-[0.2em]">
                         <Link href="mailto:hello@eloquo.io" className="hover:text-electric-cyan transition-colors">hello@eloquo.io</Link>
                     </div>
                 </div>

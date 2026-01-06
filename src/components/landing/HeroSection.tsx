@@ -90,7 +90,7 @@ export function HeroSection() {
                                 ) : (
                                     <Button size="lg" className="w-full sm:w-auto h-14 px-10 rounded-xl bg-neon-orange hover:bg-neon-orange/90 text-[#0A0A0A] border-none text-lg font-bold tracking-widest uppercase glow-sm hover:glow-md transition-all group" asChild>
                                         <Link href={isLoggedIn ? "/dashboard" : "/signup"}>
-                                            {isLoggedIn ? "Go to Dashboard" : "Start Optimizing Free"} <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                            {isLoggedIn ? "Go to Dashboard" : "Start Optimizing"} <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                                         </Link>
                                     </Button>
                                 )}
