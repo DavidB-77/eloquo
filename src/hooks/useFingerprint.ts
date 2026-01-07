@@ -115,27 +115,38 @@ export function useFreeTierStatus(userId: string | null): UseFreeTierStatusResul
     }, [checkStatus, fingerprintLoading]); // Check status whenever dependencies allow
 
     const recordUsage = async (): Promise<boolean> => {
+        console.log('[recordUsage] Called');
+        console.log('[recordUsage] fingerprintLoading:', fingerprintLoading);
+        console.log('[recordUsage] fingerprint:', fingerprint);
+        console.log('[recordUsage] userId:', userId);
+
         if (fingerprintLoading) return false;
         if (!fingerprint && !userId) {
             setError('Cannot record usage: Missing identity');
+            console.error('[recordUsage] Missing identity - fingerprint and userId both null');
             return false;
         }
 
         setIsLoading(true);
         try {
+            console.log('[recordUsage] Sending POST to /api/free-tier with action: use');
+
             const res = await fetch('/api/free-tier', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     userId,
-                    fingerprint: fingerprint || 'unknown-fingerprint', // Fail safe?
+                    fingerprint: fingerprint || 'unknown-fingerprint',
                     action: 'use'
                 })
             });
 
+            console.log('[recordUsage] Response status:', res.status, res.ok);
+
             if (!res.ok) throw new Error('Failed to record usage');
 
             const data = await res.json();
+            console.log('[recordUsage] Response data:', data);
 
             // Update local state with fresh data from server
             setStatus({
@@ -147,10 +158,13 @@ export function useFreeTierStatus(userId: string | null): UseFreeTierStatusResul
                 flagged: data.flagged
             });
 
+            console.log('[recordUsage] Updated local state - canOptimize:', data.canOptimize, 'remaining:', data.remaining);
+
             // Return whether user can still optimize (after this usage was recorded)
             return data.canOptimize;
 
         } catch (err) {
+            console.error('[recordUsage] Error:', err);
             setError(err instanceof Error ? err.message : 'Usage record failed');
             return false;
         } finally {

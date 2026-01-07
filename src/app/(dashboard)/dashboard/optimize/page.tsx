@@ -158,13 +158,19 @@ export default function OptimizePage() {
             setSubmittedData(data);
 
             try {
-                // Determine if we should record usage for PP? Ideally yes, but sticking to prompt instructions for "Optimize API".
+                // Record usage for Project Protocol (also consumes 1 optimization from free tier)
                 if (!isPaidUser) {
-                    // Optionally track PP usage here too if desired, keeping consistent with request
-                    const allowed = await recordUsage();
-                    if (!allowed) {
+                    console.log('[PROJECT PROTOCOL] Free tier user - recording usage before generation');
+                    console.log('[PROJECT PROTOCOL] Current canOptimize:', canOptimize, 'Remaining:', remaining);
+
+                    const usageRecorded = await recordUsage();
+                    console.log('[PROJECT PROTOCOL] recordUsage result:', usageRecorded);
+
+                    if (!usageRecorded) {
+                        console.error('[PROJECT PROTOCOL] Failed to record usage or limit reached');
                         throw new Error("Weekly limit reached during processing.");
                     }
+                    console.log('[PROJECT PROTOCOL] Usage recorded successfully');
                 }
 
                 const payload = {
@@ -204,13 +210,20 @@ export default function OptimizePage() {
 
         // Standard optimization flow
 
-        // 2. Record Usage (if free)
+        // 2. Record Usage FIRST for free tier users (BEFORE showing modal)
         if (!isPaidUser) {
-            const result = await recordUsage();
-            if (!result) { // result is boolean from hook
-                setError("Weekly limit reached. Upgrade to continue."); // Detailed message shown below via error state
+            console.log('[OPTIMIZE] Free tier user - recording usage before optimization');
+            console.log('[OPTIMIZE] Current canOptimize:', canOptimize, 'Remaining:', remaining);
+
+            const usageRecorded = await recordUsage();
+            console.log('[OPTIMIZE] recordUsage result:', usageRecorded);
+
+            if (!usageRecorded) {
+                console.error('[OPTIMIZE] Failed to record usage or limit reached');
+                setError("Weekly limit reached. Upgrade to continue.");
                 return;
             }
+            console.log('[OPTIMIZE] Usage recorded successfully, proceeding with optimization');
         }
 
         setShowOptimizationModal(true);
