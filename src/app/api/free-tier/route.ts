@@ -138,45 +138,40 @@ export async function POST(request: Request) {
             });
         }
 
-        // 3. Check for Abuse (Fingerprint used by different user?)
-        // Fetch existing record by fingerprint
+        // 3. Calculate week start for this usage
+        const weekStart = getWeekStart();
+
+        // 4. Fetch existing record by user_id + week_start (matches UNIQUE constraint)
+        // This ensures we increment the SAME record instead of creating new ones
         const { data: existing } = await supabase
             .from('free_tier_tracking')
             .select('*')
-            .eq('fingerprint_hash', fingerprintHash)
+            .eq('user_id', userId)
+            .eq('week_start', weekStart)
             .single();
 
+        console.log('[FREE-TIER POST] Existing record:', existing);
+
+        // 5. Check for abuse (optional - fingerprint mismatch detection)
         let isFlagged = false;
         if (existing) {
-            if (existing.user_id !== userId) {
-                isFlagged = true; // Fingerprint mismatch
-            }
+            // If fingerprint changes, it might be suspicious (optional check)
+            // But we don't enforce this strictly since UNIQUE is on user_id+week_start
             if (existing.flagged) isFlagged = true;
         }
 
-        // 4. Calculate New State
-        const weekStart = getWeekStart();
-        let currentUsage = 0;
+        // 6. Calculate current usage
+        let currentUsage = existing ? existing.weekly_usage : 0;
+        console.log('[FREE-TIER POST] Current usage before increment:', currentUsage);
 
-        // Reset Logic
-        if (existing) {
-            if (existing.week_start !== weekStart) {
-                // New week! Reset.
-                currentUsage = 0;
-            } else {
-                currentUsage = existing.weekly_usage;
-            }
-        }
-
-        // Increment if 'use'
+        // 7. Increment if 'use' action
         if (action === 'use') {
             if (currentUsage < FREE_TIER_WEEKLY_LIMIT) {
                 currentUsage++;
+                console.log('[FREE-TIER POST] Incremented usage to:', currentUsage);
             } else {
-                // Limit reached (Double check effectively)
-                // If action is use, but we are at limit, we shouldn't increment.
-                // But the client should have checked.
-                // We'll increment anyway to track attempts? No, limit strict.
+                // Limit reached
+                console.warn('[FREE-TIER POST] Limit reached, not incrementing');
                 return NextResponse.json({
                     canOptimize: false,
                     isPaidUser: false,
@@ -188,15 +183,17 @@ export async function POST(request: Request) {
             }
         }
 
-        // 5. Update DB
+        // 8. Update DB with incremented usage
+        console.log('[FREE-TIER POST] Upserting with weekly_usage:', currentUsage);
+
         const { error: upsertError } = await supabase
             .from('free_tier_tracking')
             .upsert({
-                fingerprint_hash: fingerprintHash,
                 user_id: userId,
-                ip_hash: ipHash,
-                weekly_usage: currentUsage,
                 week_start: weekStart,
+                fingerprint_hash: fingerprintHash,
+                ip_hash: ipHash,
+                weekly_usage: currentUsage,  // This is now properly incremented!
                 flagged: isFlagged,
                 updated_at: new Date().toISOString()
             }, {
