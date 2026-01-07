@@ -137,7 +137,7 @@ export function useFreeTierStatus(userId: string | null): UseFreeTierStatusResul
 
             const data = await res.json();
 
-            // Update local state
+            // Update local state with fresh data from server
             setStatus({
                 canOptimize: data.canOptimize,
                 isPaidUser: data.isPaidUser,
@@ -147,7 +147,8 @@ export function useFreeTierStatus(userId: string | null): UseFreeTierStatusResul
                 flagged: data.flagged
             });
 
-            return data.canOptimize; // Or true if usage was allowed/recorded? Return result logic.
+            // Return whether user can still optimize (after this usage was recorded)
+            return data.canOptimize;
 
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Usage record failed');

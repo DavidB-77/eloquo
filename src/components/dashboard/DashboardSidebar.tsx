@@ -85,8 +85,8 @@ export function DashboardSidebar() {
                     ))}
                 </nav>
 
-                {/* Usage Display (Hidden when collapsed) */}
-                {!isCollapsed && userData && (
+                {/* Usage Display - Show Credits for Paid Users Only */}
+                {!isCollapsed && userData && userData.tier !== 'free' && (
                     <div className="px-5 py-8">
                         <div className="glass bg-deep-teal/20 border-electric-cyan/20 p-5 relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -110,8 +110,8 @@ export function DashboardSidebar() {
                     </div>
                 )}
 
-                {/* Free Tier Indicator */}
-                {!isCollapsed && <FreeTierIndicator className="mx-3 mb-4" />}
+                {/* Free Tier Indicator - Show for Free Users Only */}
+                {!isCollapsed && userData && userData.tier === 'free' && <FreeTierIndicator className="mx-3 mb-4" />}
 
                 {/* Footer/User */}
                 <div className="border-t border-electric-cyan/10 p-4">
