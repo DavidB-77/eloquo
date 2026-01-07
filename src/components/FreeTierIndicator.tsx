@@ -1,7 +1,8 @@
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/providers/AuthProvider';
 import { useFreeTierStatus } from '@/hooks/useFingerprint';
-import { cn } from '@/lib/utils'; // Assuming cn utility exists, otherwise will use template literals or install clsx/tailwind-merge locally if needed. I saw tailwind-merge in package.json.
+import { cn } from '@/lib/utils';
 
 interface FreeTierIndicatorProps {
     className?: string;
@@ -16,8 +17,20 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
         remaining,
         weeklyLimit,
         flagged,
-        isLoading
+        isLoading,
+        checkStatus
     } = useFreeTierStatus(user?.id ?? null);
+
+    // Listen for usage updates from other components (e.g., optimize page)
+    useEffect(() => {
+        const handleUpdate = () => {
+            console.log('[FreeTierIndicator] Received free-tier-updated event, refetching...');
+            checkStatus();
+        };
+
+        window.addEventListener('free-tier-updated', handleUpdate);
+        return () => window.removeEventListener('free-tier-updated', handleUpdate);
+    }, [checkStatus]);
 
     if (isLoading || isPaidUser) return null;
 

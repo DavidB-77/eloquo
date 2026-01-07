@@ -160,6 +160,20 @@ export function useFreeTierStatus(userId: string | null): UseFreeTierStatusResul
 
             console.log('[recordUsage] Updated local state - canOptimize:', data.canOptimize, 'remaining:', data.remaining);
 
+            // Broadcast event to sync all FreeTierIndicator components
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('free-tier-updated', {
+                    detail: {
+                        canOptimize: data.canOptimize,
+                        remaining: data.remaining,
+                        weeklyUsage: data.weeklyUsage,
+                        weeklyLimit: data.weeklyLimit,
+                        flagged: data.flagged
+                    }
+                }));
+                console.log('[recordUsage] Dispatched free-tier-updated event');
+            }
+
             // Return whether user can still optimize (after this usage was recorded)
             return data.canOptimize;
 
