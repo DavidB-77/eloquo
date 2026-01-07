@@ -200,7 +200,7 @@ export async function POST(request: Request) {
                 flagged: isFlagged,
                 updated_at: new Date().toISOString()
             }, {
-                onConflict: 'fingerprint_hash'
+                onConflict: 'user_id,week_start'  // Match UNIQUE constraint on (user_id, week_start)
             });
 
         if (upsertError) {
