@@ -55,6 +55,8 @@ interface UseFreeTierStatusResult extends FreeTierStatus {
 export function useFreeTierStatus(userId: string | null): UseFreeTierStatusResult {
     const { fingerprint, isLoading: fingerprintLoading, error: fingerprintError } = useFingerprint();
 
+    // Default state: Fresh users start with canOptimize: false until API responds
+    // The API will return canOptimize: true with 3 remaining if no tracking record exists
     const [status, setStatus] = useState<FreeTierStatus>({
         canOptimize: false,
         isPaidUser: false,

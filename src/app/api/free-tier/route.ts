@@ -71,7 +71,9 @@ export async function GET(request: Request) {
         let weeklyUsage = 0;
         let flagged = false;
 
-        if (usages) {
+        // NO RECORD = FRESH USER = 3 OPTIMIZATIONS AVAILABLE
+        // Only count usage if records exist
+        if (usages && usages.length > 0) {
             for (const u of usages) {
                 // Only count usage from current week
                 if (u.week_start === weekStart) {
@@ -88,7 +90,7 @@ export async function GET(request: Request) {
         // Usually abuse flag blocks, but technically limits might still be valid.
 
         return NextResponse.json({
-            canOptimize: remaining > 0, // Strict limit check
+            canOptimize,
             isPaidUser: false,
             remaining,
             weeklyLimit: FREE_TIER_WEEKLY_LIMIT,
