@@ -103,7 +103,6 @@ export async function POST(request: Request) {
                             subscription_tier: tier,
                             subscription_status: 'active',
                             polar_customer_id: customerId,
-                            optimizations_limit: TIER_LIMITS[tier],
                             updated_at: new Date().toISOString(),
                         })
                         .eq('id', userId);
@@ -176,7 +175,6 @@ export async function POST(request: Request) {
                             subscription_tier: tier,
                             subscription_status: 'active',
                             polar_customer_id: customerId,
-                            optimizations_limit: TIER_LIMITS[tier],
                             updated_at: new Date().toISOString(),
                         })
                         .eq('id', userId);
@@ -245,7 +243,6 @@ export async function POST(request: Request) {
                             subscription_tier: tier,
                             subscription_status: 'active',
                             polar_customer_id: customerId,
-                            optimizations_limit: TIER_LIMITS[tier],
                             updated_at: new Date().toISOString(),
                         })
                         .eq('id', userId);
@@ -287,7 +284,6 @@ export async function POST(request: Request) {
                         .update({
                             subscription_tier: tier,
                             subscription_status: subscriptionStatus,
-                            optimizations_limit: TIER_LIMITS[tier],
                             updated_at: new Date().toISOString(),
                         })
                         .eq('id', userId);
@@ -297,7 +293,6 @@ export async function POST(request: Request) {
                         .update({
                             subscription_tier: tier,
                             subscription_status: subscriptionStatus,
-                            optimizations_limit: TIER_LIMITS[tier],
                             updated_at: new Date().toISOString(),
                         })
                         .eq('polar_customer_id', customerId);
