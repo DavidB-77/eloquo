@@ -130,6 +130,9 @@ export default function OptimizePage() {
     const [ppResult, setPpResult] = React.useState<ProjectProtocolResponse | null>(null);
     const [ppLoading, setPpLoading] = React.useState(false);
 
+    // Guard against double-calling recordUsage (e.g., double-click submit)
+    const isRecordingUsage = React.useRef(false);
+
     const handleSubmit = async (data: OptimizeFormData, contextAnswers?: Record<string, string>, forceStandard?: boolean) => {
         setError(null);
 
@@ -160,17 +163,28 @@ export default function OptimizePage() {
             try {
                 // Record usage for Project Protocol (also consumes 1 optimization from free tier)
                 if (!isPaidUser) {
+                    // Guard against duplicate calls
+                    if (isRecordingUsage.current) {
+                        console.warn('[PROJECT PROTOCOL] Already recording usage, skipping duplicate call');
+                        throw new Error("Please wait, processing your previous request...");
+                    }
+
+                    isRecordingUsage.current = true;
                     console.log('[PROJECT PROTOCOL] Free tier user - recording usage before generation');
                     console.log('[PROJECT PROTOCOL] Current canOptimize:', canOptimize, 'Remaining:', remaining);
 
-                    const usageRecorded = await recordUsage();
-                    console.log('[PROJECT PROTOCOL] recordUsage result:', usageRecorded);
+                    try {
+                        const usageRecorded = await recordUsage();
+                        console.log('[PROJECT PROTOCOL] recordUsage result:', usageRecorded);
 
-                    if (!usageRecorded) {
-                        console.error('[PROJECT PROTOCOL] Failed to record usage or limit reached');
-                        throw new Error("Weekly limit reached during processing.");
+                        if (!usageRecorded) {
+                            console.error('[PROJECT PROTOCOL] Failed to record usage or limit reached');
+                            throw new Error("Weekly limit reached during processing.");
+                        }
+                        console.log('[PROJECT PROTOCOL] Usage recorded successfully');
+                    } finally {
+                        isRecordingUsage.current = false;
                     }
-                    console.log('[PROJECT PROTOCOL] Usage recorded successfully');
                 }
 
                 const payload = {
@@ -212,18 +226,30 @@ export default function OptimizePage() {
 
         // 2. Record Usage FIRST for free tier users (BEFORE showing modal)
         if (!isPaidUser) {
+            // Guard against duplicate calls
+            if (isRecordingUsage.current) {
+                console.warn('[OPTIMIZE] Already recording usage, skipping duplicate call');
+                setError("Please wait, processing your previous request...");
+                return;
+            }
+
+            isRecordingUsage.current = true;
             console.log('[OPTIMIZE] Free tier user - recording usage before optimization');
             console.log('[OPTIMIZE] Current canOptimize:', canOptimize, 'Remaining:', remaining);
 
-            const usageRecorded = await recordUsage();
-            console.log('[OPTIMIZE] recordUsage result:', usageRecorded);
+            try {
+                const usageRecorded = await recordUsage();
+                console.log('[OPTIMIZE] recordUsage result:', usageRecorded);
 
-            if (!usageRecorded) {
-                console.error('[OPTIMIZE] Failed to record usage or limit reached');
-                setError("Weekly limit reached. Upgrade to continue.");
-                return;
+                if (!usageRecorded) {
+                    console.error('[OPTIMIZE] Failed to record usage or limit reached');
+                    setError("Weekly limit reached. Upgrade to continue.");
+                    return;
+                }
+                console.log('[OPTIMIZE] Usage recorded successfully, proceeding with optimization');
+            } finally {
+                isRecordingUsage.current = false;
             }
-            console.log('[OPTIMIZE] Usage recorded successfully, proceeding with optimization');
         }
 
         setShowOptimizationModal(true);
