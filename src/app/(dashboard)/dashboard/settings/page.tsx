@@ -28,6 +28,7 @@ const MOCK_API_KEYS = [
 ];
 
 const PLAN_DETAILS: Record<string, { name: string; price: string; color: string }> = {
+    free: { name: "Free", price: "$0/mo", color: "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20" },
     basic: { name: "Basic", price: "$7/mo", color: "bg-muted text-muted-foreground" },
     pro: { name: "Pro", price: "$9/mo", color: "bg-primary text-primary-foreground" },
     business: { name: "Business", price: "$20/mo", color: "bg-accent text-accent-foreground" },
@@ -57,15 +58,15 @@ function SettingsContent() {
 
     // Default fallback if loading or no data
     const usage = userData || {
-        tier: "basic" as const,
+        tier: "free" as const,
         optimizationsUsed: 0,
-        optimizationsLimit: 150,
+        optimizationsLimit: 3,
         premiumCreditsUsed: 0,
         premiumCreditsLimit: 0,
         hasMcpAccess: false,
     };
 
-    const plan = PLAN_DETAILS[usage.tier];
+    const plan = PLAN_DETAILS[usage.tier] || PLAN_DETAILS.free;
 
     const handleSaveProfile = async () => {
         setIsSaving(true);
@@ -204,12 +205,12 @@ function SettingsContent() {
                                         </p>
                                     </div>
                                 </div>
-                                {usage.tier === "basic" && (
+                                {(usage.tier === "free" || usage.tier === "basic") && (
                                     <Button onClick={() => handleUpgrade('pro')} disabled={isUpgrading}>
                                         {isUpgrading ? 'Loading...' : 'Upgrade to Pro'}
                                     </Button>
                                 )}
-                                {usage.tier !== "basic" && (
+                                {usage.tier !== "free" && usage.tier !== "basic" && (
                                     <Button variant="outline" onClick={handleManageSubscription} disabled={isLoadingPortal}>
                                         <ExternalLink className="h-4 w-4 mr-2" />
                                         {isLoadingPortal ? 'Loading...' : 'Manage Subscription'}
