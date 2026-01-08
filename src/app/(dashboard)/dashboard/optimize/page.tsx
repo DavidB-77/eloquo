@@ -443,7 +443,8 @@ export default function OptimizePage() {
     };
 
     const handleEdit = () => {
-        setResult(null);
+        console.log('[EDIT] Clearing results and resetting session');
+        resetSession();  // Also reset session to allow new optimization
     };
 
     const handleRefine = async (instruction: string) => {
@@ -481,8 +482,10 @@ export default function OptimizePage() {
         }
     };
 
+
     const handleStartNew = () => {
-        setResult(null);
+        console.log('[NEW OPTIMIZATION] Starting fresh - resetting all state');
+        resetSession();  // CRITICAL - Reset session charge flag to prevent unlimited optimizations
         setError(null);
         setSubmittedData(null);
         setClarificationData(null);
@@ -491,7 +494,10 @@ export default function OptimizePage() {
         setShowOptimizationModal(false);
         setOptimizationComplete(false);
         setPpResult(null);
+        setOptimizationInProgress(false);  // Clear progress flag
+        setInitialRemaining(remaining);  // Reset initial remaining for warning banner
     };
+
 
     // Calculate metrics for display
     const getMetrics = () => {
