@@ -175,13 +175,17 @@ export function useFreeTierStatus(userId: string | null): UseFreeTierStatusResul
                 console.log('[recordUsage] Dispatched free-tier-updated event');
             }
 
-            // Return whether user can still optimize (after this usage was recorded)
-            return data.canOptimize;
+            // Return TRUE if this usage was successfully recorded (status 200)
+            // data.canOptimize indicates if they can optimize NEXT time, not if THIS one succeeded
+            // If we got here with status 200, this optimization IS allowed
+            console.log('[recordUsage] Usage recorded successfully - this optimization is ALLOWED');
+            console.log('[recordUsage] canOptimize for NEXT time:', data.canOptimize, 'remaining:', data.remaining);
+            return true; // THIS optimization was allowed
 
         } catch (err) {
             console.error('[recordUsage] Error:', err);
             setError(err instanceof Error ? err.message : 'Usage record failed');
-            return false;
+            return false; // THIS optimization failed
         } finally {
             setIsLoading(false);
         }

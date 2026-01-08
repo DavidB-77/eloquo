@@ -18,8 +18,17 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
         weeklyLimit,
         flagged,
         isLoading,
-        updateStatus
+        updateStatus,
+        checkStatus
     } = useFreeTierStatus(user?.id ?? null);
+
+    // Fetch fresh data on component mount (e.g., when navigating back to page)
+    useEffect(() => {
+        if (!isLoading && user?.id) {
+            console.log('[FreeTierIndicator] Component mounted - fetching fresh status');
+            checkStatus();
+        }
+    }, []); // Only on mount
 
     // Listen for usage updates from other components (e.g., optimize page)
     // Update state DIRECTLY from event detail for immediate UI update
