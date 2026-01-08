@@ -137,6 +137,16 @@ export default function OptimizePage() {
     const [sessionChargeRecorded, setSessionChargeRecorded] = React.useState(false);
     const currentSessionId = React.useRef<string | null>(null);
 
+    // Track when initial status check is complete to prevent race conditions
+    const [statusChecked, setStatusChecked] = React.useState(false);
+
+    // Mark status as checked after loading completes
+    React.useEffect(() => {
+        if (!statusLoading && user?.id) {
+            setStatusChecked(true);
+        }
+    }, [statusLoading, user?.id]);
+
     const handleSubmit = async (data: OptimizeFormData, contextAnswers?: Record<string, string>, forceStandard?: boolean) => {
         setError(null);
 
@@ -555,124 +565,152 @@ export default function OptimizePage() {
                         </>
                     )}
 
-                    {/* Error State */}
-                    {error && !result && (
-                        <Card className="border-destructive bg-destructive/5">
-                            <CardContent className="py-6">
-                                <div className="flex items-start space-x-3">
-                                    <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                                    <div>
-                                        <p className="font-medium text-destructive">Optimization Stopped</p>
-                                        <p className="text-sm text-muted-foreground mt-1">{error}</p>
-                                        {!error.includes("limit reached") && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="mt-4"
-                                                onClick={handleStartNew}
-                                            >
-                                                Try Again
-                                            </Button>
-                                        )}
-                                        {error.includes("limit reached") && (
-                                            <Button
-                                                variant="default"
-                                                size="sm"
-                                                className="mt-4 bg-[#09B7B4] text-black hover:bg-[#09B7B4]/90"
-                                                asChild
-                                            >
-                                                <Link href="/dashboard/settings?tab=subscription">View Plans</Link>
-                                            </Button>
-                                        )}
+                    {/* Form Container with Position Relative for Overlays */}
+                    <div className="relative">
+                        {/* Error State */}
+                        {error && !result && (
+                            <Card className="border-destructive bg-destructive/5">
+                                <CardContent className="py-6">
+                                    <div className="flex items-start space-x-3">
+                                        <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="font-medium text-destructive">Optimization Stopped</p>
+                                            <p className="text-sm text-muted-foreground mt-1">{error}</p>
+                                            {!error.includes("limit reached") && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="mt-4"
+                                                    onClick={handleStartNew}
+                                                >
+                                                    Try Again
+                                                </Button>
+                                            )}
+                                            {error.includes("limit reached") && (
+                                                <Button
+                                                    variant="default"
+                                                    size="sm"
+                                                    className="mt-4 bg-[#09B7B4] text-black hover:bg-[#09B7B4]/90"
+                                                    asChild
+                                                >
+                                                    <Link href="/dashboard/settings?tab=subscription">View Plans</Link>
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
+                                </CardContent>
+                            </Card>
+                        )}
 
-                    {/* PP Loading State */}
-                    {ppLoading && (
-                        <div className="mt-8 p-8 border border-electric-cyan/30 rounded-xl bg-midnight/80 text-center">
-                            <div className="animate-spin w-12 h-12 border-4 border-electric-cyan border-t-transparent rounded-full mx-auto mb-4" />
-                            <p className="text-electric-cyan font-medium text-lg">🚀 Generating Project Documents...</p>
-                            <p className="text-white/50 text-sm mt-2">This takes 15-30 seconds. Creating PRD, Architecture, and Implementation Stories.</p>
-                        </div>
-                    )}
-
-                    {/* Results View (Standard Optimization) */}
-                    {result && !showOptimizationModal ? (
-                        <div
-                            className={cn(
-                                "grid gap-6 animate-in slide-in-from-right-5 duration-300",
-                                "lg:grid-cols-[35%_1fr]"
-                            )}
-                        >
-                            {/* Left: Input Summary */}
-                            {submittedData && (
-                                <InputSummary
-                                    prompt={submittedData.prompt}
-                                    targetModel={submittedData.targetModel}
-                                    strength={submittedData.strength}
-                                    context={submittedData.context}
-                                    files={submittedData.contextFiles}
-                                    onEdit={handleEdit}
-                                />
-                            )}
-
-                            {/* Right: Results */}
-                            <div className="space-y-4">
-                                <ResultsTabs
-                                    results={result.results}
-                                    metrics={getMetrics() || undefined}
-                                    targetModel={submittedData?.targetModel || "universal"}
-                                    onStartNew={handleStartNew}
-                                    improvements={result.improvements}
-                                    techniques_applied={result.techniques_applied}
-                                    validation={result.validation}
-                                    onRefine={handleRefine}
-                                    isRefining={isRefining}
-                                />
+                        {/* PP Loading State */}
+                        {ppLoading && (
+                            <div className="mt-8 p-8 border border-electric-cyan/30 rounded-xl bg-midnight/80 text-center">
+                                <div className="animate-spin w-12 h-12 border-4 border-electric-cyan border-t-transparent rounded-full mx-auto mb-4" />
+                                <p className="text-electric-cyan font-medium text-lg">🚀 Generating Project Documents...</p>
+                                <p className="text-white/50 text-sm mt-2">This takes 15-30 seconds. Creating PRD, Architecture, and Implementation Stories.</p>
                             </div>
-                        </div>
-                    ) : !showOptimizationModal && !ppLoading ? (
-                        /* Form + Questions Layout */
-                        <div className={cn(
-                            "grid gap-6 transition-all duration-500",
-                            showQuestions ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 max-w-6xl mx-auto"
-                        )}>
-                            {/* Left: Form */}
-                            <div className="w-full">
-                                <OptimizeForm
-                                    onSubmit={(data) => handleSubmit(data)}
-                                    isLoading={false}
-                                    canOptimize={isPaidUser || canOptimize} // Pass free tier status: block form if !canOptimize? Or allow submit to show error?
-                                    // User flow: If remaining=0, form should probably be disabled OR handling submit shows error.
-                                    // Assuming OptimizeForm takes `canOptimize` to disable button.
-                                    // But wait, existing code passed `canOptimize={true}` before.
-                                    // I'll update it to respect logic, ensuring consistency.
-                                    canOrchestrate={userTier !== "basic"}
-                                    initialData={submittedData || undefined}
-                                />
-                            </div>
+                        )}
 
-                            {/* Right: Questions panel (appears when needed) */}
-                            {showQuestions && clarificationData && (
-                                <div className="w-full h-full animate-in slide-in-from-right duration-500">
-                                    <QuestionsForm
-                                        questions={clarificationData.questions}
-                                        originalPrompt={clarificationData.originalPrompt}
-                                        creditsWillUse={clarificationData.creditsWillUse}
-                                        classification={clarificationData.classification}
-                                        onSubmit={handleQuestionsSubmit}
-                                        onCancel={handleQuestionsCancel}
-                                        isSubmitting={isSubmittingQuestions}
+                        {/* Results View (Standard Optimization) */}
+                        {result && !showOptimizationModal ? (
+                            <div
+                                className={cn(
+                                    "grid gap-6 animate-in slide-in-from-right-5 duration-300",
+                                    "lg:grid-cols-[35%_1fr]"
+                                )}
+                            >
+                                {/* Left: Input Summary */}
+                                {submittedData && (
+                                    <InputSummary
+                                        prompt={submittedData.prompt}
+                                        targetModel={submittedData.targetModel}
+                                        strength={submittedData.strength}
+                                        context={submittedData.context}
+                                        files={submittedData.contextFiles}
+                                        onEdit={handleEdit}
+                                    />
+                                )}
+
+                                {/* Right: Results */}
+                                <div className="space-y-4">
+                                    <ResultsTabs
+                                        results={result.results}
+                                        metrics={getMetrics() || undefined}
+                                        targetModel={submittedData?.targetModel || "universal"}
+                                        onStartNew={handleStartNew}
+                                        improvements={result.improvements}
+                                        techniques_applied={result.techniques_applied}
+                                        validation={result.validation}
+                                        onRefine={handleRefine}
+                                        isRefining={isRefining}
                                     />
                                 </div>
-                            )}
-                        </div>
-                    ) : null}
-                </div>
+                            </div>
+                        ) : !showOptimizationModal && !ppLoading ? (
+                            /* Form + Questions Layout */
+                            <div className={cn(
+                                "grid gap-6 transition-all duration-500",
+                                showQuestions ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 max-w-6xl mx-auto"
+                            )}>
+                                {/* Left: Form */}
+                                <div className="w-full">
+                                    <OptimizeForm
+                                        onSubmit={(data) => handleSubmit(data)}
+                                        isLoading={false}
+                                        canOptimize={isPaidUser || canOptimize} // Pass free tier status: block form if !canOptimize? Or allow submit to show error?
+                                        // User flow: If remaining=0, form should probably be disabled OR handling submit shows error.
+                                        // Assuming OptimizeForm takes `canOptimize` to disable button.
+                                        // But wait, existing code passed `canOptimize={true}` before.
+                                        // I'll update it to respect logic, ensuring consistency.
+                                        canOrchestrate={userTier !== "basic"}
+                                        initialData={submittedData || undefined}
+                                    />
+                                </div>
+
+                                {/* Right: Questions panel (appears when needed) */}
+                                {showQuestions && clarificationData && (
+                                    <div className="w-full h-full animate-in slide-in-from-right duration-500">
+                                        <QuestionsForm
+                                            questions={clarificationData.questions}
+                                            originalPrompt={clarificationData.originalPrompt}
+                                            creditsWillUse={clarificationData.creditsWillUse}
+                                            classification={clarificationData.classification}
+                                            onSubmit={handleQuestionsSubmit}
+                                            onCancel={handleQuestionsCancel}
+                                            isSubmitting={isSubmittingQuestions}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        ) : null}
+
+                        {/* LOADING OVERLAY - checking usage status */}
+                        {!statusChecked && (
+                            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center rounded-lg">
+                                <div className="text-center">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mx-auto mb-4"></div>
+                                    <p className="text-gray-300">Checking usage...</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* BLOCKER OVERLAY - limit reached */}
+                        {!isPaidUser && !canOptimize && remaining === 0 && statusChecked && (
+                            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-50 flex flex-col items-center justify-center rounded-lg">
+                                <div className="text-center p-8">
+                                    <div className="text-red-500 text-xl font-bold mb-4">Weekly Limit Reached</div>
+                                    <p className="text-gray-300 mb-2">You've used all 3 free optimizations this week.</p>
+                                    <p className="text-gray-400 mb-6">Resets on Monday</p>
+                                    <Link href="/dashboard/settings?tab=subscription">
+                                        <Button className="bg-cyan-500 hover:bg-cyan-600 text-black">
+                                            Upgrade for Unlimited
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
+                    </div>{/* Close position relative wrapper */}
             )}
-        </>
-    );
+                </>
+            );
 }

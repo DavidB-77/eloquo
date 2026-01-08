@@ -57,8 +57,41 @@ export async function POST(request: Request) {
             .eq('id', user.id)
             .single();
 
-        const userTier = (profile?.subscription_tier as 'basic' | 'pro' | 'business' | 'enterprise') || 'basic';
+        const userTier = (profile?.subscription_tier as 'free' | 'basic' | 'pro' | 'business' | 'enterprise') || 'free';
         const comprehensiveCreditsRemaining = profile?.comprehensive_credits_remaining ?? 3;
+
+        // CRITICAL: Check free tier limit BEFORE any AI processing to prevent API token usage
+        if (userTier === 'free') {
+            console.log('[OPTIMIZE API] Free tier user - checking weekly limit');
+
+            const getWeekStart = () => {
+                const now = new Date();
+                const dayOfWeek = now.getDay();
+                const diff = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek;
+                const monday = new Date(now);
+                monday.setDate(now.getDate() + diff);
+                monday.setHours(0, 0, 0, 0);
+                return monday.toISOString();
+            };
+
+            const { data: tracking } = await supabase
+                .from('free_tier_tracking')
+                .select('weekly_usage')
+                .eq('user_id', user.id)
+                .eq('week_start', getWeekStart())
+                .single();
+
+            const weeklyUsage = tracking?.weekly_usage || 0;
+            console.log('[OPTIMIZE API] Free tier weekly usage:', weeklyUsage);
+
+            if (weeklyUsage >= 3) {
+                console.log('[OPTIMIZE API] Free tier limit reached - blocking request');
+                return NextResponse.json(
+                    { success: false, error: 'Weekly limit reached. Please upgrade to continue.' },
+                    { status: 403 }
+                );
+            }
+        }
 
         // We run the standard check first to get usage stats
         const { canOptimize, usage } = await checkUsageLimits(user.id);
