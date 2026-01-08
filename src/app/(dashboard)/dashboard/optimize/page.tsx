@@ -145,13 +145,22 @@ export default function OptimizePage() {
 
         console.log('[SUBMIT] Is follow-up submission:', isFollowUpSubmission);
         console.log('[SUBMIT] Session charge recorded:', sessionChargeRecorded);
+        console.log('[SUBMIT] canOptimize:', canOptimize, 'isPaidUser:', isPaidUser);
 
-        // 1. Check Free Tier Limits (if standard flow)
-        // Note: Project Protocol might have different limits, but prompt implied general optimize.
-        // We'll enforce for standard optimize first.
-        if (!data.isProjectProtocol && !isPaidUser && !canOptimize) {
-            setError("Free tier weekly limit reached. Please upgrade to continue.");
-            return;
+        // CRITICAL: Follow-up submissions bypass ALL usage checks
+        // We already charged/recorded usage for this session on the initial submission
+        if (isFollowUpSubmission && sessionChargeRecorded) {
+            console.log('[SUBMIT] Follow-up submission with session already charged - bypassing ALL usage checks');
+            // Skip directly to API call below
+        } else {
+            // 1. Check Free Tier Limits (only for NEW submissions, not follow-ups)
+            // Note: Project Protocol might have different limits, but prompt implied general optimize.
+            // We'll enforce for standard optimize first.
+            if (!data.isProjectProtocol && !isPaidUser && !canOptimize && !isFollowUpSubmission) {
+                console.log('[SUBMIT] Free tier limit reached and NOT a follow-up - blocking');
+                setError("Free tier weekly limit reached. Please upgrade to continue.");
+                return;
+            }
         }
 
         // Check if Project Protocol mode
@@ -519,7 +528,7 @@ export default function OptimizePage() {
 
                             {(userTier === "basic" || userTier === "free") && (
                                 <Button variant="outline" size="sm" asChild>
-                                    <Link href="/pricing">Upgrade</Link>
+                                    <Link href="/dashboard/settings?tab=subscription">Upgrade</Link>
                                 </Button>
                             )}
                         </div>
@@ -540,7 +549,7 @@ export default function OptimizePage() {
                                         <AlertCircle className="h-4 w-4" />
                                         <span>Weekly free limit reached.</span>
                                     </div>
-                                    <Link href="/pricing" className="underline hover:text-red-300 font-medium">Upgrade to Pro</Link>
+                                    <Link href="/dashboard/settings?tab=subscription" className="underline hover:text-red-300 font-medium">Upgrade to Pro</Link>
                                 </div>
                             )}
                         </>
@@ -572,7 +581,7 @@ export default function OptimizePage() {
                                                 className="mt-4 bg-[#09B7B4] text-black hover:bg-[#09B7B4]/90"
                                                 asChild
                                             >
-                                                <Link href="/pricing">View Plans</Link>
+                                                <Link href="/dashboard/settings?tab=subscription">View Plans</Link>
                                             </Button>
                                         )}
                                     </div>

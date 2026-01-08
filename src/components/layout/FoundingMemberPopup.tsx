@@ -89,7 +89,7 @@ export function FoundingMemberPopup({ canShow, onOpenChange }: FoundingMemberPop
                     <Button
                         className="bg-neon-orange hover:bg-neon-orange/80 text-midnight font-bold w-full sm:w-auto min-w-[200px]"
                         onClick={() => {
-                            window.location.href = "/pricing";
+                            window.location.href = "/dashboard/settings?tab=subscription";
                             handleClose();
                         }}
                     >

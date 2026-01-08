@@ -62,7 +62,7 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
             <div className={cn("rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400", className)}>
                 <p className="font-semibold">Account Flagged</p>
                 <p className="mt-1 opacity-90">
-                    Suspicious activity detected. Please <Link href="/pricing" className="underline hover:text-red-300">upgrade to Pro</Link> to continue.
+                    Suspicious activity detected. Please <Link href="/dashboard/settings?tab=subscription" className="underline hover:text-red-300">upgrade to Pro</Link> to continue.
                 </p>
             </div>
         );
@@ -88,7 +88,7 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
                     <span className={cn("font-medium", textColor)}>
                         {remaining} left
                     </span>
-                    <Link href="/pricing" className="text-[10px] text-zinc-500 hover:text-white transition-colors">
+                    <Link href="/dashboard/settings?tab=subscription" className="text-[10px] text-zinc-500 hover:text-white transition-colors">
                         Increasing limits?
                     </Link>
                 </div>
@@ -123,7 +123,7 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
                 <div className="text-xs text-center">
                     <p className="text-zinc-400 mb-2">Weekly limit reached.</p>
                     <Link
-                        href="/pricing"
+                        href="/dashboard/settings?tab=subscription"
                         className="inline-flex w-full items-center justify-center rounded-lg bg-[#09B7B4] px-3 py-2 text-sm font-medium text-black transition-all hover:bg-[#09B7B4]/90 hover:shadow-[0_0_15px_rgba(9,183,180,0.3)]"
                     >
                         Upgrade for Unlimited
@@ -131,7 +131,7 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
                 </div>
             ) : (
                 <p className="text-xs text-zinc-500 text-center">
-                    Resets on Monday. <Link href="/pricing" className="text-zinc-400 hover:text-[#09B7B4] transition-colors">Upgrade to remove limits</Link>
+                    Resets on Monday. <Link href="/dashboard/settings?tab=subscription" className="text-zinc-400 hover:text-[#09B7B4] transition-colors">Upgrade to remove limits</Link>
                 </p>
             )}
         </div>
