@@ -141,7 +141,7 @@ export default function OptimizePage() {
     const [statusChecked, setStatusChecked] = React.useState(false);
 
     // Track initial remaining count when page loads (for warning banner UX)
-    const [initialRemaining, setInitialRemaining] = React.useState<number | null>(null);
+    const [initialRemaining, setInitialRemaining] = React.useState<number | null | undefined>(null);
 
     // Track if optimization is actively processing (prevents blocker mid-session)
     const [optimizationInProgress, setOptimizationInProgress] = React.useState(false);
@@ -155,11 +155,12 @@ export default function OptimizePage() {
 
     // Capture the remaining count when status first loads (for warning banner)
     React.useEffect(() => {
-        if (remaining !== undefined && initialRemaining === null && !statusLoading) {
+        // Only set initialRemaining AFTER we have confirmed fresh data from API
+        if (remaining !== undefined && remaining !== null && initialRemaining === null && statusChecked) {
             console.log('[UX] Setting initialRemaining to:', remaining);
             setInitialRemaining(remaining);
         }
-    }, [remaining, initialRemaining, statusLoading]);
+    }, [remaining, initialRemaining, statusChecked]);
 
     const handleSubmit = async (data: OptimizeFormData, contextAnswers?: Record<string, string>, forceStandard?: boolean) => {
         setError(null);

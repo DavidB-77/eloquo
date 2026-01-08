@@ -37,7 +37,7 @@ export function useFingerprint(): UseFingerprintResult {
 interface FreeTierStatus {
     canOptimize: boolean;
     isPaidUser: boolean;
-    remaining: number;
+    remaining: number | undefined;  // undefined means data not loaded yet
     weeklyLimit: number;
     weeklyUsage: number;
     flagged: boolean;
@@ -56,12 +56,12 @@ interface UseFreeTierStatusResult extends FreeTierStatus {
 export function useFreeTierStatus(userId: string | null): UseFreeTierStatusResult {
     const { fingerprint, isLoading: fingerprintLoading, error: fingerprintError } = useFingerprint();
 
-    // Default state: Fresh users start with canOptimize: false until API responds
+    // Default to optimistic values so we don't block prematurely with stale data
     // The API will return canOptimize: true with 3 remaining if no tracking record exists
     const [status, setStatus] = useState<FreeTierStatus>({
-        canOptimize: false,
+        canOptimize: true,  // Default to true so we don't block before data loads
         isPaidUser: false,
-        remaining: 0,
+        remaining: undefined,  // undefined means "not loaded yet" - prevents false triggers
         weeklyLimit: 0,
         weeklyUsage: 0,
         flagged: false,
