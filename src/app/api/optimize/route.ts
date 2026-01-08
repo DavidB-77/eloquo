@@ -84,8 +84,8 @@ export async function POST(request: Request) {
             const weeklyUsage = tracking?.weekly_usage || 0;
             console.log('[OPTIMIZE API] Free tier weekly usage:', weeklyUsage);
 
-            if (weeklyUsage >= 3) {
-                console.log('[OPTIMIZE API] Free tier limit reached - blocking request');
+            if (weeklyUsage > 3) {
+                console.log('[OPTIMIZE API] Free tier limit exceeded - blocking request');
                 return NextResponse.json(
                     { success: false, error: 'Weekly limit reached. Please upgrade to continue.' },
                     { status: 403 }
