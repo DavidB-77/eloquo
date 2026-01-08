@@ -97,7 +97,10 @@ export async function POST(request: Request) {
             contextFiles = [],
             contextAnswers = null,
             forceStandard = false,
+            isFollowUpSubmission = false, // Track if this is answering clarification questions
         } = body;
+
+        console.log('[OPTIMIZE API] isFollowUpSubmission:', isFollowUpSubmission);
 
         if (!prompt || !prompt.trim()) {
             return NextResponse.json(
@@ -178,11 +181,17 @@ export async function POST(request: Request) {
         if ('success' in result && result.success && 'results' in result) {
             const successResult = result as ExtendedOptimizeResult;
 
-            // Only increment usage if NOT in test mode? Or count it?
-            await incrementUsage(user.id, 1, 0);
+            // ONLY increment usage if this is NOT a follow-up submission
+            if (!isFollowUpSubmission) {
+                console.log('[OPTIMIZE API] First submission - incrementing usage');
+                await incrementUsage(user.id, 1, 0);
+            } else {
+                console.log('[OPTIMIZE API] Follow-up submission - skipping usage increment');
+            }
 
-            if (result.metrics?.outputMode === 'comprehensive' && comprehensiveCreditsRemaining > 0 && !isTestMode) {
-                // Only deduct premium credits if REAL
+            // ONLY deduct comprehensive credits if NOT a follow-up AND comprehensive mode
+            if (result.metrics?.outputMode === 'comprehensive' && comprehensiveCreditsRemaining > 0 && !isTestMode && !isFollowUpSubmission) {
+                console.log('[OPTIMIZE API] Deducting comprehensive credit');
                 await supabase
                     .from('profiles')
                     .update({ comprehensive_credits_remaining: comprehensiveCreditsRemaining - 1 })

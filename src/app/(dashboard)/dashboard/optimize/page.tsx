@@ -133,8 +133,18 @@ export default function OptimizePage() {
     // Guard against double-calling recordUsage (e.g., double-click submit)
     const isRecordingUsage = React.useRef(false);
 
+    // Session tracking to prevent double-charging on follow-up questions
+    const [sessionChargeRecorded, setSessionChargeRecorded] = React.useState(false);
+    const currentSessionId = React.useRef<string | null>(null);
+
     const handleSubmit = async (data: OptimizeFormData, contextAnswers?: Record<string, string>, forceStandard?: boolean) => {
         setError(null);
+
+        // Check if this is a follow-up submission (answering clarification questions)
+        const isFollowUpSubmission = contextAnswers !== undefined && contextAnswers !== null;
+
+        console.log('[SUBMIT] Is follow-up submission:', isFollowUpSubmission);
+        console.log('[SUBMIT] Session charge recorded:', sessionChargeRecorded);
 
         // 1. Check Free Tier Limits (if standard flow)
         // Note: Project Protocol might have different limits, but prompt implied general optimize.
@@ -162,7 +172,8 @@ export default function OptimizePage() {
 
             try {
                 // Record usage for Project Protocol (also consumes 1 optimization from free tier)
-                if (!isPaidUser) {
+                // ONLY charge on first submission, NOT on follow-up question answers
+                if (!isPaidUser && !isFollowUpSubmission && !sessionChargeRecorded) {
                     // Guard against duplicate calls
                     if (isRecordingUsage.current) {
                         console.warn('[PROJECT PROTOCOL] Already recording usage, skipping duplicate call');
@@ -182,9 +193,12 @@ export default function OptimizePage() {
                             throw new Error("Weekly limit reached during processing.");
                         }
                         console.log('[PROJECT PROTOCOL] Usage recorded successfully');
+                        setSessionChargeRecorded(true); // Mark session as charged
                     } finally {
                         isRecordingUsage.current = false;
                     }
+                } else if (!isPaidUser && (isFollowUpSubmission || sessionChargeRecorded)) {
+                    console.log('[PROJECT PROTOCOL] Follow-up submission or already charged - skipping recordUsage');
                 }
 
                 const payload = {
@@ -225,7 +239,8 @@ export default function OptimizePage() {
         // Standard optimization flow
 
         // 2. Record Usage FIRST for free tier users (BEFORE showing modal)
-        if (!isPaidUser) {
+        // ONLY charge on first submission, NOT on follow-up question answers
+        if (!isPaidUser && !isFollowUpSubmission && !sessionChargeRecorded) {
             // Guard against duplicate calls
             if (isRecordingUsage.current) {
                 console.warn('[OPTIMIZE] Already recording usage, skipping duplicate call');
@@ -247,9 +262,12 @@ export default function OptimizePage() {
                     return;
                 }
                 console.log('[OPTIMIZE] Usage recorded successfully, proceeding with optimization');
+                setSessionChargeRecorded(true); // Mark session as charged
             } finally {
                 isRecordingUsage.current = false;
             }
+        } else if (!isPaidUser && (isFollowUpSubmission || sessionChargeRecorded)) {
+            console.log('[OPTIMIZE] Follow-up submission or already charged - skipping recordUsage');
         }
 
         setShowOptimizationModal(true);
@@ -278,6 +296,7 @@ export default function OptimizePage() {
                     })),
                     contextAnswers: contextAnswers || null,
                     forceStandard: forceStandard || false,
+                    isFollowUpSubmission: isFollowUpSubmission, // Prevent double-charging
                 }),
             });
 
@@ -345,6 +364,17 @@ export default function OptimizePage() {
         if (!submittedData) return;
         setShowUpgradeModal(false);
         await handleSubmit(submittedData, undefined, true);
+    };
+
+    // Reset session when user wants to start a new optimization
+    const resetSession = () => {
+        console.log('[SESSION] Resetting session - clearing charge tracking');
+        setSessionChargeRecorded(false);
+        currentSessionId.current = null;
+        setResult(null);
+        setPpResult(null);
+        setShowQuestions(false);
+        setClarificationData(null);
     };
 
     // When user clicks "View Optimized Prompt" in modal
