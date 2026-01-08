@@ -174,7 +174,7 @@ export default function OptimizePage() {
         // For NEW submissions (not follow-ups), reset initialRemaining to current value
         // This ensures warning banner shows correctly when user returns after this optimization
         if (!isFollowUpSubmission) {
-            console.log([UX] Resetting initialRemaining for new session to:, remaining);
+            console.log('[UX] Resetting initialRemaining for new session to:', remaining);
             setInitialRemaining(remaining);
         }
 
