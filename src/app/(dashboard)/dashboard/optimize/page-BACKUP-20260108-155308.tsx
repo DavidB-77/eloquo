@@ -710,8 +710,8 @@ export default function OptimizePage() {
                             </div>
                         )}
                     </div>{/* Close position relative wrapper */}
-                </div>
             )}
-        </>
-    );
+                </>
+            );
 }
+
