@@ -140,12 +140,26 @@ export default function OptimizePage() {
     // Track when initial status check is complete to prevent race conditions
     const [statusChecked, setStatusChecked] = React.useState(false);
 
+    // Track initial remaining count when page loads (for warning banner UX)
+    const [initialRemaining, setInitialRemaining] = React.useState<number | null>(null);
+
+    // Track if optimization is actively processing (prevents blocker mid-session)
+    const [optimizationInProgress, setOptimizationInProgress] = React.useState(false);
+
     // Mark status as checked after loading completes
     React.useEffect(() => {
         if (!statusLoading && user?.id) {
             setStatusChecked(true);
         }
     }, [statusLoading, user?.id]);
+
+    // Capture the remaining count when status first loads (for warning banner)
+    React.useEffect(() => {
+        if (remaining !== undefined && initialRemaining === null && !statusLoading) {
+            console.log('[UX] Setting initialRemaining to:', remaining);
+            setInitialRemaining(remaining);
+        }
+    }, [remaining, initialRemaining, statusLoading]);
 
     const handleSubmit = async (data: OptimizeFormData, contextAnswers?: Record<string, string>, forceStandard?: boolean) => {
         setError(null);
@@ -156,6 +170,13 @@ export default function OptimizePage() {
         console.log('[SUBMIT] Is follow-up submission:', isFollowUpSubmission);
         console.log('[SUBMIT] Session charge recorded:', sessionChargeRecorded);
         console.log('[SUBMIT] canOptimize:', canOptimize, 'isPaidUser:', isPaidUser);
+
+        // For NEW submissions (not follow-ups), reset initialRemaining to current value
+        // This ensures warning banner shows correctly when user returns after this optimization
+        if (!isFollowUpSubmission) {
+            console.log([UX] Resetting initialRemaining for new session to:, remaining);
+            setInitialRemaining(remaining);
+        }
 
         // CRITICAL: Follow-up submissions bypass ALL usage checks
         // We already charged/recorded usage for this session on the initial submission
@@ -296,6 +317,7 @@ export default function OptimizePage() {
         setShowQuestions(false);
         setClarificationData(null);
         setSubmittedData(data);
+        setOptimizationInProgress(true); // Mark optimization as in progress
 
         try {
             const endpoint = data.useOrchestration ? "/api/orchestrate" : "/api/optimize";
@@ -353,6 +375,7 @@ export default function OptimizePage() {
                 console.log('[OPTIMIZE] Success - showing results');
                 setResult(apiResult);
                 setOptimizationComplete(true);
+                setOptimizationInProgress(false); // Clear progress flag
                 await refreshUserData();
                 return;
             }
@@ -361,11 +384,13 @@ export default function OptimizePage() {
             console.error('[OPTIMIZE] API returned error:', apiResult.error || 'Unknown error');
             setShowOptimizationModal(false);
             setError(apiResult.error || "Optimization failed");
+            setOptimizationInProgress(false); // Clear progress flag
 
         } catch (err) {
             console.error('[OPTIMIZE] Exception during optimization:', err);
             setShowOptimizationModal(false);
             setError("Failed to connect to optimization service");
+            setOptimizationInProgress(false); // Clear progress flag
         }
     };
 
@@ -547,7 +572,7 @@ export default function OptimizePage() {
                     {/* Free Tier Warnings */}
                     {!isPaidUser && !statusLoading && (
                         <>
-                            {remaining === 1 && (
+                            {initialRemaining === 1 && (
                                 <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/20 px-4 py-3 text-sm text-yellow-500 flex items-center gap-2">
                                     <AlertCircle className="h-4 w-4" />
                                     <span>Last free optimization this week!</span>
@@ -695,7 +720,7 @@ export default function OptimizePage() {
                         )}
 
                         {/* BLOCKER OVERLAY - limit reached */}
-                        {!isPaidUser && !canOptimize && remaining === 0 && statusChecked && (
+                        {!isPaidUser && !canOptimize && remaining === 0 && statusChecked && !optimizationInProgress && (
                             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-50 flex flex-col items-center justify-center rounded-lg">
                                 <div className="text-center p-8">
                                     <div className="text-red-500 text-xl font-bold mb-4">Weekly Limit Reached</div>
