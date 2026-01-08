@@ -68,6 +68,17 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
         );
     }
 
+    // Show loading state if data hasn't loaded yet
+    if (remaining === undefined) {
+        return (
+            <div className={cn("rounded-lg border border-zinc-800 bg-zinc-900/50 p-3 text-sm", className)}>
+                <div className="flex items-center gap-2">
+                    <div className="animate-pulse h-4 w-24 bg-zinc-700 rounded"></div>
+                </div>
+            </div>
+        );
+    }
+
     const progress = Math.min(100, (remaining / weeklyLimit) * 100);
     const isDepleted = remaining === 0;
     const isWarning = remaining === 1;
