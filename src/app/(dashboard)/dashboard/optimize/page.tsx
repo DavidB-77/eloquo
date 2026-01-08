@@ -300,10 +300,20 @@ export default function OptimizePage() {
                 }),
             });
 
+            console.log('[OPTIMIZE] API Response status:', response.status, response.ok);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('[OPTIMIZE] API request failed:', response.status, errorText);
+                throw new Error(`API returned ${response.status}: ${errorText}`);
+            }
+
             const apiResult = await response.json();
+            console.log('[OPTIMIZE] API Result:', apiResult);
 
             // Handle: Needs Clarification
             if (apiResult.status === "needs_clarification") {
+                console.log('[OPTIMIZE] Needs clarification - showing questions');
                 setShowOptimizationModal(false);
                 setClarificationData(apiResult);
                 setShowQuestions(true);
@@ -312,6 +322,7 @@ export default function OptimizePage() {
 
             // Handle: Upgrade Required
             if (apiResult.status === "upgrade_required") {
+                console.log('[OPTIMIZE] Upgrade required - showing modal');
                 setShowOptimizationModal(false);
                 setUpgradeData(apiResult);
                 setShowUpgradeModal(true);
@@ -320,6 +331,7 @@ export default function OptimizePage() {
 
             // Handle: Success
             if (apiResult.success) {
+                console.log('[OPTIMIZE] Success - showing results');
                 setResult(apiResult);
                 setOptimizationComplete(true);
                 await refreshUserData();
@@ -327,10 +339,12 @@ export default function OptimizePage() {
             }
 
             // Handle: Error
+            console.error('[OPTIMIZE] API returned error:', apiResult.error || 'Unknown error');
             setShowOptimizationModal(false);
             setError(apiResult.error || "Optimization failed");
 
         } catch (err) {
+            console.error('[OPTIMIZE] Exception during optimization:', err);
             setShowOptimizationModal(false);
             setError("Failed to connect to optimization service");
         }

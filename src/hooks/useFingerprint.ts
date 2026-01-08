@@ -108,12 +108,35 @@ export function useFreeTierStatus(userId: string | null): UseFreeTierStatusResul
         }
     }, [userId, fingerprint, fingerprintLoading]);
 
-    // Initial check when dependencies are ready
+    // Fetch fresh data when hook mounts with userId
     useEffect(() => {
-        if (!fingerprintLoading) {
+        if (userId && !fingerprintLoading) {
+            console.log('[useFreeTierStatus] Hook mounted with userId - fetching fresh status');
             checkStatus();
         }
-    }, [checkStatus, fingerprintLoading]); // Check status whenever dependencies allow
+    }, [userId, fingerprintLoading]); // Fetch when userId or fingerprint loading changes
+
+    // Listen for global 'free-tier-updated' events to keep ALL hook instances in sync
+    useEffect(() => {
+        const handleUpdate = (event: Event) => {
+            const customEvent = event as CustomEvent;
+            console.log('[useFreeTierStatus] Received global free-tier-updated event:', customEvent.detail);
+            setStatus(prev => ({
+                ...prev,
+                canOptimize: customEvent.detail.canOptimize,
+                remaining: customEvent.detail.remaining,
+                weeklyUsage: customEvent.detail.weeklyUsage,
+                weeklyLimit: customEvent.detail.weeklyLimit,
+                flagged: customEvent.detail.flagged,
+                isPaidUser: false
+            }));
+        };
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('free-tier-updated', handleUpdate);
+            return () => window.removeEventListener('free-tier-updated', handleUpdate);
+        }
+    }, []); // Only set up listener once
 
     const recordUsage = async (): Promise<boolean> => {
         console.log('[recordUsage] Called');
