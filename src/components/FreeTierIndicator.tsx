@@ -18,19 +18,32 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
         weeklyLimit,
         flagged,
         isLoading,
-        checkStatus
+        updateStatus
     } = useFreeTierStatus(user?.id ?? null);
 
     // Listen for usage updates from other components (e.g., optimize page)
+    // Update state DIRECTLY from event detail for immediate UI update
     useEffect(() => {
-        const handleUpdate = () => {
-            console.log('[FreeTierIndicator] Received free-tier-updated event, refetching...');
-            checkStatus();
+        const handleUpdate = (event: Event) => {
+            const customEvent = event as CustomEvent;
+            console.log('[FreeTierIndicator] Received event with detail:', customEvent.detail);
+
+            // Direct state update from event - no API call needed!
+            updateStatus({
+                canOptimize: customEvent.detail.canOptimize,
+                remaining: customEvent.detail.remaining,
+                weeklyUsage: customEvent.detail.weeklyUsage,
+                weeklyLimit: customEvent.detail.weeklyLimit,
+                flagged: customEvent.detail.flagged,
+                isPaidUser: false
+            });
+
+            console.log('[FreeTierIndicator] State updated to remaining:', customEvent.detail.remaining);
         };
 
         window.addEventListener('free-tier-updated', handleUpdate);
         return () => window.removeEventListener('free-tier-updated', handleUpdate);
-    }, [checkStatus]);
+    }, [updateStatus]);
 
     if (isLoading || isPaidUser) return null;
 

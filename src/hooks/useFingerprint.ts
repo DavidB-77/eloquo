@@ -49,6 +49,7 @@ interface UseFreeTierStatusResult extends FreeTierStatus {
     fingerprint: string | null;
     fingerprintLoading: boolean;
     checkStatus: () => Promise<void>;
+    updateStatus: (newStatus: Partial<FreeTierStatus>) => void; // Direct state update
     recordUsage: () => Promise<boolean>; // Returns true if usage recorded/allowed
 }
 
@@ -186,6 +187,15 @@ export function useFreeTierStatus(userId: string | null): UseFreeTierStatusResul
         }
     };
 
+    // Direct state update for external sync (e.g., from custom events)
+    const updateStatus = useCallback((newStatus: Partial<FreeTierStatus>) => {
+        console.log('[updateStatus] Updating with:', newStatus);
+        setStatus(prev => ({
+            ...prev,
+            ...newStatus
+        }));
+    }, []);
+
     return {
         ...status,
         isLoading,
@@ -193,6 +203,7 @@ export function useFreeTierStatus(userId: string | null): UseFreeTierStatusResul
         fingerprint,
         fingerprintLoading,
         checkStatus,
+        updateStatus,
         recordUsage
     };
 }
