@@ -131,7 +131,20 @@ export async function POST(request: Request) {
             contextAnswers = null,
             forceStandard = false,
             isFollowUpSubmission = false, // Track if this is answering clarification questions
+            isProjectProtocol = false, // Project Protocol flag
         } = body;
+
+        // 3a. Validate Project Protocol - Paid users only
+        if (isProjectProtocol && userTier === 'free') {
+            console.log('[OPTIMIZE API] Free tier user attempted to use Project Protocol - blocking');
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'Project Protocol requires a Pro subscription. Please upgrade to access this feature.'
+                },
+                { status: 403 }
+            );
+        }
 
         console.log('[OPTIMIZE API] isFollowUpSubmission:', isFollowUpSubmission);
 

@@ -20,9 +20,18 @@ export async function POST(request: NextRequest) {
         // Get user profile for tier and credits
         const { data: profile } = await supabase
             .from("profiles")
-            .select("tier, optimizations_remaining")
+            .select("tier, optimizations_remaining, subscription_tier")
             .eq("id", user.id)
             .single();
+        // Block free tier users from Project Protocol
+        const userTier = profile?.subscription_tier || profile?.tier || 'free';
+        if (userTier === 'free') {
+            console.log('[PROJECT PROTOCOL API] Free tier user blocked');
+            return NextResponse.json({
+                error: "Project Protocol requires a Pro subscription. Please upgrade to access.",
+                requiresUpgrade: true
+            }, { status: 403 });
+        }
 
         if (!profile || profile.optimizations_remaining < 5) {
             return NextResponse.json({

@@ -703,6 +703,7 @@ export default function OptimizePage() {
                                         // I'll update it to respect logic, ensuring consistency.
                                         canOrchestrate={userTier !== "basic"}
                                         initialData={submittedData || undefined}
+                                        isPaidUser={isPaidUser}
                                     />
                                 </div>
 

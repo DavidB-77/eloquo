@@ -37,6 +37,7 @@ interface OptimizeFormProps {
     canOptimize?: boolean;
     canOrchestrate?: boolean;
     initialData?: Partial<OptimizeFormData>;
+    isPaidUser?: boolean;  // Required to restrict Project Protocol to paid users
 }
 
 export function OptimizeForm({
@@ -45,6 +46,7 @@ export function OptimizeForm({
     canOptimize = true,
     canOrchestrate = false,
     initialData,
+    isPaidUser = true,  // Default to true for backward compatibility
 }: OptimizeFormProps) {
     const [prompt, setPrompt] = React.useState(initialData?.prompt || "");
     const [targetModel, setTargetModel] = React.useState(initialData?.targetModel || "universal");
@@ -113,31 +115,46 @@ export function OptimizeForm({
                 </div>
 
                 {/* Project Protocol Toggle */}
-                <div
-                    className={`p-4 rounded-xl border transition-all cursor-pointer ${isProjectProtocol
-                        ? "bg-electric-cyan/10 border-electric-cyan/40 shadow-[0_0_15px_rgba(9,183,180,0.2)]"
-                        : "bg-white/5 border-white/10 hover:border-white/20"
-                        }`}
-                    onClick={() => setIsProjectProtocol(!isProjectProtocol)}
-                >
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <span className="text-xl">🚀</span>
-                            <div>
-                                <p className="text-sm font-bold text-white">PROJECT PROTOCOL</p>
-                                <p className="text-xs text-white/60">Generate PRD, Architecture & Implementation Stories</p>
+                <div className="relative">
+                    <div
+                        className={`p-4 rounded-xl border transition-all ${!isPaidUser ? 'opacity-50' : 'cursor-pointer'} ${isProjectProtocol
+                            ? "bg-electric-cyan/10 border-electric-cyan/40 shadow-[0_0_15px_rgba(9,183,180,0.2)]"
+                            : "bg-white/5 border-white/10 hover:border-white/20"
+                            }`}
+                        onClick={() => {
+                            if (!isPaidUser) return; // Block free tier users
+                            setIsProjectProtocol(!isProjectProtocol);
+                        }}
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <span className="text-xl">🚀</span>
+                                <div>
+                                    <p className="text-sm font-bold text-white">PROJECT PROTOCOL {!isPaidUser && <span className="ml-2 text-[10px] px-2 py-0.5 rounded bg-sunset-orange/20 text-sunset-orange">PRO</span>}</p>
+                                    <p className="text-xs text-white/60">Generate PRD, Architecture & Implementation Stories</p>
+                                </div>
+                            </div>
+                            <div className={`w-12 h-6 rounded-full transition-colors relative ${isProjectProtocol ? "bg-electric-cyan" : "bg-white/20"
+                                }`}>
+                                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isProjectProtocol ? "left-7" : "left-1"
+                                    }`} />
                             </div>
                         </div>
-                        <div className={`w-12 h-6 rounded-full transition-colors relative ${isProjectProtocol ? "bg-electric-cyan" : "bg-white/20"
-                            }`}>
-                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isProjectProtocol ? "left-7" : "left-1"
-                                }`} />
-                        </div>
+                        {isProjectProtocol && (
+                            <div className="mt-3 pt-3 border-t border-electric-cyan/20 flex items-center gap-2">
+                                <span className="text-[10px] px-2 py-0.5 rounded bg-electric-cyan/20 text-electric-cyan font-bold">5 CREDITS</span>
+                                <span className="text-[10px] text-white/40">Generates complete project documentation</span>
+                            </div>
+                        )}
                     </div>
-                    {isProjectProtocol && (
-                        <div className="mt-3 pt-3 border-t border-electric-cyan/20 flex items-center gap-2">
-                            <span className="text-[10px] px-2 py-0.5 rounded bg-electric-cyan/20 text-electric-cyan font-bold">5 CREDITS</span>
-                            <span className="text-[10px] text-white/40">Generates complete project documentation</span>
+                    {!isPaidUser && (
+                        <div
+                            className="absolute inset-0 cursor-not-allowed rounded-xl flex items-center justify-center bg-black/5 backdrop-blur-[1px]"
+                            title="Project Protocol is a Pro feature - Upgrade to unlock"
+                        >
+                            <div className="text-[10px] px-3 py-1.5 rounded-lg bg-midnight/90 border border-sunset-orange/40 text-sunset-orange font-bold uppercase tracking-wider">
+                                🔒 PRO FEATURE • <a href="/dashboard/settings?tab=subscription" className="underline hover:text-white">UPGRADE</a>
+                            </div>
                         </div>
                     )}
                 </div>
