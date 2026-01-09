@@ -146,6 +146,9 @@ export default function OptimizePage() {
     // Track if optimization is actively processing (prevents blocker mid-session)
     const [optimizationInProgress, setOptimizationInProgress] = React.useState(false);
 
+    // Track if user is viewing a result (prevents blocker from covering result)
+    const [isViewingResult, setIsViewingResult] = React.useState(false);
+
     // Mark status as checked after loading completes
     React.useEffect(() => {
         if (!statusLoading && user?.id) {
@@ -375,6 +378,7 @@ export default function OptimizePage() {
             if (apiResult.success) {
                 console.log('[OPTIMIZE] Success - showing results');
                 setResult(apiResult);
+                setIsViewingResult(true);  // Mark that we're now viewing a result
                 setOptimizationComplete(true);
                 setOptimizationInProgress(false); // Clear progress flag
                 await refreshUserData();
@@ -434,6 +438,7 @@ export default function OptimizePage() {
         setPpResult(null);
         setShowQuestions(false);
         setClarificationData(null);
+        setIsViewingResult(false);  // Clear result viewing state
     };
 
     // When user clicks "View Optimized Prompt" in modal
@@ -729,7 +734,7 @@ export default function OptimizePage() {
                         )}
 
                         {/* BLOCKER OVERLAY - limit reached (only show when no result displayed) */}
-                        {!isPaidUser && remaining === 0 && !result && (
+                        {!isPaidUser && remaining === 0 && !isViewingResult && (
                             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-50 flex flex-col items-center justify-center rounded-lg">
                                 <div className="text-center p-8">
                                     <div className="text-red-500 text-xl font-bold mb-4">Weekly Limit Reached</div>
