@@ -35,6 +35,8 @@ interface ResultsTabsProps {
         approved: boolean;
         score: number;
     };
+    isPaidUser?: boolean;
+    remaining?: number | undefined;
 }
 
 const TAB_CONFIG = {
@@ -62,6 +64,8 @@ export function ResultsTabs({
     onRefine,
     isRefining = false,
     validation,
+    isPaidUser = true,
+    remaining,
 }: ResultsTabsProps) {
     const [activeTab, setActiveTab] = React.useState<TabType>("full");
     const [refineInput, setRefineInput] = React.useState("");
@@ -157,15 +161,27 @@ export function ResultsTabs({
                         <Sparkles className="h-5 w-5 text-electric-cyan glow-sm" />
                         Optimized Result
                     </CardTitle>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={onStartNew}
-                        className="border-electric-cyan/50 bg-electric-cyan/10 text-electric-cyan hover:bg-electric-cyan hover:text-midnight font-bold uppercase tracking-[0.15em] text-[11px] px-4 py-2 rounded-lg transition-all duration-300 hover:shadow-[0_0_20px_rgba(9,183,180,0.5)] hover:scale-105 flex items-center gap-2"
-                    >
-                        <span className="text-lg leading-none">+</span>
-                        New Optimization
-                    </Button>
+                    {!isPaidUser && remaining === 0 ? (
+                        <div className="flex items-center gap-2 text-sm">
+                            <span className="text-gray-400">Weekly limit reached</span>
+                            <a
+                                href="/dashboard/settings?tab=subscription"
+                                className="text-cyan-500 hover:text-cyan-400 underline font-medium"
+                            >
+                                Upgrade
+                            </a>
+                        </div>
+                    ) : (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={onStartNew}
+                            className="border-electric-cyan/50 bg-electric-cyan/10 text-electric-cyan hover:bg-electric-cyan hover:text-midnight font-bold uppercase tracking-[0.15em] text-[11px] px-4 py-2 rounded-lg transition-all duration-300 hover:shadow-[0_0_20px_rgba(9,183,180,0.5)] hover:scale-105 flex items-center gap-2"
+                        >
+                            <span className="text-lg leading-none">+</span>
+                            New Optimization
+                        </Button>
+                    )}
                 </div>
 
                 <div className="flex items-center justify-between mt-4">
@@ -340,7 +356,7 @@ export function ResultsTabs({
                                         placeholder="Or describe how to improve..."
                                         className="flex-1 px-3 py-2 bg-midnight/50 border border-electric-cyan/20 rounded-lg text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-electric-cyan/50"
                                     />
-                                    <Button onClick={() => { if(refineInput.trim()) { onRefine(refineInput); setShowRefineInput(false); setRefineInput(""); }}} disabled={!refineInput.trim() || isRefining} className="bg-electric-cyan text-midnight font-bold px-4">
+                                    <Button onClick={() => { if (refineInput.trim()) { onRefine(refineInput); setShowRefineInput(false); setRefineInput(""); } }} disabled={!refineInput.trim() || isRefining} className="bg-electric-cyan text-midnight font-bold px-4">
                                         {isRefining ? <RefreshCw className="h-4 w-4 animate-spin" /> : "Refine"}
                                     </Button>
                                     <Button variant="ghost" onClick={() => setShowRefineInput(false)} className="text-white/50 hover:text-white px-2">✕</Button>

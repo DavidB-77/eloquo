@@ -675,6 +675,8 @@ export default function OptimizePage() {
                                         validation={result.validation}
                                         onRefine={handleRefine}
                                         isRefining={isRefining}
+                                        isPaidUser={isPaidUser}
+                                        remaining={remaining}
                                     />
                                 </div>
                             </div>
@@ -726,8 +728,8 @@ export default function OptimizePage() {
                             </div>
                         )}
 
-                        {/* BLOCKER OVERLAY - limit reached */}
-                        {!isPaidUser && !canOptimize && remaining === 0 && statusChecked && !optimizationInProgress && (
+                        {/* BLOCKER OVERLAY - limit reached (only show when no result displayed) */}
+                        {!isPaidUser && remaining === 0 && !result && (
                             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-50 flex flex-col items-center justify-center rounded-lg">
                                 <div className="text-center p-8">
                                     <div className="text-red-500 text-xl font-bold mb-4">Weekly Limit Reached</div>
