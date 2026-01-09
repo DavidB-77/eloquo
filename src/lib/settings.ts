@@ -150,6 +150,8 @@ export type GeneralSettings = {
     maintenance_mode: boolean;
     free_plan_monthly_limit: number;
     test_mode_enabled: boolean;
+    free_tier_enabled?: boolean;
+    free_tier_weekly_limit?: number;
 };
 
 const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
@@ -159,7 +161,9 @@ const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
     show_changelog_popup: false,
     maintenance_mode: false,
     free_plan_monthly_limit: 10,
-    test_mode_enabled: false
+    test_mode_enabled: false,
+    free_tier_enabled: true,
+    free_tier_weekly_limit: 3
 };
 
 export async function getGeneralSettings(): Promise<GeneralSettings> {

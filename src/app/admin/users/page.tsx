@@ -15,12 +15,14 @@ interface UserProfile {
     display_name: string | null;
     subscription_tier: string | null;
     created_at: string;
-    last_sign_in_at: string | null; // This will now reflect the *real* last activity (latest optimization)
+    last_sign_in_at: string | null;
     optimization_count: number;
     is_founding_member: boolean;
     founding_wave: number | null;
     is_admin: boolean;
     status?: string;
+    free_tier_usage?: number;
+    free_tier_flagged?: boolean;
 }
 
 const PLAN_STYLES: Record<string, string> = {
@@ -64,7 +66,12 @@ export default function AdminUsersPage() {
                 // We won't block the UI, but counts might be 0
             }
 
-            // 3. Enrich Profiles with Optimization Data
+            // 3. Fetch free tier tracking data
+            const { data: freeTierData } = await supabase
+                .from('free_tier_tracking')
+                .select('user_id, weekly_usage, week_start, flagged');
+
+            // 4. Enrich Profiles with Optimization Data and Free Tier Info
             const enrichedUsers = (profiles || []).map((profile) => {
                 const userOpts = (optimizations || []).filter((o) => o.user_id === profile.id);
 
@@ -85,10 +92,15 @@ export default function AdminUsersPage() {
                     }
                 }
 
+                // Find free tier data for this user
+                const userFreeTier = (freeTierData || []).find(ft => ft.user_id === profile.id);
+
                 return {
                     ...profile,
                     optimization_count: realOptCount,
-                    last_sign_in_at: lastActive
+                    last_sign_in_at: lastActive,
+                    free_tier_usage: userFreeTier?.weekly_usage || 0,
+                    free_tier_flagged: userFreeTier?.flagged || false,
                 };
             });
 
@@ -141,6 +153,27 @@ export default function AdminUsersPage() {
         if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
         if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
         return formatDate(dateString);
+    };
+
+    const handleResetFreeTier = async (userId: string) => {
+        if (!confirm('Reset this user\'s free tier usage to 0? They will get 3 more optimizations.')) return;
+
+        const supabase = createClient();
+        try {
+            const { error } = await supabase
+                .from('free_tier_tracking')
+                .update({ weekly_usage: 0 })
+                .eq('user_id', userId);
+
+            if (error) throw error;
+
+            // Refresh users list
+            fetchUsers();
+            alert('Free tier reset successfully');
+        } catch (err: any) {
+            console.error('Error resetting free tier:', err);
+            alert('Failed to reset: ' + err.message);
+        }
     };
 
     return (
@@ -218,6 +251,7 @@ export default function AdminUsersPage() {
                             <tr className="border-b border-white/10 bg-white/5">
                                 <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-4">User</th>
                                 <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-4">Plan</th>
+                                <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-4">Free Tier</th>
                                 <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-4">Founding</th>
                                 <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-4">Signed Up</th>
                                 <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-6 py-4">Last Active</th>
@@ -244,6 +278,23 @@ export default function AdminUsersPage() {
                                             <span className={cn("text-xs px-2 py-1 rounded-full font-medium capitalize", planStyle)}>
                                                 {user.subscription_tier === "enterprise" ? "Business" : user.subscription_tier || "None"}
                                             </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {(!user.subscription_tier || user.subscription_tier === 'free') ? (
+                                                <div className="flex items-center gap-2">
+                                                    <span className={cn(
+                                                        "text-sm",
+                                                        (user.free_tier_usage || 0) >= 3 ? "text-red-400" : "text-gray-400"
+                                                    )}>
+                                                        {user.free_tier_usage || 0}/3 used
+                                                    </span>
+                                                    {user.free_tier_flagged && (
+                                                        <span className="text-xs text-red-500">⚠️ Flagged</span>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className="text-gray-500">—</span>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4">
                                             {user.is_founding_member ? (
@@ -293,6 +344,15 @@ export default function AdminUsersPage() {
                                                             <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-yellow-400 hover:bg-white/5 transition-colors text-left">
                                                                 <Ban className="h-4 w-4" /> Suspend
                                                             </button>
+                                                            {(!user.subscription_tier || user.subscription_tier === 'free') && (
+                                                                <button
+                                                                    onClick={() => handleResetFreeTier(user.id)}
+                                                                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-yellow-400 hover:bg-white/5 transition-colors text-left"
+                                                                >
+                                                                    <RefreshCw className="w-4 h-4" />
+                                                                    Reset Free Tier
+                                                                </button>
+                                                            )}
                                                             <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-white/5 transition-colors text-left">
                                                                 <Trash2 className="h-4 w-4" /> Delete
                                                             </button>

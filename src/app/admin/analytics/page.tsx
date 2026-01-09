@@ -29,6 +29,12 @@ export default function AdminAnalyticsPage() {
     const [newBalance, setNewBalance] = React.useState("");
     const [bmadData, setBmadData] = React.useState<any>(null);
     const [financialData, setFinancialData] = React.useState<any>(null);
+    const [tierCounts, setTierCounts] = React.useState({
+        free: 0,
+        basic: 0,
+        pro: 0,
+        business: 0
+    });
 
     const syncBalance = React.useCallback(async () => {
         setSyncingBalance(true);
@@ -44,7 +50,27 @@ export default function AdminAnalyticsPage() {
                     setNewBalance(balanceData.data.balance !== null ? balanceData.data.balance.toString() : "0");
                 }
             }
-        } catch (error) {
+       
+            // Fetch tier distribution
+            try {
+                const { createClient } = await import('@/lib/supabase/client');
+                const supabase = createClient();
+                const { data: tierData } = await supabase
+                    .from('profiles')
+                    .select('subscription_tier');
+
+                const counts = { free: 0, basic: 0, pro: 0, business: 0 };
+                (tierData || []).forEach(user => {
+                    const tier = user.subscription_tier || 'free';
+                    if (tier in counts) {
+                        counts[tier as keyof typeof counts]++;
+                    }
+                });
+                setTierCounts(counts);
+            } catch(err) {
+                console.error('Error fetching tier distribution:', err);
+            }
+} catch (error) {
             console.error("Failed to sync balance:", error);
         } finally {
             setSyncingBalance(false);
@@ -113,7 +139,27 @@ export default function AdminAnalyticsPage() {
                     syncBalance();
                 }
             }
-        } catch (error) {
+       
+            // Fetch tier distribution
+            try {
+                const { createClient } = await import('@/lib/supabase/client');
+                const supabase = createClient();
+                const { data: tierData } = await supabase
+                    .from('profiles')
+                    .select('subscription_tier');
+
+                const counts = { free: 0, basic: 0, pro: 0, business: 0 };
+                (tierData || []).forEach(user => {
+                    const tier = user.subscription_tier || 'free';
+                    if (tier in counts) {
+                        counts[tier as keyof typeof counts]++;
+                    }
+                });
+                setTierCounts(counts);
+            } catch(err) {
+                console.error('Error fetching tier distribution:', err);
+            }
+} catch (error) {
             console.error("Failed to fetch analytics data:", error);
         } finally {
             setLoading(false);
@@ -577,6 +623,69 @@ export default function AdminAnalyticsPage() {
                             </div>
                         )}
                     </div>
+                </div>
+            </div>
+
+            {/* Subscription Distribution */}
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-400 mb-4">📊 User Distribution by Tier</h3>
+
+                <div className="space-y-3">
+                    {/* Free */}
+                    <div className="flex items-center gap-3">
+                        <span className="w-20 text-sm text-gray-400">Free</span>
+                        <div className="flex-1 h-6 bg-zinc-800 rounded overflow-hidden">
+                            <div
+                                className="h-full bg-gray-500 flex items-center justify-end pr-2"
+                                style={{ width: `${Object.values(tierCounts).reduce((a, b) => a + b, 0) > 0 ? (tierCounts.free / Object.values(tierCounts).reduce((a, b) => a + b, 0)) * 100 : 0}%`, minWidth: tierCounts.free > 0 ? '30px' : '0' }}
+                            >
+                                <span className="text-xs text-white font-medium">{tierCounts.free}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Basic */}
+                    <div className="flex items-center gap-3">
+                        <span className="w-20 text-sm text-blue-400">Basic</span>
+                        <div className="flex-1 h-6 bg-zinc-800 rounded overflow-hidden">
+                            <div
+                                className="h-full bg-blue-500 flex items-center justify-end pr-2"
+                                style={{ width: `${Object.values(tierCounts).reduce((a, b) => a + b, 0) > 0 ? (tierCounts.basic / Object.values(tierCounts).reduce((a, b) => a + b, 0)) * 100 : 0}%`, minWidth: tierCounts.basic > 0 ? '30px' : '0' }}
+                            >
+                                <span className="text-xs text-white font-medium">{tierCounts.basic}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Pro */}
+                    <div className="flex items-center gap-3">
+                        <span className="w-20 text-sm text-[#09B7B4]">Pro</span>
+                        <div className="flex-1 h-6 bg-zinc-800 rounded overflow-hidden">
+                            <div
+                                className="h-full bg-[#09B7B4] flex items-center justify-end pr-2"
+                                style={{ width: `${Object.values(tierCounts).reduce((a, b) => a + b, 0) > 0 ? (tierCounts.pro / Object.values(tierCounts).reduce((a, b) => a + b, 0)) * 100 : 0}%`, minWidth: tierCounts.pro > 0 ? '30px' : '0' }}
+                            >
+                                <span className="text-xs text-white font-medium">{tierCounts.pro}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Business */}
+                    <div className="flex items-center gap-3">
+                        <span className="w-20 text-sm text-orange-400">Business</span>
+                        <div className="flex-1 h-6 bg-zinc-800 rounded overflow-hidden">
+                            <div
+                                className="h-full bg-orange-500 flex items-center justify-end pr-2"
+                                style={{ width: `${Object.values(tierCounts).reduce((a, b) => a + b, 0) > 0 ? (tierCounts.business / Object.values(tierCounts).reduce((a, b) => a + b, 0)) * 100 : 0}%`, minWidth: tierCounts.business > 0 ? '30px' : '0' }}
+                            >
+                                <span className="text-xs text-white font-medium">{tierCounts.business}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-zinc-800 text-center">
+                    <span className="text-gray-500 text-sm">Total Users: {Object.values(tierCounts).reduce((a, b) => a + b, 0)}</span>
                 </div>
             </div>
 

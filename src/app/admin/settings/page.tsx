@@ -219,6 +219,57 @@ export default function AdminSettingsPage() {
                             />
                         </button>
                     </div>
+
+                    {/* Free Tier Settings */}
+                    <div className="border-t border-zinc-800 pt-4 mt-4">
+                        <h4 className="text-sm font-medium text-gray-300 mb-3">Free Tier Settings</h4>
+
+                        {/* Enable Free Tier Toggle */}
+                        <div className="flex items-center justify-between py-2">
+                            <div>
+                                <p className="text-sm text-white">Enable Free Tier</p>
+                                <p className="text-xs text-gray-500">Allow non-paying users to use limited optimizations</p>
+                            </div>
+                            <button
+                                onClick={() => handleToggle('free_tier_enabled')}
+                                className={cn(
+                                    "w-12 h-6 rounded-full transition-colors relative",
+                                    settings?.free_tier_enabled ? "bg-[#09B7B4]" : "bg-zinc-700"
+                                )}
+                            >
+                                <span className={cn(
+                                    "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
+                                    settings?.free_tier_enabled ? "translate-x-7" : "translate-x-1"
+                                )} />
+                            </button>
+                        </div>
+
+                        {/* Free Tier Weekly Limit */}
+                        <div className="flex items-center justify-between py-2">
+                            <div>
+                                <p className="text-sm text-white">Weekly Limit</p>
+                                <p className="text-xs text-gray-500">Optimizations per week for free users</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    type="number"
+                                    value={settings?.free_tier_weekly_limit || 3}
+                                    onChange={(e) => setSettings(s => s ? { ...s, free_tier_weekly_limit: parseInt(e.target.value) || 3 } : s)}
+                                    className="w-20 h-8 text-center bg-zinc-800 border-zinc-700"
+                                    min={1}
+                                    max={10}
+                                />
+                                <Button
+                                    size="sm"
+                                    onClick={saveLimit}
+                                    disabled={isSaving}
+                                    className="h-8"
+                                >
+                                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 

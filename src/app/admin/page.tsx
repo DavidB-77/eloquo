@@ -11,6 +11,15 @@ function capitalize(str: string) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+function getWeekStart(): string {
+    const now = new Date();
+    const day = now.getUTCDay();
+    const diff = now.getUTCDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), diff));
+    monday.setUTCHours(0, 0, 0, 0);
+    return monday.toISOString();
+}
+
 export default function AdminOverviewPage() {
     const [stats, setStats] = React.useState({
         totalUsers: 0,
@@ -23,6 +32,14 @@ export default function AdminOverviewPage() {
     const [ratingsDistribution, setRatingsDistribution] = React.useState<any>(null);
     const [dailyOptData, setDailyOptData] = React.useState<{ date: string; count: number }[]>([]);
     const [dailyRevenueData, setDailyRevenueData] = React.useState<{ date: string; revenue: number }[]>([]);
+
+    // Free tier metrics
+    const [freeTierMetrics, setFreeTierMetrics] = React.useState({
+        totalFreeUsers: 0,
+        atLimit: 0,
+        flaggedUsers: 0,
+        avgUsage: '0'
+    });
 
     // Real data states (replacing mock)
     const [polarData, setPolarData] = React.useState<any>(null);
@@ -72,7 +89,7 @@ export default function AdminOverviewPage() {
                 .select("*", { count: "exact", head: true })
                 .lte("created_at", lastWeek.toISOString());
 
-            const growth = lastWeekCount && lastWeekCount > 0 
+            const growth = lastWeekCount && lastWeekCount > 0
                 ? Math.round(((userCount || 0) - lastWeekCount) / lastWeekCount * 100)
                 : 0;
 
@@ -170,6 +187,30 @@ export default function AdminOverviewPage() {
                 }
             } catch (err) {
                 console.error("Error fetching daily data:", err);
+            }
+
+            // 9. Fetch free tier statistics
+            try {
+                const { data: freeTierStats } = await supabase
+                    .from('free_tier_tracking')
+                    .select('weekly_usage, flagged, week_start');
+
+                const currentWeekStart = new Date(getWeekStart()).getTime();
+                const currentWeekData = (freeTierStats || []).filter(ft => {
+                    const ftWeekStart = new Date(ft.week_start).getTime();
+                    return ftWeekStart === currentWeekStart;
+                });
+
+                setFreeTierMetrics({
+                    totalFreeUsers: currentWeekData.length,
+                    atLimit: currentWeekData.filter(ft => ft.weekly_usage >= 3).length,
+                    flaggedUsers: currentWeekData.filter(ft => ft.flagged).length,
+                    avgUsage: currentWeekData.length > 0
+                        ? (currentWeekData.reduce((sum, ft) => sum + ft.weekly_usage, 0) / currentWeekData.length).toFixed(1)
+                        : '0'
+                });
+            } catch (err) {
+                console.error("Error fetching free tier stats:", err);
             }
 
         } catch (err) {
@@ -284,7 +325,7 @@ export default function AdminOverviewPage() {
                                 name={account.name}
                                 emoji={account.type === 'checking' ? '📥' : '💵'}
                                 balance={account.balance}
-                                change={account.transactions?.[0]?.amount 
+                                change={account.transactions?.[0]?.amount
                                     ? `${account.transactions[0].amount >= 0 ? '+' : ''}$${Math.abs(account.transactions[0].amount).toFixed(2)}`
                                     : "—"
                                 }
@@ -296,6 +337,31 @@ export default function AdminOverviewPage() {
                             {loading ? "Loading bank accounts..." : "Connect Mercury to see accounts"}
                         </div>
                     )}
+                </div>
+            </div>
+
+            {/* Free Tier Stats */}
+            <div>
+                <h2 className="text-sm font-medium text-white/60 mb-3">🆓 Free Tier (This Week)</h2>
+                <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <p className="text-2xl font-bold text-white">{freeTierMetrics.totalFreeUsers}</p>
+                            <p className="text-xs text-gray-500">Active Users</p>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-red-400">{freeTierMetrics.atLimit}</p>
+                            <p className="text-xs text-gray-500">At Limit (3/3)</p>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-yellow-400">{freeTierMetrics.flaggedUsers}</p>
+                            <p className="text-xs text-gray-500">Flagged</p>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-[#09B7B4]">{freeTierMetrics.avgUsage}</p>
+                            <p className="text-xs text-gray-500">Avg Usage</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -413,12 +479,11 @@ export default function AdminOverviewPage() {
                                         <p className="text-xs text-white/40">{user.email}</p>
                                     </div>
                                     <div className="text-right">
-                                        <span className={`text-xs px-2 py-0.5 rounded ${
-                                            user.plan === 'Business' ? 'bg-purple-500/20 text-purple-400' :
-                                            user.plan === 'Pro' ? 'bg-blue-500/20 text-blue-400' :
-                                            user.plan === 'Basic' ? 'bg-green-500/20 text-green-400' :
-                                            'bg-white/10 text-white/40'
-                                        }`}>
+                                        <span className={`text-xs px-2 py-0.5 rounded ${user.plan === 'Business' ? 'bg-purple-500/20 text-purple-400' :
+                                                user.plan === 'Pro' ? 'bg-blue-500/20 text-blue-400' :
+                                                    user.plan === 'Basic' ? 'bg-green-500/20 text-green-400' :
+                                                        'bg-white/10 text-white/40'
+                                            }`}>
                                             {user.plan}
                                         </span>
                                         <p className="text-xs text-white/30 mt-1">{user.signedUp}</p>
