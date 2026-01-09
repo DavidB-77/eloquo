@@ -76,7 +76,12 @@ export async function GET(request: Request) {
         if (usages && usages.length > 0) {
             for (const u of usages) {
                 // Only count usage from current week
-                if (u.week_start === weekStart) {
+                // Compare as Date objects to handle format differences
+                const recordWeekStart = new Date(u.week_start).getTime();
+                const currentWeekStart = new Date(weekStart).getTime();
+                console.log('[FREE-TIER GET] Comparing week_start:', u.week_start, 'vs', weekStart);
+                console.log('[FREE-TIER GET] As timestamps:', recordWeekStart, 'vs', currentWeekStart);
+                if (recordWeekStart === currentWeekStart) {
                     weeklyUsage += u.weekly_usage;
                 }
                 if (u.flagged) flagged = true;
