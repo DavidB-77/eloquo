@@ -231,14 +231,15 @@ export default function AdminSettingsPage() {
                                 <p className="text-xs text-gray-500">Allow non-paying users to use limited optimizations</p>
                             </div>
                             <button
+                                type="button"
                                 onClick={() => handleToggle('free_tier_enabled')}
                                 className={cn(
-                                    "w-12 h-6 rounded-full transition-colors relative",
+                                    "w-12 h-6 rounded-full transition-colors relative cursor-pointer",
                                     settings?.free_tier_enabled ? "bg-[#09B7B4]" : "bg-zinc-700"
                                 )}
                             >
                                 <span className={cn(
-                                    "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
+                                    "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform pointer-events-none",
                                     settings?.free_tier_enabled ? "translate-x-7" : "translate-x-1"
                                 )} />
                             </button>
