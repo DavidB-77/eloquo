@@ -733,8 +733,11 @@ export default function OptimizePage() {
                             </div>
                         )}
 
+
+                        {(() => { console.log('[BLOCKER EVAL] remaining:', remaining, 'isViewingResult:', isViewingResult, 'optimizationInProgress:', optimizationInProgress); return null; })()}
+
                         {/* BLOCKER OVERLAY - limit reached (only show when no result displayed) */}
-                        {!isPaidUser && remaining === 0 && !isViewingResult && (
+                        {!isPaidUser && remaining !== undefined && remaining === 0 && !isViewingResult && !optimizationInProgress && (
                             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-50 flex flex-col items-center justify-center rounded-lg">
                                 <div className="text-center p-8">
                                     <div className="text-red-500 text-xl font-bold mb-4">Weekly Limit Reached</div>
