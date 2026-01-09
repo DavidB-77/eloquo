@@ -67,6 +67,24 @@ function SettingsContent() {
     };
 
     const plan = PLAN_DETAILS[usage.tier] || PLAN_DETAILS.free;
+    const currentTier = usage.tier || 'free';
+
+    // Helper to determine button text and state based on current tier
+    const getButtonConfig = (targetTier: string) => {
+        if (targetTier === currentTier) {
+            return { text: 'Current Plan', disabled: true, variant: 'outline' as const };
+        }
+
+        const tierOrder = ['free', 'basic', 'pro', 'business'];
+        const currentIndex = tierOrder.indexOf(currentTier);
+        const targetIndex = tierOrder.indexOf(targetTier);
+
+        if (targetIndex > currentIndex) {
+            return { text: 'Upgrade', disabled: false, variant: 'default' as const };
+        } else {
+            return { text: 'Downgrade', disabled: false, variant: 'secondary' as const };
+        }
+    };
 
     const handleSaveProfile = async () => {
         setIsSaving(true);
@@ -87,7 +105,7 @@ function SettingsContent() {
         return true;
     };
 
-    const handleUpgrade = async (plan: string = 'pro') => {
+    const handleCheckout = async (plan: 'basic' | 'pro' | 'business') => {
         setIsUpgrading(true);
         try {
             const res = await fetch('/api/checkout', {
@@ -205,11 +223,7 @@ function SettingsContent() {
                                         </p>
                                     </div>
                                 </div>
-                                {(usage.tier === "free" || usage.tier === "basic") && (
-                                    <Button onClick={() => handleUpgrade('pro')} disabled={isUpgrading}>
-                                        {isUpgrading ? 'Loading...' : 'Upgrade to Pro'}
-                                    </Button>
-                                )}
+                                {/* Removed upgrade button - checkout buttons now on tier cards */}
                                 {usage.tier !== "free" && usage.tier !== "basic" && (
                                     <Button variant="outline" onClick={handleManageSubscription} disabled={isLoadingPortal}>
                                         <ExternalLink className="h-4 w-4 mr-2" />
@@ -293,6 +307,14 @@ function SettingsContent() {
                                                     MCP/API access
                                                 </li>
                                             </ul>
+                                            <Button
+                                                onClick={() => handleCheckout(tier)}
+                                                disabled={getButtonConfig(tier).disabled || isUpgrading}
+                                                variant={getButtonConfig(tier).variant}
+                                                className="w-full mt-4"
+                                            >
+                                                {isUpgrading ? 'Loading...' : getButtonConfig(tier).text}
+                                            </Button>
                                         </div>
                                     );
                                 })}
