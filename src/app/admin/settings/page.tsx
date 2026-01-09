@@ -239,8 +239,8 @@ export default function AdminSettingsPage() {
                                 )}
                             >
                                 <span className={cn(
-                                    "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform pointer-events-none",
-                                    settings?.free_tier_enabled ? "translate-x-7" : "translate-x-1"
+                                    "absolute top-1 w-4 h-4 rounded-full bg-white transition-all pointer-events-none",
+                                    settings?.free_tier_enabled ? "left-7" : "left-1"
                                 )} />
                             </button>
                         </div>
