@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 
         // 2. Get usage stats
         const usage = await getUserUsage(keyData.userId);
-        const limits = TIER_LIMITS[usage.tier];
+        const limits = TIER_LIMITS[usage.tier] || TIER_LIMITS.free;
 
         // 3. Calculate days remaining in billing cycle
         const now = new Date();

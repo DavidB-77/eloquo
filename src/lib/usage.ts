@@ -1,6 +1,11 @@
-export const TIER_LIMITS = {
+export type Tier = 'free' | 'basic' | 'pro' | 'business' | 'enterprise';
+
+export const TIER_LIMITS: Record<string, { optimizations: number; premiumCredits: number }> = {
     free: { optimizations: 5, premiumCredits: 0 },
+    basic: { optimizations: 20, premiumCredits: 5 }, // added placeholder
     pro: { optimizations: 100, premiumCredits: 50 },
+    business: { optimizations: 500, premiumCredits: 200 }, // added placeholder
+    enterprise: { optimizations: 10000, premiumCredits: 1000 }, // added placeholder
 };
 
 export async function checkUsageLimits(userId: string) {
@@ -21,7 +26,7 @@ export async function saveToHistory(...args: any[]) {
 
 export async function getUserUsage(userId: string) {
     return {
-        tier: 'pro',
+        tier: 'pro' as Tier,
         optimizationsUsed: 0,
         optimizationsLimit: 100,
         premiumCreditsUsed: 0,
