@@ -15,6 +15,7 @@ export default function SignupSuccessPage() {
     const [message, setMessage] = React.useState<string>('Verifying your payment...');
     const [error, setError] = React.useState<string | null>(null);
     const ensureProfile = useMutation(api.profiles.ensureProfile);
+    const completeSignupProcess = useMutation(api.pendingSignups.completeSignupProcess);
 
     // Get stored signup intent from sessionStorage
     const [signupIntent, setSignupIntent] = React.useState<any>(null);
@@ -93,7 +94,7 @@ export default function SignupSuccessPage() {
                     });
 
                     // Complete the signup process in Convex (updates profile and marks pending as done)
-                    await convex.mutation(api.pendingSignups.completeSignupProcess, {
+                    await completeSignupProcess({
                         email: signupIntent.email.toLowerCase(),
                     });
 
