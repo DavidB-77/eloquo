@@ -248,7 +248,7 @@ export const getAdmins = query({
     handler: async (ctx) => {
         const admins = await ctx.db
             .query("profiles")
-            .filter((q) => q.eq(q.field("isAdmin"), true))
+            .filter((q) => q.eq(q.field("is_admin"), true))
             .collect();
         return admins;
     },
