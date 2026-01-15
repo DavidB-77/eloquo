@@ -57,10 +57,15 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
 };
 
 // Get the current authenticated user
+// Get the current authenticated user
 export const getCurrentUser = query({
     args: {},
     handler: async (ctx) => {
-        return authComponent.getAuthUser(ctx);
+        try {
+            return await authComponent.getAuthUser(ctx);
+        } catch (e) {
+            return null;
+        }
     },
 });
 
@@ -68,8 +73,12 @@ export const getCurrentUser = query({
 export const isAuthenticated = query({
     args: {},
     handler: async (ctx) => {
-        const user = await authComponent.getAuthUser(ctx);
-        return !!user;
+        try {
+            const user = await authComponent.getAuthUser(ctx);
+            return !!user;
+        } catch (e) {
+            return false;
+        }
     },
 });
 
@@ -77,17 +86,21 @@ export const isAuthenticated = query({
 export const getUserById = query({
     args: {},
     handler: async (ctx) => {
-        const user = await authComponent.getAuthUser(ctx);
-        if (!user) return null;
+        try {
+            const user = await authComponent.getAuthUser(ctx);
+            if (!user) return null;
 
-        // Return user with profile data
-        return {
-            id: user.userId,
-            email: user.email,
-            name: user.name,
-            image: user.image,
-            emailVerified: user.emailVerified,
-            createdAt: user.createdAt,
-        };
+            // Return user with profile data
+            return {
+                id: user.userId,
+                email: user.email,
+                name: user.name,
+                image: user.image,
+                emailVerified: user.emailVerified,
+                createdAt: user.createdAt,
+            };
+        } catch (e) {
+            return null;
+        }
     },
 });
