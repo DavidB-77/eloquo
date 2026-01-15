@@ -18,6 +18,7 @@ export const authComponent = createClient<DataModel>(components.betterAuth);
 export const createAuth = (ctx: GenericCtx<DataModel>) => {
     return betterAuth({
         baseURL: siteUrl,
+        secret: process.env.JWT_SECRET || "fallback-secret-1234567890", // Prevent crash if env var missing
         database: authComponent.adapter(ctx),
 
         // Email and password authentication
