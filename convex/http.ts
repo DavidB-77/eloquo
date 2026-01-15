@@ -10,6 +10,7 @@ authComponent.registerRoutes(http, createAuth);
 
 // Register Dodo Payments webhook route
 // This expects DODO_PAYMENTS_WEBHOOK_SECRET to be set in the Convex dashboard
-dodoWebhookHandler.registerRoutes(http, components.dodopayments);
+// FIXME: dodoWebhookHandler.registerRoutes is not a function. Needs investigation.
+// dodoWebhookHandler.registerRoutes(http, components.dodopayments);
 
 export default http;
