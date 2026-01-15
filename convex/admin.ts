@@ -213,3 +213,30 @@ export const getFinancialSummary = query({
         };
     },
 });
+/**
+ * Get free tier stats
+ */
+export const getFreeTierStats = query({
+    args: { weekStart: v.number() },
+    handler: async (ctx, args) => {
+        const freeUsers = await ctx.db
+            .query("profiles")
+            .filter((q) => q.eq(q.field("subscription_tier"), "free"))
+            .collect();
+
+        const totalFreeUsers = freeUsers.length;
+        const atLimit = freeUsers.filter(u => (u.optimizations_used || 0) >= 5).length;
+        // Mock flagging logic for now as we don't have explicit flags
+        const flaggedUsers = 0;
+
+        const totalUsage = freeUsers.reduce((sum, u) => sum + (u.optimizations_used || 0), 0);
+        const avgUsage = totalFreeUsers > 0 ? (totalUsage / totalFreeUsers).toFixed(1) : "0.0";
+
+        return {
+            totalFreeUsers,
+            atLimit,
+            flaggedUsers,
+            avgUsage
+        };
+    },
+});
