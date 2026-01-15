@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/forms/FormField";
@@ -15,22 +14,28 @@ export default function ForgotPasswordPage() {
     const [error, setError] = React.useState<string | null>(null);
     const [isLoading, setIsLoading] = React.useState(false);
     const [isSuccess, setIsSuccess] = React.useState(false);
-    const supabase = createClient();
 
     const handleResetRequest = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError(null);
 
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/reset-password`,
-        });
+        try {
+            // Send password reset email via Resend
+            const res = await fetch('/api/auth/send-password-reset', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            });
 
-        if (error) {
-            setError(error.message);
-            setIsLoading(false);
-        } else {
+            if (!res.ok) {
+                throw new Error('Failed to send reset email');
+            }
+
             setIsSuccess(true);
+        } catch (err: any) {
+            setError(err.message || 'Something went wrong');
+        } finally {
             setIsLoading(false);
         }
     };

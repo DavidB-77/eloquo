@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { callOptimize, type OptimizeRequest, type OptimizeSuccessResponse } from '@/lib/n8n';
-import { checkUsageLimits, incrementUsage, saveToHistory, getUserUsage } from '@/lib/usage';
 import { calculateTokenSavings, countTokens } from '@/lib/tokenizer';
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../../../../convex/_generated/api";
+import { getToken } from "@/lib/auth-server";
+import { headers } from "next/headers";
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 // Cost per million tokens by model
 const MODEL_COSTS: Record<string, { input: number; output: number }> = {
@@ -28,93 +32,54 @@ interface ExtendedOptimizeResult extends OptimizeSuccessResponse {
 export async function POST(request: Request) {
     const startTime = Date.now();
     try {
-        // 1. Get user from session
-        const supabase = await createClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        // 1. Get user from Better Auth session
+        const token = await getToken();
 
-        if (authError || !user) {
+        if (!token) {
             return NextResponse.json(
                 { success: false, error: 'Unauthorized' },
                 { status: 401 }
             );
         }
 
-        // 2a. Fetch System Settings overrides
-        const { data: settingsData } = await supabase
-            .from('system_settings')
-            .select('value')
-            .eq('key', 'general_settings')
-            .single();
+        // Set token for Convex client
+        convex.setAuth(token);
 
-        const settings = settingsData?.value || {};
-        const isTestMode = settings.test_mode_enabled === true;
-        const basicLimit = typeof settings.basic_plan_monthly_limit === 'number' ? settings.basic_plan_monthly_limit : 150;
-
-        // 2b. Re-Check usage limits with dynamic Free Tier limit
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('subscription_tier, comprehensive_credits_remaining')
-            .eq('id', user.id)
-            .single();
-
-        const userTier = (profile?.subscription_tier as 'free' | 'basic' | 'pro' | 'business' | 'enterprise') || 'free';
-        const comprehensiveCreditsRemaining = profile?.comprehensive_credits_remaining ?? 3;
-
-        // CRITICAL: Check free tier limit BEFORE any AI processing to prevent API token usage
-        if (userTier === 'free') {
-            console.log('[OPTIMIZE API] Free tier user - checking weekly limit');
-
-            const getWeekStart = () => {
-                const now = new Date();
-                const dayOfWeek = now.getDay();
-                const diff = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek;
-                const monday = new Date(now);
-                monday.setDate(now.getDate() + diff);
-                monday.setHours(0, 0, 0, 0);
-                return monday.toISOString();
-            };
-
-            const { data: tracking } = await supabase
-                .from('free_tier_tracking')
-                .select('weekly_usage')
-                .eq('user_id', user.id)
-                .eq('week_start', getWeekStart())
-                .single();
-
-            const weeklyUsage = tracking?.weekly_usage || 0;
-            console.log('[OPTIMIZE API] Free tier weekly usage:', weeklyUsage);
-
-            if (weeklyUsage > 3) {
-                console.log('[OPTIMIZE API] Free tier limit exceeded - blocking request');
-                return NextResponse.json(
-                    { success: false, error: 'Weekly limit reached. Please upgrade to continue.' },
-                    { status: 403 }
-                );
-            }
+        // Get user profile to get the email/userId correctly if needed
+        const session = await convex.query(api.auth.getUserById, {});
+        if (!session) {
+            return NextResponse.json(
+                { success: false, error: 'Unauthorized' },
+                { status: 401 }
+            );
         }
 
-        // We run the standard check first to get usage stats
-        const { canOptimize, usage } = await checkUsageLimits(user.id);
+        const user = session;
 
-        // Apply strict dynamic limit for basic users
-        if (userTier === 'basic') {
-            if (usage.optimizationsUsed >= basicLimit) {
-                return NextResponse.json(
-                    {
-                        success: false,
-                        error: `Basic plan limit of ${basicLimit} optimizations reached. Please upgrade to Pro.`,
-                        usage
-                    },
-                    { status: 429 }
-                );
-            }
-        } else if (!canOptimize) {
-            // Standard limit fallback for other tiers
+        // 2a. Fetch System Settings overrides from Convex
+        const generalSettings: any = await convex.query(api.settings.getSettings, { key: 'general_settings' }) || {};
+        const isTestMode = generalSettings.test_mode_enabled === true;
+        const basicLimit = typeof generalSettings.basic_plan_monthly_limit === 'number' ? generalSettings.basic_plan_monthly_limit : 150;
+
+        // 2b. Re-Check usage limits from Convex
+        const usageData: any = await convex.query(api.profiles.getUsage, {});
+        if (!usageData) {
+            return NextResponse.json(
+                { success: false, error: 'User profile not found' },
+                { status: 404 }
+            );
+        }
+
+        const userTier = usageData.tier;
+        const comprehensiveCreditsRemaining = usageData.comprehensiveCreditsRemaining ?? 3;
+
+        // Check if user can optimize
+        if (!usageData.canOptimize) {
             return NextResponse.json(
                 {
                     success: false,
-                    error: 'Monthly optimization limit reached',
-                    usage
+                    error: userTier === 'free' ? 'Weekly limit reached. Please upgrade to continue.' : 'Optimization limit reached. Please upgrade to continue.',
+                    usage: usageData
                 },
                 { status: 429 }
             );
@@ -130,13 +95,12 @@ export async function POST(request: Request) {
             contextFiles = [],
             contextAnswers = null,
             forceStandard = false,
-            isFollowUpSubmission = false, // Track if this is answering clarification questions
-            isProjectProtocol = false, // Project Protocol flag
+            isFollowUpSubmission = false,
+            isProjectProtocol = false,
         } = body;
 
         // 3a. Validate Project Protocol - Paid users only
         if (isProjectProtocol && userTier === 'free') {
-            console.log('[OPTIMIZE API] Free tier user attempted to use Project Protocol - blocking');
             return NextResponse.json(
                 {
                     success: false,
@@ -145,8 +109,6 @@ export async function POST(request: Request) {
                 { status: 403 }
             );
         }
-
-        console.log('[OPTIMIZE API] isFollowUpSubmission:', isFollowUpSubmission);
 
         if (!prompt || !prompt.trim()) {
             return NextResponse.json(
@@ -159,14 +121,13 @@ export async function POST(request: Request) {
 
         // 5. Call n8n OR Mock if Test Mode
         if (isTestMode) {
-            console.log("TEST MODE ACTIVE: Returning mock optimization result.");
-            // Simulate delay
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            console.log("TEST MODE ACTIVE");
+            await new Promise(resolve => setTimeout(resolve, 1500));
 
             result = {
                 success: true,
                 results: {
-                    full: `[TEST MODE] Optimized: ${prompt}\n\nThis is a mock response because the system is in Test Mode. API credits were not consumed.`,
+                    full: `[TEST MODE] Optimized: ${prompt}`,
                     quickRef: "[TEST MODE] Quick lookup info...",
                     snippet: "Test Mode Snippet",
                 },
@@ -174,36 +135,22 @@ export async function POST(request: Request) {
                     originalTokens: countTokens(prompt),
                     optimizedTokens: countTokens(prompt) + 50,
                     outputMode: 'standard',
-                    processingTimeMs: 2000,
+                    processingTimeMs: 1500,
                     creditsUsed: 0,
                     tokensSaved: -50,
                 },
-                improvements: [
-                    "Test Mode Analysis: No API calls made",
-                    "Input verified and processed",
-                    "System health check passed"
-                ],
-                classification: {
-                    complexity: 'simple',
-                    domain: 'test'
-                },
-                usage: {
-                    creditsUsed: 0,
-                    comprehensiveRemaining: comprehensiveCreditsRemaining
-                },
-                analytics: {
-                    generationModel: "test-mode-mock",
-                },
+                improvements: ["Test Mode: No API calls made"],
+                classification: { complexity: 'simple', domain: 'test' },
+                usage: { creditsUsed: 0, comprehensiveRemaining: comprehensiveCreditsRemaining },
                 generationModel: "test-mode-mock"
             } as ExtendedOptimizeResult;
         } else {
-            // Real API Call
             const n8nRequest: OptimizeRequest = {
                 prompt,
                 targetModel,
                 strength,
                 additionalContext: context,
-                userId: user.id,
+                userId: user.id || undefined,
                 userTier,
                 contextFiles: contextFiles.map((f: { name: string; mimeType: string; base64: string }) => ({
                     name: f.name,
@@ -226,69 +173,37 @@ export async function POST(request: Request) {
         // 8. Track usage and save with analytics if successful
         if ('success' in result && result.success && 'results' in result) {
             const successResult = result as ExtendedOptimizeResult;
-
-            // ONLY increment usage if this is NOT a follow-up submission
-            if (!isFollowUpSubmission) {
-                console.log('[OPTIMIZE API] First submission - incrementing usage');
-                await incrementUsage(user.id, 1, 0);
-            } else {
-                console.log('[OPTIMIZE API] Follow-up submission - skipping usage increment');
-            }
-
-            // ONLY deduct comprehensive credits if NOT a follow-up AND comprehensive mode
-            if (result.metrics?.outputMode === 'comprehensive' && comprehensiveCreditsRemaining > 0 && !isTestMode && !isFollowUpSubmission) {
-                console.log('[OPTIMIZE API] Deducting comprehensive credit');
-                await supabase
-                    .from('profiles')
-                    .update({ comprehensive_credits_remaining: comprehensiveCreditsRemaining - 1 })
-                    .eq('id', user.id);
-            }
-
-            // Calculate analytics
             const optimizedPrompt = successResult.results.full;
             const tokenData = calculateTokenSavings(prompt, optimizedPrompt || '', targetModel);
-
             const processingTime = Date.now() - startTime;
             const inputTokens = successResult.metrics?.originalTokens || tokenData.original || 0;
             const outputTokens = successResult.metrics?.optimizedTokens || tokenData.optimized || 0;
-
-            // Use extended type
             const model = successResult.analytics?.generationModel || successResult.generationModel || 'deepseek/deepseek-chat';
             const apiCost = calculateCost(inputTokens, outputTokens, model);
 
-            // Save to database using insert
-            try {
-                const { error: saveError } = await supabase
-                    .from('optimizations')
-                    .insert({
-                        user_id: user.id,
-                        original_prompt: prompt,
-                        optimized_prompt: optimizedPrompt,
-                        target_model: targetModel,
-                        strength: strength,
-                        tokens_original: tokenData.original,
-                        tokens_optimized: tokenData.optimized,
-                        tokens_saved: tokenData.saved,
-                        improvements: result.improvements || [],
-                        metrics: { ...result.metrics, qualityScore: result.validation?.score || 0 },
-                        quick_reference: result.results.quickRef || null,
-                        snippet: result.results.snippet || null,
-                        was_orchestrated: false,
-                        api_tokens_input: inputTokens,
-                        api_tokens_output: outputTokens,
-                        api_tokens_total: inputTokens + outputTokens,
-                        api_cost_usd: apiCost,
-                        processing_time_ms: processingTime,
-                        had_file_upload: contextFiles && contextFiles.length > 0,
-                        file_count: contextFiles?.length || 0,
-                        user_tier: userTier,
-                        generation_model: model,
-                    });
+            // Call Convex mutation to save optimization and update usage
+            // The mutation handles credit deduction and logging
+            await convex.mutation(api.optimizations.createOptimization, {
+                originalPrompt: prompt,
+                optimizedPrompt: optimizedPrompt || '',
+                targetModel: targetModel,
+                optimizationType: (successResult.metrics?.outputMode as "standard" | "comprehensive") || "standard",
+                strength: strength,
+                context: context || undefined,
 
-                if (saveError) console.error('Failed to save optimization:', saveError);
-            } catch (saveError) {
-                console.error('Error saving optimization:', saveError);
-            }
+                tokensOriginal: inputTokens,
+                tokensOptimized: outputTokens,
+                improvements: successResult.improvements || [],
+                metrics: {
+                    qualityScore: successResult.validation?.score || 0,
+                    total_tokens: inputTokens + outputTokens,
+                    processing_time_sec: processingTime / 1000,
+                    api_cost_usd: apiCost,
+                },
+                wasOrchestrated: false,
+                outputMode: successResult.metrics?.outputMode,
+                creditsUsed: successResult.metrics?.creditsUsed || 1,
+            });
 
             // Ensure frontend gets calculated metrics
             if (!successResult.metrics) {
@@ -297,9 +212,9 @@ export async function POST(request: Request) {
             }
 
             const metrics = successResult.metrics as any;
-            metrics.originalTokens = tokenData.original;
-            metrics.optimizedTokens = tokenData.optimized;
-            metrics.tokensSaved = tokenData.saved;
+            metrics.originalTokens = inputTokens;
+            metrics.optimizedTokens = outputTokens;
+            metrics.tokensSaved = inputTokens - outputTokens;
             metrics.processingTimeMs = processingTime;
             metrics.estimatedCost = apiCost;
         }

@@ -1,13 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { Save, RefreshCw, Plus, Trash2, Check, X, Loader2, AlertTriangle, Search } from "lucide-react";
+import { Save, Plus, Check, X, Loader2, AlertTriangle, Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { getGeneralSettings, updateSystemSetting, GeneralSettings } from "@/lib/settings";
+import { useMutation, useQuery, useConvex } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import { Doc } from "../../../../convex/_generated/dataModel";
 
 export default function AdminSettingsPage() {
     const [settings, setSettings] = React.useState<GeneralSettings | null>(null);
@@ -15,7 +17,6 @@ export default function AdminSettingsPage() {
     const [isSaving, setIsSaving] = React.useState(false);
 
     // Admin Users State
-    const [adminUsers, setAdminUsers] = React.useState<any[]>([]);
     const [loadingAdmins, setLoadingAdmins] = React.useState(true);
 
     // Add Admin Modal State
@@ -24,8 +25,13 @@ export default function AdminSettingsPage() {
     const [addAdminLoading, setAddAdminLoading] = React.useState(false);
     const [addAdminMessage, setAddAdminMessage] = React.useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-    // Fetch initial data
-    const fetchSettings = async () => {
+    // Convex data and actions
+    const convex = useConvex();
+    const adminsRaw = useQuery(api.admin.getAdmins);
+    const updateAdminStatus = useMutation(api.profiles.updateAdminStatus);
+
+    // Fetch initial settings
+    const fetchSettings = React.useCallback(async () => {
         try {
             const data = await getGeneralSettings();
             setSettings(data);
@@ -34,40 +40,17 @@ export default function AdminSettingsPage() {
         } finally {
             setLoadingSettings(false);
         }
-    };
-
-    const fetchAdmins = async () => {
-        setLoadingAdmins(true);
-        const supabase = createClient();
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('id, email, full_name, display_name, created_at, is_admin')
-                .eq('is_admin', true)
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-
-            if (data) {
-                setAdminUsers(data.map(user => ({
-                    id: user.id,
-                    name: user.full_name || user.display_name || "Unknown",
-                    email: user.email,
-                    role: "Admin",
-                    added: user.created_at ? formatDistanceToNow(new Date(user.created_at), { addSuffix: true }) : "Unknown"
-                })));
-            }
-        } catch (err) {
-            console.error("Error fetching admin users:", err);
-        } finally {
-            setLoadingAdmins(false);
-        }
-    };
+    }, []);
 
     React.useEffect(() => {
         fetchSettings();
-        fetchAdmins();
-    }, []);
+    }, [fetchSettings]);
+
+    React.useEffect(() => {
+        if (adminsRaw !== undefined) {
+            setLoadingAdmins(false);
+        }
+    }, [adminsRaw]);
 
     const handleToggle = async (key: keyof GeneralSettings) => {
         if (!settings) return;
@@ -109,31 +92,20 @@ export default function AdminSettingsPage() {
         setAddAdminLoading(true);
         setAddAdminMessage(null);
 
-        const supabase = createClient();
         try {
-            // 1. Find user by email
-            const { data: users, error: searchError } = await supabase
-                .from('profiles')
-                .select('id, email')
-                .eq('email', newAdminEmail)
-                .single();
+            // 1. Find user by email (using on-demand query)
+            const user = await convex.query(api.profiles.getProfileByEmail, { email: newAdminEmail });
 
-            if (searchError || !users) {
+            if (!user) {
                 setAddAdminMessage({ type: 'error', text: "User not found with that email." });
                 return;
             }
 
             // 2. Update user to be admin
-            const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ is_admin: true })
-                .eq('id', users.id);
-
-            if (updateError) throw updateError;
+            await updateAdminStatus({ userId: user.userId, isAdmin: true });
 
             setAddAdminMessage({ type: 'success', text: "Admin added successfully!" });
             setNewAdminEmail("");
-            fetchAdmins(); // Refresh list
 
             // Close modal after delay
             setTimeout(() => {
@@ -141,13 +113,22 @@ export default function AdminSettingsPage() {
                 setAddAdminMessage(null);
             }, 1500);
 
-        } catch (error: any) {
-            console.error("Error adding admin:", error);
-            setAddAdminMessage({ type: 'error', text: error.message || "Failed to add admin" });
+        } catch (error: unknown) {
+            const err = error as Error;
+            console.error("Error adding admin:", err);
+            setAddAdminMessage({ type: 'error', text: err.message || "Failed to add admin" });
         } finally {
             setAddAdminLoading(false);
         }
     };
+
+    const formattedAdmins = adminsRaw?.map((user: Doc<"profiles">) => ({
+        id: user._id,
+        name: user.full_name || user.display_name || "Unknown",
+        email: user.email,
+        role: "Admin",
+        added: user.created_at ? formatDistanceToNow(new Date(user.created_at), { addSuffix: true }) : "Unknown"
+    })) || [];
 
     if (loadingSettings) {
         return (
@@ -205,6 +186,7 @@ export default function AdminSettingsPage() {
                         </div>
                         <button
                             onClick={() => handleToggle('maintenance_mode')}
+                            aria-label={settings.maintenance_mode ? "Disable Maintenance Mode" : "Enable Maintenance Mode"}
                             className={cn(
                                 "w-12 h-6 rounded-full transition-colors relative",
                                 "transition-all duration-300",
@@ -233,6 +215,7 @@ export default function AdminSettingsPage() {
                             <button
                                 type="button"
                                 onClick={() => handleToggle('free_tier_enabled')}
+                                aria-label={settings?.free_tier_enabled ? "Disable Free Tier" : "Enable Free Tier"}
                                 className={cn(
                                     "w-12 h-6 rounded-full transition-colors relative cursor-pointer",
                                     settings?.free_tier_enabled ? "bg-[#09B7B4]" : "bg-zinc-700"
@@ -294,6 +277,7 @@ export default function AdminSettingsPage() {
                             </p>
                             <button
                                 onClick={() => handleToggle(flag.key as keyof GeneralSettings)}
+                                aria-label={settings[flag.key as keyof GeneralSettings] ? `Disable ${flag.label}` : `Enable ${flag.label}`}
                                 className={cn(
                                     "w-12 h-6 rounded-full transition-colors relative",
                                     settings[flag.key as keyof GeneralSettings]
@@ -322,7 +306,6 @@ export default function AdminSettingsPage() {
                     <h2 className="text-lg font-semibold text-white">🔗 Integration Settings</h2>
                     <span className="text-xs border border-white/20 px-2 py-1 rounded text-white/50">Coming Soon</span>
                 </div>
-                {/* Simplified placeholder content to save space, assuming integrations are next sprint */}
                 <p className="text-sm text-gray-500">Integration configuration will be available in the next update.</p>
             </section>
 
@@ -346,7 +329,7 @@ export default function AdminSettingsPage() {
                             <Loader2 className="h-5 w-5 animate-spin text-electric-cyan" />
                         </div>
                     ) : (
-                        adminUsers.map((admin) => (
+                        formattedAdmins.map((admin: { id: string; name: string; email: string; role: string; added: string }) => (
                             <div
                                 key={admin.id}
                                 className="flex items-center justify-between py-3 border-b border-white/5 last:border-0"
@@ -362,7 +345,7 @@ export default function AdminSettingsPage() {
                             </div>
                         ))
                     )}
-                    {!loadingAdmins && adminUsers.length === 0 && (
+                    {!loadingAdmins && formattedAdmins.length === 0 && (
                         <p className="text-sm text-gray-500 text-center py-2">No admin users found.</p>
                     )}
                 </div>
@@ -374,6 +357,7 @@ export default function AdminSettingsPage() {
                     <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
                         <button
                             onClick={() => setShowAddAdmin(false)}
+                            aria-label="Close"
                             className="absolute top-4 right-4 text-gray-400 hover:text-white"
                         >
                             <X className="h-5 w-5" />

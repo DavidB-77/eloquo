@@ -100,13 +100,24 @@ export function PricingSection() {
                 return;
             }
 
+            // Determine discount code if founding pricing is active
+            let discountCode: string | undefined;
+            const selectedTier = TIERS.find(t => t.key === planKey);
+
+            if (selectedTier?.foundingPrice) {
+                // Hardcoded discount codes - User must create these in Dodo
+                if (planKey === 'pro') discountCode = 'FOUNDING_PRO';
+                if (planKey === 'business') discountCode = 'FOUNDING_BUSINESS';
+            }
+
             // Check if user is authenticated by trying to call checkout
             const res = await fetch('/api/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     plan: planKey,
-                    billing: isAnnual ? 'annual' : 'monthly'
+                    billing: isAnnual ? 'annual' : 'monthly',
+                    discountCode,
                 }),
             });
             const data = await res.json();

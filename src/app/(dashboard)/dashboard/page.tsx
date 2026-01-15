@@ -21,29 +21,15 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useUser } from "@/providers/UserProvider";
 import { formatDistanceToNow } from "date-fns";
+import { useQuery } from "convex/react";
+import { api } from "../../../../../convex/_generated/api";
 
 export default function DashboardPage() {
     const { userData } = useUser();
-    const [historyData, setHistoryData] = React.useState<any>(null);
-    const [isLoading, setIsLoading] = React.useState(true);
+    const convexHistory = useQuery(api.optimizations.getOptimizationHistory, { limit: 5 });
+    const isLoading = convexHistory === undefined;
 
     React.useEffect(() => {
-        const fetchHistory = async () => {
-            try {
-                const res = await fetch("/api/history?limit=5");
-                const data = await res.json();
-                if (data.success) {
-                    setHistoryData(data);
-                }
-            } catch (error) {
-                console.error("Failed to fetch dashboard history:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchHistory();
-
         // Post-signup checkout flow - check URL params
         const params = new URLSearchParams(window.location.search);
         const plan = params.get('plan');
@@ -66,20 +52,12 @@ export default function DashboardPage() {
         }
     }, []);
 
-    const stats = historyData?.stats || {};
-    const totalOptimizations = stats.total_optimizations || 0;
-    const tokensSaved = stats.tokens_saved || stats.total_tokens_saved || 0;
-    const tokensOriginalTotal = stats.tokens_original_total || 0;
+    const recentPrompts = convexHistory || [];
 
-    const avgSavingsPercent = stats.avg_savings_percent || (tokensOriginalTotal > 0
-        ? (tokensSaved / tokensOriginalTotal) * 100
-        : 0);
-
-    const recentPrompts = historyData?.history || [];
-
-    // Calculate avg quality score and ratings count from stats
-    const avgQualityScore = stats.avg_quality_score || 0;
-    const ratingsGiven = stats.ratings_given || 0;
+    // Map stats from profile or history
+    const totalOptimizations = userData?.optimizationsUsed || 0;
+    const avgQualityScore = 0; // Will be implemented with analytics
+    const ratingsGiven = 0;
 
     return (
         <div className="space-y-8">
@@ -151,7 +129,7 @@ export default function DashboardPage() {
                                     </TableRow>
                                 ) : recentPrompts.length > 0 ? (
                                     recentPrompts.map((prompt: any) => (
-                                        <TableRow key={prompt.id} className="hover:bg-electric-cyan/5 border-electric-cyan/5 transition-colors group">
+                                        <TableRow key={prompt._id} className="hover:bg-electric-cyan/5 border-electric-cyan/5 transition-colors group">
                                             <TableCell className="font-bold text-white pl-6 max-w-[200px] truncate">
                                                 {prompt.original_prompt.substring(0, 50)}...
                                             </TableCell>
@@ -162,7 +140,7 @@ export default function DashboardPage() {
                                             </TableCell>
                                             <TableCell>
                                                 <Badge className="bg-electric-cyan/10 text-electric-cyan border-electric-cyan/20 px-2 py-0 text-[10px] uppercase font-bold tracking-wider">
-                                                    OPTIMIZED
+                                                    {prompt.optimization_type}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-right text-xs text-white/40 pr-6 font-mono opacity-60 group-hover:opacity-100 transition-opacity">

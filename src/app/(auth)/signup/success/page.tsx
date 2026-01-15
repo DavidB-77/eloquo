@@ -2,136 +2,127 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { authClient, signUp } from "@/lib/auth-client";
 import { Container } from "@/components/layout/Container";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../../../../../convex/_generated/api";
 
 export default function SignupSuccessPage() {
     const router = useRouter();
-    const supabase = createClient();
     const [status, setStatus] = React.useState<'loading' | 'success' | 'error'>('loading');
-    const [message, setMessage] = React.useState<string>('Setting up your account...');
+    const [message, setMessage] = React.useState<string>('Verifying your payment...');
     const [error, setError] = React.useState<string | null>(null);
+    const ensureProfile = useMutation(api.profiles.ensureProfile);
+
+    // Get stored signup intent from sessionStorage
+    const [signupIntent, setSignupIntent] = React.useState<any>(null);
 
     React.useEffect(() => {
-        const completeSignup = async () => {
+        const intent = sessionStorage.getItem('eloquo_signup_intent');
+        if (intent) {
             try {
-                // Get stored signup intent from sessionStorage
-                const signupIntent = sessionStorage.getItem('eloquo_signup_intent');
-
-                if (!signupIntent) {
-                    // Check if already logged in
-                    const { data: { user } } = await supabase.auth.getUser();
-                    if (user) {
-                        setStatus('success');
-                        setMessage('Welcome back! Redirecting...');
-                        setTimeout(() => router.push('/dashboard'), 1500);
-                        return;
-                    }
-
-                    setStatus('error');
-                    setError('Signup session expired. Please try signing up again.');
-                    return;
-                }
-
-                const { email, password, timestamp } = JSON.parse(signupIntent);
-
+                const parsed = JSON.parse(intent);
                 // Check if signup intent is too old (1 hour)
-                if (Date.now() - timestamp > 3600000) {
+                if (Date.now() - parsed.timestamp > 3600000) {
                     sessionStorage.removeItem('eloquo_signup_intent');
                     setStatus('error');
                     setError('Signup session expired. Please try again.');
-                    return;
+                } else {
+                    setSignupIntent(parsed);
                 }
-
-                setMessage('Verifying payment...');
-
-                // Check if payment was recorded (poll a few times)
-                let pendingSignup = null;
-                for (let i = 0; i < 15; i++) {
-                    const res = await fetch(`/api/auth/check-pending-signup?email=${encodeURIComponent(email)}`);
-                    const data = await res.json();
-
-                    if (data.success && data.pending) {
-                        pendingSignup = data.pending;
-                        break;
-                    }
-
-                    // Wait 1 second before retry
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    setMessage(`Verifying payment... (${i + 1}/15)`);
-                }
-
-                if (!pendingSignup) {
+            } catch (e) {
+                console.error("Failed to parse signup intent", e);
+                setStatus('error');
+                setError('Invalid signup session. Please try again.');
+            }
+        } else {
+            // Check if already logged in
+            authClient.getSession().then(session => {
+                if (session?.data?.user) {
+                    setStatus('success');
+                    setMessage('Welcome back! Redirecting...');
+                    setTimeout(() => router.push('/dashboard'), 1500);
+                } else {
                     setStatus('error');
-                    setError('Payment verification pending. Please wait a moment and refresh, or contact support.');
-                    return;
+                    setError('Signup session expired. Please try signing up again.');
                 }
+            });
+        }
+    }, [router]);
 
+    // Use Convex query to reactively watch for the payment confirmation
+    const pendingSignup = useQuery(
+        api.pendingSignups.checkPendingSignup,
+        signupIntent?.email ? { email: signupIntent.email } : "skip"
+    );
+
+    // Effect to handle account creation once payment is detected
+    React.useEffect(() => {
+        if (!signupIntent || !pendingSignup || status !== 'loading') return;
+
+        const completeSignup = async () => {
+            try {
                 setMessage('Creating your account...');
 
-                // Create the account with the user's password
-                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-                    email,
-                    password,
-                    options: {
-                        data: {
-                            subscription_tier: pendingSignup.subscription_tier,
-                        },
-                    },
+                // Create the account with Better Auth
+                const { data: authData, error: authError } = await signUp.email({
+                    email: signupIntent.email,
+                    password: signupIntent.password,
+                    name: "",
+                    callbackURL: "/dashboard",
                 });
 
-                if (signUpError) {
-                    // User might already exist - try to sign in
-                    if (signUpError.message.includes('already registered')) {
-                        const { error: signInError } = await supabase.auth.signInWithPassword({
-                            email,
-                            password,
-                        });
-
-                        if (signInError) {
-                            setStatus('error');
-                            setError('Account exists but password is different. Please use the login page.');
-                            return;
-                        }
+                if (authError) {
+                    if (authError.message?.toLowerCase().includes('already') || authError.status === 422) {
+                        setStatus('error');
+                        setError('Account already exists. Please use the login page.');
+                        return;
                     } else {
-                        throw signUpError;
+                        throw new Error(authError.message || 'Failed to create account');
                     }
                 }
 
-                // Mark pending signup as complete and update profile
-                await fetch('/api/auth/complete-signup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email }),
-                });
+                if (authData?.user) {
+                    // Ensure Convex profile exists with the correct tier
+                    await ensureProfile({
+                        userId: authData.user.id,
+                        email: authData.user.email,
+                        subscriptionTier: pendingSignup.subscription_tier,
+                    });
 
-                // Clear sessionStorage
-                sessionStorage.removeItem('eloquo_signup_intent');
+                    // Complete the signup process in Convex (updates profile and marks pending as done)
+                    await convex.mutation(api.pendingSignups.completeSignupProcess, {
+                        email: signupIntent.email.toLowerCase(),
+                    });
 
-                setStatus('success');
-                setMessage('Please check your email to confirm your account, then log in.');
-                // Don't auto-redirect - let user confirm email first
-                return;
+                    // Send confirmation email via Resend
+                    const confirmUrl = `${window.location.origin}/api/auth/callback?type=signup&email=${encodeURIComponent(signupIntent.email)}`;
+                    await fetch('/api/auth/send-confirmation', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: signupIntent.email,
+                            confirmUrl,
+                        }),
+                    });
 
-                // Auto sign in if we just signed up
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) {
-                    await supabase.auth.signInWithPassword({ email, password });
+                    // Clear sessionStorage
+                    sessionStorage.removeItem('eloquo_signup_intent');
+
+                    setStatus('success');
+                    setMessage('Check your email for a confirmation link to activate your account.');
                 }
-
-                setTimeout(() => router.push('/dashboard'), 1500);
-
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Signup completion error:', err);
                 setStatus('error');
-                setError('Something went wrong. Please contact support.');
+                setError(err.message || 'Something went wrong. Please contact support.');
             }
         };
 
         completeSignup();
-    }, [router, supabase]);
+    }, [signupIntent, pendingSignup, status, ensureProfile]);
 
     return (
         <div className="min-h-screen bg-midnight flex flex-col items-center justify-center py-12">
@@ -141,6 +132,11 @@ export default function SignupSuccessPage() {
                         <Loader2 className="h-12 w-12 animate-spin text-electric-cyan mx-auto" />
                         <h1 className="text-2xl font-bold text-white">Payment Successful!</h1>
                         <p className="text-white/60">{message}</p>
+                        {signupIntent && !pendingSignup && (
+                            <p className="text-xs text-white/40 italic mt-4">
+                                Waiting for payment processor confirmation...
+                            </p>
+                        )}
                     </div>
                 )}
 

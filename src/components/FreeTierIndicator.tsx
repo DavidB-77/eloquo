@@ -12,7 +12,6 @@ interface FreeTierIndicatorProps {
 export function FreeTierIndicator({ className, compact = false }: FreeTierIndicatorProps) {
     const { user } = useAuth();
     const {
-        canOptimize,
         isPaidUser,
         remaining,
         weeklyLimit,
@@ -28,7 +27,7 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
             console.log('[FreeTierIndicator] Component mounted - fetching fresh status');
             checkStatus();
         }
-    }, []); // Only on mount
+    }, [checkStatus, isLoading, user?.id]); // Only on mount
 
     // Listen for usage updates from other components (e.g., optimize page)
     // Update state DIRECTLY from event detail for immediate UI update
@@ -106,7 +105,7 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
                 <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
                     <div
                         className={cn("h-full transition-all duration-500", barColor)}
-                        style={{ width: `${progress}%` }}
+                        style={{ width: `${progress}%` } as React.CSSProperties}
                     />
                 </div>
             </div>
@@ -126,7 +125,7 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
             <div className="relative h-2 w-full bg-zinc-800 rounded-full overflow-hidden mb-4">
                 <div
                     className={cn("absolute top-0 left-0 h-full transition-all duration-700 ease-out rounded-full", barColor)}
-                    style={{ width: `${progress}%` }}
+                    style={{ width: `${progress}%` } as React.CSSProperties}
                 />
             </div>
 

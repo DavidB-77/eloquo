@@ -1,7 +1,7 @@
-"use client";
-
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
-import { useAuth } from "@/providers/AuthProvider";
+import { useAuth } from "@/providers/BetterAuthProvider";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 interface UserData {
     tier: "free" | "basic" | "pro" | "business" | "enterprise";
@@ -19,50 +19,32 @@ interface UserData {
 interface UserContextType {
     userData: UserData | null;
     isLoading: boolean;
-    refreshUserData: () => Promise<void>;
+    refreshUserData: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
-    const [userData, setUserData] = useState<UserData | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
-
-    const fetchUserData = useCallback(async () => {
-        if (!user) {
-            setUserData(null);
-            return;
-        }
-
-        try {
-            // Don't set loading true on refresh to avoid UI flicker
-            if (!userData) setIsLoading(true);
-
-            const res = await fetch("/api/usage");
-            const data = await res.json();
-
-            if (data.success && data.data) {
-                setUserData(data.data);
-            }
-        } catch (error) {
-            console.error("Failed to fetch user data:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [user, userData]);
+    const convexUsage = useQuery(api.profiles.getUsage);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        fetchUserData();
-    }, [user]); // Re-fetch when user changes
+        if (convexUsage !== undefined) {
+            setIsLoading(false);
+        }
+    }, [convexUsage]);
 
     return (
-        <UserContext.Provider value={{ userData, isLoading, refreshUserData: fetchUserData }}>
+        <UserContext.Provider value={{
+            userData: convexUsage as any || null,
+            isLoading,
+            refreshUserData: () => { } // Convex handles automatic updates
+        }}>
             {children}
         </UserContext.Provider>
     );
 }
-
 export function useUser() {
     const context = useContext(UserContext);
     if (context === undefined) {

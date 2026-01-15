@@ -6,20 +6,51 @@ import { StatCard } from "@/components/admin/StatCards";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
+interface MercuryTransaction {
+    id: string;
+    date: string;
+    description: string;
+    amount: number;
+}
+
+interface MercuryAccount {
+    id: string;
+    name: string;
+    accountNumber: string;
+    balance: number;
+    transactions: MercuryTransaction[];
+}
+
+interface PlanBreakdown {
+    plan: string;
+    subscribers: number;
+    mrr: number;
+    percentage: number;
+}
+
+interface RecentOrder {
+    id: string;
+    date: string;
+    customer: string;
+    amount: number;
+    status: string;
+    productName: string;
+}
+
 export default function AdminRevenuePage() {
     const [loading, setLoading] = React.useState(true);
-    const [mercuryAccounts, setMercuryAccounts] = React.useState<any[]>([]);
+    const [mercuryAccounts, setMercuryAccounts] = React.useState<MercuryAccount[]>([]);
     const [mercuryTotal, setMercuryTotal] = React.useState(0);
     const [mercuryError, setMercuryError] = React.useState<string | null>(null);
     const [revenue, setRevenue] = React.useState({ mrr: 0, arr: 0, totalSubscribers: 0 });
-    const [planBreakdown, setPlanBreakdown] = React.useState<any[]>([]);
-    const [recentOrders, setRecentOrders] = React.useState<any[]>([]);
-    const [polarError, setPolarError] = React.useState<string | null>(null);
+    const [planBreakdown, setPlanBreakdown] = React.useState<PlanBreakdown[]>([]);
+    const [recentOrders, setRecentOrders] = React.useState<RecentOrder[]>([]);
+    const [dodoError, setDodoError] = React.useState<string | null>(null);
     const [openRouterBalance, setOpenRouterBalance] = React.useState<number | null>(null);
 
     const fetchData = React.useCallback(async () => {
         setLoading(true);
-        
+
         // Fetch Mercury
         try {
             const res = await fetch('/api/admin/mercury');
@@ -31,24 +62,24 @@ export default function AdminRevenuePage() {
             } else {
                 setMercuryError(data.error);
             }
-        } catch (err) {
+        } catch {
             setMercuryError('Failed to connect to Mercury');
         }
 
-        // Fetch Polar
+        // Fetch Dodo
         try {
-            const res = await fetch('/api/admin/polar-revenue');
+            const res = await fetch('/api/admin/dodo-revenue');
             const data = await res.json();
             if (data.success) {
                 setRevenue(data.revenue);
                 setPlanBreakdown(data.planBreakdown);
                 setRecentOrders(data.recentOrders);
-                setPolarError(null);
+                setDodoError(null);
             } else {
-                setPolarError(data.error);
+                setDodoError(data.error);
             }
-        } catch (err) {
-            setPolarError('Failed to connect to Polar');
+        } catch {
+            setDodoError('Failed to connect to Dodo Payments');
         }
 
         // Fetch OpenRouter
@@ -56,7 +87,7 @@ export default function AdminRevenuePage() {
             const res = await fetch('/api/admin/openrouter-balance');
             const data = await res.json();
             if (data.success) setOpenRouterBalance(data.balance);
-        } catch (err) {}
+        } catch { }
 
         setLoading(false);
     }, []);
@@ -85,7 +116,7 @@ export default function AdminRevenuePage() {
 
             <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-green-400 text-sm font-medium">Live Data — Connected to Polar & Mercury APIs</span>
+                <span className="text-green-400 text-sm font-medium">Live Data — Connected to Dodo Payments & Mercury APIs</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -99,7 +130,7 @@ export default function AdminRevenuePage() {
             <div>
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-white">💰 Mercury Bank Accounts</h2>
-                    <a href="https://app.mercury.com" target="_blank" className="text-sm text-[#09B7B4] hover:underline flex items-center gap-1">
+                    <a href="https://app.mercury.com" target="_blank" rel="noopener noreferrer" className="text-sm text-[#09B7B4] hover:underline flex items-center gap-1">
                         Open Mercury <ExternalLink className="h-3 w-3" />
                     </a>
                 </div>
@@ -117,7 +148,7 @@ export default function AdminRevenuePage() {
                                 <p className="text-2xl font-bold font-mono text-white mb-4">${account.balance.toFixed(2)}</p>
                                 <div className="space-y-2 border-t border-white/5 pt-4">
                                     <p className="text-xs text-gray-500 uppercase">Recent Transactions</p>
-                                    {account.transactions.length > 0 ? account.transactions.slice(0, 5).map((tx: any) => (
+                                    {account.transactions.length > 0 ? account.transactions.slice(0, 5).map((tx) => (
                                         <div key={tx.id} className="flex items-center justify-between text-sm">
                                             <div>
                                                 <span className="text-gray-400">{tx.date ? format(new Date(tx.date), 'MMM d') : ''}</span>
@@ -132,6 +163,11 @@ export default function AdminRevenuePage() {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                )}
+                {dodoError && (
+                    <div className="mt-4 bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm">
+                        {dodoError}
                     </div>
                 )}
             </div>
@@ -150,7 +186,7 @@ export default function AdminRevenuePage() {
                                     <td className="py-3">
                                         <div className="flex items-center gap-2">
                                             <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
-                                                <div className="h-full bg-[#09B7B4]" style={{ width: `${plan.percentage}%` }} />
+                                                <div className="h-full bg-[#09B7B4]" style={{ width: `${plan.percentage}%` } as React.CSSProperties} />
                                             </div>
                                             <span className="text-xs text-gray-500">{plan.percentage}%</span>
                                         </div>
@@ -194,6 +230,6 @@ export default function AdminRevenuePage() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

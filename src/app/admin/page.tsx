@@ -1,115 +1,44 @@
 "use client";
 
 import * as React from "react";
-import { Users, DollarSign, Zap, CreditCard, TrendingUp, Loader2, RefreshCw } from "lucide-react";
+import { Users, DollarSign, Zap, CreditCard, TrendingUp, RefreshCw } from "lucide-react";
 import { StatCard, BankAccountCard, AlertItem, ServiceStatus } from "@/components/admin/StatCards";
-import { createClient } from "@/lib/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 function capitalize(str: string) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-function getWeekStart(): string {
+function getWeekStart(): number {
     const now = new Date();
     const day = now.getUTCDay();
     const diff = now.getUTCDate() - day + (day === 0 ? -6 : 1);
     const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), diff));
     monday.setUTCHours(0, 0, 0, 0);
-    return monday.toISOString();
+    return monday.getTime();
 }
 
 export default function AdminOverviewPage() {
-    const [stats, setStats] = React.useState({
-        totalUsers: 0,
-        userGrowth: "+0%",
-        optimizations: 0,
-    });
-    const [recentSignups, setRecentSignups] = React.useState<any[]>([]);
-    const [loading, setLoading] = React.useState(true);
+    const [loading, setLoading] = React.useState(false);
     const [openRouterBalance, setOpenRouterBalance] = React.useState<number | null>(null);
-    const [ratingsDistribution, setRatingsDistribution] = React.useState<any>(null);
-    const [dailyOptData, setDailyOptData] = React.useState<{ date: string; count: number }[]>([]);
-    const [dailyRevenueData, setDailyRevenueData] = React.useState<{ date: string; revenue: number }[]>([]);
-
-    // Free tier metrics
-    const [freeTierMetrics, setFreeTierMetrics] = React.useState({
-        totalFreeUsers: 0,
-        atLimit: 0,
-        flaggedUsers: 0,
-        avgUsage: '0'
-    });
-
-    // Real data states (replacing mock)
-    const [polarData, setPolarData] = React.useState<any>(null);
-    const [mercuryData, setMercuryData] = React.useState<any>(null);
+    const [dodoData, setDodoData] = React.useState<any>(null);
+    const [mercuryData, setMercuryData] = React.useState<{ accounts: any[]; totalBalance: number } | null>(null);
     const [alerts, setAlerts] = React.useState<{ severity: "critical" | "warning"; message: string }[]>([]);
+
+    // Convex Data
+    const dashboardStats = useQuery(api.admin.getDashboardStats);
+    const recentSignupsRaw = useQuery(api.admin.getRecentSignups, { limit: 5 });
+    const ratingsDistribution = useQuery(api.admin.getRatingsDistribution);
+    const dailyOptData = useQuery(api.admin.getDailyOptimizations, { days: 7 });
+    const freeTierMetrics = useQuery(api.admin.getFreeTierStats, { weekStart: getWeekStart() });
 
     const fetchData = React.useCallback(async () => {
         setLoading(true);
-        const supabase = createClient();
-
         try {
-            // 1. Total Users
-            const { count: userCount, error: countError } = await supabase
-                .from("profiles")
-                .select("*", { count: "exact", head: true });
-
-            if (countError) console.error("Error fetching user count:", countError);
-
-            // 2. Recent Signups
-            const { data: recentUsers, error: recentError } = await supabase
-                .from("profiles")
-                .select("id, email, full_name, display_name, subscription_tier, created_at")
-                .order("created_at", { ascending: false })
-                .limit(5);
-
-            if (recentError) console.error("Error fetching recent users:", recentError);
-
-            // 3. Optimizations Today
-            const now = new Date();
-            const year = now.getUTCFullYear();
-            const month = now.getUTCMonth();
-            const day = now.getUTCDate();
-            const todayISO = new Date(Date.UTC(year, month, day)).toISOString();
-
-            const { count: optCount, error: optError } = await supabase
-                .from("optimizations")
-                .select("*", { count: "exact", head: true })
-                .gte("created_at", todayISO);
-
-            if (optError) console.error("Error fetching optimizations:", optError);
-
-            // Calculate user growth (compare to last week)
-            const lastWeek = new Date();
-            lastWeek.setDate(lastWeek.getDate() - 7);
-            const { count: lastWeekCount } = await supabase
-                .from("profiles")
-                .select("*", { count: "exact", head: true })
-                .lte("created_at", lastWeek.toISOString());
-
-            const growth = lastWeekCount && lastWeekCount > 0
-                ? Math.round(((userCount || 0) - lastWeekCount) / lastWeekCount * 100)
-                : 0;
-
-            setStats({
-                totalUsers: userCount || 0,
-                userGrowth: growth >= 0 ? `+${growth}%` : `${growth}%`,
-                optimizations: optCount || 0,
-            });
-
-            if (recentUsers) {
-                setRecentSignups(recentUsers.map(user => ({
-                    id: user.id,
-                    name: user.full_name || user.display_name || user.email?.split('@')[0] || "Unknown User",
-                    email: user.email || "No email",
-                    plan: user.subscription_tier === "enterprise" ? "Business" : user.subscription_tier ? capitalize(user.subscription_tier) : "None",
-                    signedUp: user.created_at ? formatDistanceToNow(new Date(user.created_at), { addSuffix: true }) : "Unknown"
-                })));
-            }
-
-            // 4. Fetch OpenRouter Balance
+            // 1. Fetch OpenRouter Balance
             try {
                 const balanceRes = await fetch('/api/admin/openrouter-balance');
                 const balanceData = await balanceRes.json();
@@ -120,18 +49,18 @@ export default function AdminOverviewPage() {
                 console.error("Error fetching OpenRouter balance:", err);
             }
 
-            // 5. Fetch Polar revenue data
+            // 2. Fetch Dodo revenue data
             try {
-                const polarRes = await fetch('/api/admin/polar-revenue');
-                const polar = await polarRes.json();
-                if (polar.success) {
-                    setPolarData(polar);
+                const dodoRes = await fetch('/api/admin/dodo-revenue');
+                const dodo = await dodoRes.json();
+                if (dodo.success) {
+                    setDodoData(dodo);
                 }
             } catch (err) {
-                console.error("Error fetching Polar data:", err);
+                console.error("Error fetching Dodo data:", err);
             }
 
-            // 6. Fetch Mercury bank data
+            // 3. Fetch Mercury bank data
             try {
                 const mercuryRes = await fetch('/api/admin/mercury');
                 const mercury = await mercuryRes.json();
@@ -141,86 +70,16 @@ export default function AdminOverviewPage() {
             } catch (err) {
                 console.error("Error fetching Mercury data:", err);
             }
-
-            // 7. Fetch ratings distribution
-            try {
-                const { data: ratings, error: ratingsError } = await supabase
-                    .from("optimizations")
-                    .select("user_rating")
-                    .not("user_rating", "is", null);
-
-                if (!ratingsError && ratings) {
-                    const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-                    ratings.forEach((r: any) => {
-                        if (r.user_rating >= 1 && r.user_rating <= 5) {
-                            distribution[r.user_rating]++;
-                        }
-                    });
-                    setRatingsDistribution(distribution);
-                }
-            } catch (err) {
-                console.error("Error fetching ratings:", err);
-            }
-
-            // 8. Fetch daily optimizations for chart
-            try {
-                const thirtyDaysAgo = new Date();
-                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-                const { data: dailyOpts, error: dailyError } = await supabase
-                    .from("optimizations")
-                    .select("created_at")
-                    .gte("created_at", thirtyDaysAgo.toISOString());
-
-                if (!dailyError && dailyOpts) {
-                    const dailyCounts: Record<string, number> = {};
-                    dailyOpts.forEach((opt: any) => {
-                        const date = new Date(opt.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                        dailyCounts[date] = (dailyCounts[date] || 0) + 1;
-                    });
-
-                    const chartData = Object.entries(dailyCounts)
-                        .map(([date, count]) => ({ date, count }))
-                        .slice(-7);
-
-                    setDailyOptData(chartData);
-                }
-            } catch (err) {
-                console.error("Error fetching daily data:", err);
-            }
-
-            // 9. Fetch free tier statistics
-            try {
-                const { data: freeTierStats } = await supabase
-                    .from('free_tier_tracking')
-                    .select('weekly_usage, flagged, week_start');
-
-                const currentWeekStart = new Date(getWeekStart()).getTime();
-                const currentWeekData = (freeTierStats || []).filter(ft => {
-                    const ftWeekStart = new Date(ft.week_start).getTime();
-                    return ftWeekStart === currentWeekStart;
-                });
-
-                setFreeTierMetrics({
-                    totalFreeUsers: currentWeekData.length,
-                    atLimit: currentWeekData.filter(ft => ft.weekly_usage >= 3).length,
-                    flaggedUsers: currentWeekData.filter(ft => ft.flagged).length,
-                    avgUsage: currentWeekData.length > 0
-                        ? (currentWeekData.reduce((sum, ft) => sum + ft.weekly_usage, 0) / currentWeekData.length).toFixed(1)
-                        : '0'
-                });
-            } catch (err) {
-                console.error("Error fetching free tier stats:", err);
-            }
-
-        } catch (err) {
-            console.error("Error fetching data:", err);
         } finally {
             setLoading(false);
         }
     }, []);
 
-    // Generate dynamic alerts based on real data
+    React.useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    // Generate dynamic alerts
     React.useEffect(() => {
         const newAlerts: { severity: "critical" | "warning"; message: string }[] = [];
 
@@ -238,7 +97,7 @@ export default function AdminOverviewPage() {
             });
         }
 
-        if (polarData?.revenue?.totalSubscribers === 0) {
+        if (dodoData?.summary?.totalSubscribers === 0) {
             newAlerts.push({
                 severity: "warning",
                 message: "No active subscribers yet - time to launch!"
@@ -246,16 +105,12 @@ export default function AdminOverviewPage() {
         }
 
         setAlerts(newAlerts);
-    }, [openRouterBalance, mercuryData, polarData]);
+    }, [openRouterBalance, mercuryData, dodoData]);
 
-    React.useEffect(() => {
-        fetchData();
-    }, [fetchData]);
-
-    // Calculate gross margin from real data
+    // Calculate gross margin
     const calculateGrossMargin = () => {
-        if (!polarData?.revenue?.mrr) return 0;
-        const mrr = polarData.revenue.mrr;
+        if (!dodoData?.revenue?.mrr) return 0;
+        const mrr = dodoData.revenue.mrr;
         const apiCost = openRouterBalance !== null ? Math.max(0, 50 - openRouterBalance) : 0;
         const infraCost = 16;
         const paymentFees = mrr * 0.044;
@@ -265,8 +120,16 @@ export default function AdminOverviewPage() {
     };
 
     const grossMargin = calculateGrossMargin();
-    const mrr = polarData?.revenue?.mrr || 0;
-    const mrrGrowth = polarData?.revenue?.totalSubscribers > 0 ? "+new" : "—";
+    const mrrValue = dodoData?.revenue?.mrr || 0;
+    const mrrGrowth = dodoData?.summary?.totalSubscribers > 0 ? "+new" : "—";
+
+    const formattedSignups = recentSignupsRaw?.map(user => ({
+        id: user._id,
+        name: user.full_name || user.display_name || user.email?.split('@')[0] || "Unknown User",
+        email: user.email || "No email",
+        plan: user.subscription_tier === "enterprise" ? "Business" : user.subscription_tier ? capitalize(user.subscription_tier) : "None",
+        signedUp: user.created_at ? formatDistanceToNow(new Date(user.created_at), { addSuffix: true }) : "Unknown"
+    })) || [];
 
     return (
         <div className="space-y-6">
@@ -287,13 +150,16 @@ export default function AdminOverviewPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <StatCard
                     title="Total Users"
-                    value={stats.totalUsers.toString()}
-                    change={{ value: stats.userGrowth, positive: stats.userGrowth.startsWith("+") }}
+                    value={dashboardStats?.totalUsers.toString() || "..."}
+                    change={{
+                        value: dashboardStats?.userGrowth || "0%",
+                        positive: dashboardStats?.userGrowth.startsWith("+") || false
+                    }}
                     icon={<Users className="h-5 w-5" />}
                 />
                 <StatCard
                     title="MRR"
-                    value={`$${mrr.toFixed(2)}`}
+                    value={`$${mrrValue.toFixed(2)}`}
                     change={{ value: mrrGrowth, positive: true }}
                     icon={<DollarSign className="h-5 w-5" />}
                 />
@@ -304,7 +170,7 @@ export default function AdminOverviewPage() {
                 />
                 <StatCard
                     title="Optimizations Today"
-                    value={stats.optimizations.toString()}
+                    value={dashboardStats?.optimizationsToday.toString() || "..."}
                     icon={<Zap className="h-5 w-5" />}
                 />
                 <StatCard
@@ -318,8 +184,8 @@ export default function AdminOverviewPage() {
             <div>
                 <h2 className="text-sm font-medium text-white/60 mb-3">💰 Bank Accounts (Mercury)</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {mercuryData?.accounts?.length > 0 ? (
-                        mercuryData.accounts.map((account: any) => (
+                    {mercuryData?.accounts?.length && mercuryData.accounts.length > 0 ? (
+                        mercuryData.accounts.map((account: { id: string; name: string; type: string; balance: number; transactions: any[] }) => (
                             <BankAccountCard
                                 key={account.id}
                                 name={account.name}
@@ -346,19 +212,19 @@ export default function AdminOverviewPage() {
                 <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <p className="text-2xl font-bold text-white">{freeTierMetrics.totalFreeUsers}</p>
+                            <p className="text-2xl font-bold text-white">{freeTierMetrics?.totalFreeUsers ?? "..."}</p>
                             <p className="text-xs text-gray-500">Active Users</p>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-red-400">{freeTierMetrics.atLimit}</p>
+                            <p className="text-2xl font-bold text-red-400">{freeTierMetrics?.atLimit ?? "..."}</p>
                             <p className="text-xs text-gray-500">At Limit (3/3)</p>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-yellow-400">{freeTierMetrics.flaggedUsers}</p>
+                            <p className="text-2xl font-bold text-yellow-400">{freeTierMetrics?.flaggedUsers ?? "..."}</p>
                             <p className="text-xs text-gray-500">Flagged</p>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-[#09B7B4]">{freeTierMetrics.avgUsage}</p>
+                            <p className="text-2xl font-bold text-[#09B7B4]">{freeTierMetrics?.avgUsage ?? "..."}</p>
                             <p className="text-xs text-gray-500">Avg Usage</p>
                         </div>
                     </div>
@@ -399,7 +265,7 @@ export default function AdminOverviewPage() {
                     <div className="space-y-2">
                         {[5, 4, 3, 2, 1].map((rating) => {
                             const count = ratingsDistribution[rating] || 0;
-                            const total = Object.values(ratingsDistribution).reduce((a: number, b: any) => a + b, 0) as number;
+                            const total = Object.values(ratingsDistribution).reduce((a: number, b) => a + (b as number), 0);
                             const percentage = total > 0 ? (count / total) * 100 : 0;
                             return (
                                 <div key={rating} className="flex items-center gap-3">
@@ -407,7 +273,7 @@ export default function AdminOverviewPage() {
                                     <div className="flex-1 h-4 bg-white/10 rounded-full overflow-hidden">
                                         <div
                                             className="h-full bg-electric-cyan rounded-full transition-all"
-                                            style={{ width: `${percentage}%` }}
+                                            style={{ width: `${percentage}%` } as React.CSSProperties}
                                         />
                                     </div>
                                     <span className="text-sm text-white/40 w-8">{count}</span>
@@ -424,12 +290,12 @@ export default function AdminOverviewPage() {
                 <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5">
                     <h3 className="text-sm font-medium text-white mb-4">💰 Revenue (30 days)</h3>
                     <div className="h-48">
-                        {polarData?.revenue?.mrr ? (
+                        {dodoData?.revenue?.mrr ? (
                             <div className="flex items-center justify-center h-full">
                                 <div className="text-center">
-                                    <p className="text-3xl font-bold text-electric-cyan">${polarData.revenue.mrr.toFixed(2)}</p>
+                                    <p className="text-3xl font-bold text-electric-cyan">${dodoData.revenue.mrr.toFixed(2)}</p>
                                     <p className="text-sm text-white/40">Monthly Recurring Revenue</p>
-                                    <p className="text-xs text-white/30 mt-2">{polarData.revenue.totalSubscribers} active subscriber(s)</p>
+                                    <p className="text-xs text-white/30 mt-2">{dodoData.summary.totalSubscribers} active subscriber(s)</p>
                                 </div>
                             </div>
                         ) : (
@@ -444,7 +310,7 @@ export default function AdminOverviewPage() {
                 <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5">
                     <h3 className="text-sm font-medium text-white mb-4">⚡ Optimizations (30 days)</h3>
                     <div className="h-48">
-                        {dailyOptData.length > 0 ? (
+                        {dailyOptData && dailyOptData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={dailyOptData}>
                                     <XAxis dataKey="date" tick={{ fill: '#666', fontSize: 10 }} />
@@ -458,7 +324,7 @@ export default function AdminOverviewPage() {
                             </ResponsiveContainer>
                         ) : (
                             <div className="flex items-center justify-center h-full text-white/30">
-                                No optimization data yet
+                                {dailyOptData ? "No optimization data yet" : "Loading chart..."}
                             </div>
                         )}
                     </div>
@@ -471,8 +337,8 @@ export default function AdminOverviewPage() {
                 <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5">
                     <h3 className="text-sm font-medium text-white mb-4">👤 Recent Signups</h3>
                     <div className="space-y-3">
-                        {recentSignups.length > 0 ? (
-                            recentSignups.map((user) => (
+                        {formattedSignups.length > 0 ? (
+                            formattedSignups.map((user) => (
                                 <div key={user.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
                                     <div>
                                         <p className="text-sm text-white">{user.name}</p>
@@ -480,9 +346,9 @@ export default function AdminOverviewPage() {
                                     </div>
                                     <div className="text-right">
                                         <span className={`text-xs px-2 py-0.5 rounded ${user.plan === 'Business' ? 'bg-purple-500/20 text-purple-400' :
-                                                user.plan === 'Pro' ? 'bg-blue-500/20 text-blue-400' :
-                                                    user.plan === 'Basic' ? 'bg-green-500/20 text-green-400' :
-                                                        'bg-white/10 text-white/40'
+                                            user.plan === 'Pro' ? 'bg-blue-500/20 text-blue-400' :
+                                                user.plan === 'Basic' ? 'bg-green-500/20 text-green-400' :
+                                                    'bg-white/10 text-white/40'
                                             }`}>
                                             {user.plan}
                                         </span>
@@ -491,7 +357,9 @@ export default function AdminOverviewPage() {
                                 </div>
                             ))
                         ) : (
-                            <p className="text-white/30 text-sm text-center py-4">No signups yet</p>
+                            <p className="text-white/30 text-sm text-center py-4">
+                                {!recentSignupsRaw ? "Loading signups..." : "No signups yet"}
+                            </p>
                         )}
                     </div>
                 </div>
@@ -518,8 +386,8 @@ export default function AdminOverviewPage() {
                 <h3 className="text-sm font-medium text-white mb-4">🔌 Service Status</h3>
                 <div className="flex flex-wrap gap-3">
                     <ServiceStatus name="OpenRouter" status={openRouterBalance !== null ? "healthy" : "warning"} />
-                    <ServiceStatus name="Polar" status={polarData ? "healthy" : "warning"} />
-                    <ServiceStatus name="Supabase" status="healthy" />
+                    <ServiceStatus name="Dodo" status={dodoData ? "healthy" : "warning"} />
+                    <ServiceStatus name="Convex" status="healthy" />
                     <ServiceStatus name="VPS" status="healthy" />
                     <ServiceStatus name="Mercury" status={mercuryData ? "healthy" : "warning"} />
                 </div>

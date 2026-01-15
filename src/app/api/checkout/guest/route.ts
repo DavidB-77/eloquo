@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createCheckoutUrl, PRODUCT_IDS, DISCOUNT_IDS, PlanType } from '@/lib/polar';
+import { createCheckoutUrl, PRODUCT_IDS, PlanType } from '@/lib/dodopayments';
 
 /**
  * POST /api/checkout/guest - Create checkout for new signups (no auth required)
@@ -34,21 +34,17 @@ export async function POST(request: Request) {
             );
         }
 
-        // Get discount code if applicable
-        const discountCode = DISCOUNT_IDS[plan as keyof typeof DISCOUNT_IDS];
-
         // Create checkout URL with signup intent in custom data
         const checkoutUrl = await createCheckoutUrl({
             productId,
             userId: 'pending_signup',
             userEmail: email,
-            discountCode,
             customData: {
                 signup_intent: 'true',
                 email: email,
                 plan: plan,
             },
-            redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/signup/success`,
+            redirectUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/signup/success`,
         });
 
         if (!checkoutUrl) {

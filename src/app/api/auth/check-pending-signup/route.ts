@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { ConvexHttpClient } from 'convex/browser';
+import { api } from '../../../../../convex/_generated/api';
 
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export async function GET(request: Request) {
     try {
@@ -15,14 +13,11 @@ export async function GET(request: Request) {
             return NextResponse.json({ success: false, error: 'Email required' }, { status: 400 });
         }
 
-        const { data, error } = await supabaseAdmin
-            .from('pending_signups')
-            .select('*')
-            .eq('email', email.toLowerCase())
-            .eq('account_created', false)
-            .single();
+        const data = await convex.query(api.pendingSignups.checkPendingSignup, {
+            email: email.toLowerCase()
+        });
 
-        if (error || !data) {
+        if (!data || data.account_created) {
             return NextResponse.json({ success: false, pending: null });
         }
 

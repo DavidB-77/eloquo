@@ -1,4 +1,7 @@
-import { createClient } from "@/lib/supabase/client";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../../convex/_generated/api";
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export type PricingTier = {
     monthly_price: number;
@@ -101,26 +104,15 @@ const DEFAULT_ANNUAL: AnnualDiscountConfig = {
 };
 
 export async function getPricingConfig(): Promise<PricingConfig> {
-    const supabase = createClient();
-    const { data } = await supabase
-        .from('system_settings')
-        .select('value')
-        .eq('key', 'pricing_tiers')
-        .single();
-
-    return data?.value || DEFAULT_PRICING;
+    const data = await convex.query(api.settings.getSettings, { key: 'pricing_tiers' });
+    return data || DEFAULT_PRICING;
 }
 
 export async function getFoundingMemberConfig(): Promise<FoundingMemberConfig> {
-    const supabase = createClient();
-    const { data } = await supabase
-        .from('system_settings')
-        .select('value')
-        .eq('key', 'founding_member')
-        .single();
+    const data = await convex.query(api.settings.getSettings, { key: 'founding_member' });
 
     // Merge defaults to handle missing new fields
-    const loaded = data?.value || {};
+    const loaded = data || {};
     return {
         ...DEFAULT_FOUNDING,
         ...loaded,
@@ -132,14 +124,8 @@ export async function getFoundingMemberConfig(): Promise<FoundingMemberConfig> {
 }
 
 export async function getAnnualDiscountConfig(): Promise<AnnualDiscountConfig> {
-    const supabase = createClient();
-    const { data } = await supabase
-        .from('system_settings')
-        .select('value')
-        .eq('key', 'annual_discount')
-        .single();
-
-    return data?.value || DEFAULT_ANNUAL;
+    const data = await convex.query(api.settings.getSettings, { key: 'annual_discount' });
+    return data || DEFAULT_ANNUAL;
 }
 
 export type GeneralSettings = {
@@ -167,21 +153,10 @@ const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
 };
 
 export async function getGeneralSettings(): Promise<GeneralSettings> {
-    const supabase = createClient();
-    const { data } = await supabase
-        .from('system_settings')
-        .select('value')
-        .eq('key', 'general_settings')
-        .single();
-
-    return data?.value ? { ...DEFAULT_GENERAL_SETTINGS, ...data.value } : DEFAULT_GENERAL_SETTINGS;
+    const data = await convex.query(api.settings.getSettings, { key: 'general_settings' });
+    return data ? { ...DEFAULT_GENERAL_SETTINGS, ...data } : DEFAULT_GENERAL_SETTINGS;
 }
 
 export async function updateSystemSetting(key: string, value: any) {
-    const supabase = createClient();
-    const { error } = await supabase
-        .from('system_settings')
-        .upsert({ key, value });
-
-    if (error) throw error;
+    await convex.mutation(api.settings.updateSettings, { key, value });
 }

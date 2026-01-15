@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { signIn } from "@/lib/auth-client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/forms/FormField";
@@ -16,7 +16,6 @@ export default function LoginPage() {
     const [password, setPassword] = React.useState("");
     const [error, setError] = React.useState<string | null>(null);
     const [isLoading, setIsLoading] = React.useState(false);
-    const supabase = createClient();
     const router = useRouter();
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -24,17 +23,23 @@ export default function LoginPage() {
         setIsLoading(true);
         setError(null);
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        try {
+            // Use Better Auth signIn
+            const result = await signIn.email({
+                email,
+                password,
+            });
 
-        if (error) {
-            setError(error.message);
+            if (result.error) {
+                setError(result.error.message || "Invalid email or password");
+                setIsLoading(false);
+            } else {
+                router.push("/dashboard");
+                router.refresh();
+            }
+        } catch (err: any) {
+            setError(err.message || "Something went wrong");
             setIsLoading(false);
-        } else {
-            router.push("/dashboard");
-            router.refresh();
         }
     };
 
@@ -76,7 +81,7 @@ export default function LoginPage() {
                                     required
                                 />
                                 <div className="flex justify-end mt-1">
-                                    <Link href="/forgot-password" virtual-link className="text-xs text-muted-foreground hover:text-primary">
+                                    <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-primary">
                                         Forgot your password?
                                     </Link>
                                 </div>
@@ -86,7 +91,38 @@ export default function LoginPage() {
                             <Button className="w-full" type="submit" isLoading={isLoading}>
                                 Sign In
                             </Button>
-                            <div className="text-sm text-center text-muted-foreground">
+
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <span className="w-full border-t" />
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase">
+                                    <span className="bg-background px-2 text-muted-foreground">
+                                        Or continue with
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <Button
+                                    variant="outline"
+                                    type="button"
+                                    disabled={isLoading}
+                                    onClick={() => signIn.social({ provider: "google", callbackURL: "/dashboard" })}
+                                >
+                                    Google
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    type="button"
+                                    disabled={isLoading}
+                                    onClick={() => signIn.social({ provider: "github", callbackURL: "/dashboard" })}
+                                >
+                                    GitHub
+                                </Button>
+                            </div>
+
+                            <div className="text-sm text-center text-muted-foreground pt-2">
                                 Don&apos;t have an account?{" "}
                                 <Link href="/signup" className="text-primary font-medium hover:underline">
                                     Sign up

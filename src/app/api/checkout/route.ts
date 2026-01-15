@@ -1,24 +1,41 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { createCheckoutUrl, PRODUCT_IDS, DISCOUNT_IDS, PlanType } from '@/lib/polar';
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../../../../convex/_generated/api";
+import { createCheckoutUrl, PRODUCT_IDS, PlanType } from '@/lib/dodopayments';
+import { getToken } from "@/lib/auth-server";
+import { headers } from "next/headers";
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 /**
- * POST /api/checkout - Create a Polar checkout session (existing users)
+ * POST /api/checkout - Create a Dodo checkout session (existing users)
  */
 export async function POST(request: Request) {
     try {
-        const supabase = await createClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const token = await getToken();
 
-        if (authError || !user) {
+        if (!token) {
             return NextResponse.json(
                 { success: false, error: 'Unauthorized' },
                 { status: 401 }
             );
         }
 
+        // Set auth for Convex
+        convex.setAuth(token);
+
+        // Get user profile from Convex
+        const user = await convex.query(api.auth.getCurrentUser);
+
+        if (!user) {
+            return NextResponse.json(
+                { success: false, error: 'User not found' },
+                { status: 404 }
+            );
+        }
+
         const body = await request.json();
-        const { plan } = body; // plan: 'basic' | 'pro' | 'business'
+        const { plan, billing, discountCode } = body; // plan: 'basic' | 'pro' | 'business'
 
         if (!plan || !PRODUCT_IDS[plan as PlanType]) {
             return NextResponse.json(
@@ -27,23 +44,17 @@ export async function POST(request: Request) {
             );
         }
 
-        // Get user profile
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name, email')
-            .eq('id', user.id)
-            .single();
-
-        // Get discount code if applicable
-        const discountCode = DISCOUNT_IDS[plan as keyof typeof DISCOUNT_IDS];
-
         // Create checkout URL
         const checkoutUrl = await createCheckoutUrl({
             productId: PRODUCT_IDS[plan as PlanType],
-            userId: user.id,
-            userEmail: profile?.email || user.email || '',
-            userName: profile?.full_name,
-            discountCode,
+            userId: user.userId ?? '',
+            userEmail: user.email || '',
+            userName: user.name || undefined,
+            discountCode: discountCode,
+            customData: {
+                user_id: user.userId,
+                email: user.email || '',
+            }
         });
 
         if (!checkoutUrl) {

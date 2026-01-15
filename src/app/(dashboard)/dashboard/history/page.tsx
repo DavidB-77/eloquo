@@ -14,28 +14,30 @@ import { formatDistanceToNow } from 'date-fns';
 import { Copy, Check, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import RatingStars from '@/components/RatingStars';
+import { useQuery } from 'convex/react';
+import { api } from '../../../../../convex/_generated/api';
 
 interface Optimization {
-    id: string;
+    _id: string; // Convex ID
     original_prompt: string;
     optimized_prompt: string;
     target_model: string;
     strength: string;
-    tokens_original: number;
-    tokens_optimized: number;
-    tokens_saved: number;
-    token_savings_percent: number;
-    improvements: string[];
-    metrics: {
+    tokens_original?: number;
+    tokens_optimized?: number;
+    tokens_saved?: number;
+    token_savings_percent?: number;
+    improvements?: string[];
+    metrics?: {
         qualityScore?: number;
         total_tokens?: number;
         processing_time_sec?: number;
         api_cost_usd?: number;
     };
-    quick_reference: string | null;
-    snippet: string | null;
-    was_orchestrated: boolean;
-    created_at: string;
+    quick_reference?: string | null;
+    snippet?: string | null;
+    was_orchestrated?: boolean;
+    created_at: number; // Convex timestamp
     output_mode?: string | null;
     credits_used?: number;
     // PP-specific fields
@@ -53,26 +55,61 @@ interface Stats {
 }
 
 export default function HistoryPage() {
-    const [history, setHistory] = useState<Optimization[]>([]);
-    const [stats, setStats] = useState<Stats | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const convexHistory = useQuery(api.optimizations.getOptimizationHistory, { limit: 100 });
     const [selectedItem, setSelectedItem] = useState<Optimization | null>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [activeDocTab, setActiveDocTab] = useState<'prd' | 'architecture' | 'stories'>('prd');
     const [copied, setCopied] = useState(false);
     const [showExportMenu, setShowExportMenu] = useState(false);
 
+    const history = convexHistory || [];
+    const loading = convexHistory === undefined;
+
+    // Estimate stats from history for now
+    const stats: Stats = {
+        total_optimizations: history.length,
+        total_tokens_saved: history.reduce((acc, curr) => acc + (curr.tokens_saved || 0), 0),
+        avg_savings_percent: history.length > 0
+            ? history.reduce((acc, curr) => acc + (curr.token_savings_percent || 0), 0) / history.length
+            : 0
+    };
+
     // Export functions
+
+    const truncate = (text: string, length: number = 80) => {
+        if (!text) return '';
+        if (text.length <= length) return text;
+        return text.substring(0, length) + '...';
+    };
+
+    const copyToClipboard = async (text: string) => {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const toggleExpand = (id: string) => {
+        setExpandedId(expandedId === id ? null : id);
+        setActiveDocTab('prd'); // Reset to PRD tab when expanding
+    };
+
+    const getCurrentPPDocument = (item: Optimization) => {
+        switch (activeDocTab) {
+            case 'prd': return item.prd_document || 'PRD document not available';
+            case 'architecture': return item.architecture_document || 'Architecture document not available';
+            case 'stories': return item.stories_document || 'Stories document not available';
+        }
+    };
+
     const exportToCSV = () => {
         const headers = ['Date', 'Original Prompt', 'Target Model', 'Tokens Original', 'Tokens Optimized', 'Tokens Saved', 'Quality Score', 'Type'];
         const rows = history.map(opt => [
             new Date(opt.created_at).toISOString().split('T')[0],
             `"${(opt.original_prompt || '').replace(/"/g, '""')}"`,
             opt.target_model,
-            opt.tokens_original,
-            opt.tokens_optimized,
-            opt.tokens_saved,
+            opt.tokens_original || 0,
+            opt.tokens_optimized || 0,
+            opt.tokens_saved || 0,
             opt.metrics?.qualityScore || '',
             opt.output_mode === 'bmad' ? 'project_protocol' : (opt.was_orchestrated ? 'orchestrated' : 'standard'),
             opt.credits_used || (opt.output_mode === 'bmad' ? 5 : 1)
@@ -88,7 +125,7 @@ export default function HistoryPage() {
             exported_at: new Date().toISOString(),
             total_records: history.length,
             optimizations: history.map(opt => ({
-                id: opt.id,
+                id: opt._id,
                 created_at: opt.created_at,
                 original_prompt: opt.original_prompt,
                 optimized_prompt: opt.optimized_prompt,
@@ -115,55 +152,6 @@ export default function HistoryPage() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-    };
-
-    useEffect(() => {
-        fetchHistory();
-    }, []);
-
-    const fetchHistory = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const response = await fetch('/api/history');
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to fetch history');
-            }
-
-            setHistory(data.history || []);
-            setStats(data.stats);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'An error occurred');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const truncate = (text: string, length: number = 80) => {
-        if (!text) return '';
-        if (text.length <= length) return text;
-        return text.substring(0, length) + '...';
-    };
-
-    const copyToClipboard = async (text: string) => {
-        await navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
-
-    const toggleExpand = (id: string) => {
-        setExpandedId(expandedId === id ? null : id);
-        setActiveDocTab('prd'); // Reset to PRD tab when expanding
-    };
-
-    const getCurrentPPDocument = (item: Optimization) => {
-        switch (activeDocTab) {
-            case 'prd': return item.prd_document || 'PRD document not available';
-            case 'architecture': return item.architecture_document || 'Architecture document not available';
-            case 'stories': return item.stories_document || 'Stories document not available';
-        }
     };
 
     const downloadPPDocument = (item: Optimization, type: 'section' | 'all') => {
@@ -216,23 +204,6 @@ ${item.stories_document || ''}`;
         );
     }
 
-    if (error) {
-        return (
-            <div className="p-6">
-                <Card className="border-red-200 bg-red-50">
-                    <CardContent className="p-4">
-                        <p className="text-red-600">Error: {error}</p>
-                        <button
-                            onClick={fetchHistory}
-                            className="mt-2 text-sm text-red-600 underline hover:no-underline"
-                        >
-                            Try again
-                        </button>
-                    </CardContent>
-                </Card>
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-8">
@@ -316,20 +287,20 @@ ${item.stories_document || ''}`;
                 <div className="space-y-3">
                     {history.map((item) => (
                         <Card
-                            key={item.id}
-                            className={`glass border-electric-cyan/10 transition-all ${expandedId === item.id ? 'border-electric-cyan/40' : 'hover:border-electric-cyan/30'
+                            key={item._id}
+                            className={`glass border-electric-cyan/10 transition-all ${expandedId === item._id ? 'border-electric-cyan/40' : 'hover:border-electric-cyan/30'
                                 }`}
                         >
                             {/* Header Row - Always Visible */}
                             <CardContent
                                 className="p-4 cursor-pointer"
-                                onClick={() => toggleExpand(item.id)}
+                                onClick={() => toggleExpand(item._id)}
                             >
                                 <div className="flex justify-between items-start gap-4">
                                     <div className="flex-1 min-w-0">
-                                        <p className={`text-sm font-medium transition-colors ${expandedId === item.id ? 'text-electric-cyan' : 'text-white'
+                                        <p className={`text-sm font-medium transition-colors ${expandedId === item._id ? 'text-electric-cyan' : 'text-white'
                                             }`}>
-                                            {expandedId === item.id ? item.original_prompt : truncate(item.original_prompt)}
+                                            {expandedId === item._id ? item.original_prompt : truncate(item.original_prompt)}
                                         </p>
                                         <p className="text-xs text-white/40 mt-1">
                                             {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
@@ -355,7 +326,7 @@ ${item.stories_document || ''}`;
                                             </Badge>
                                         )}
                                         {/* Expand Arrow */}
-                                        {expandedId === item.id ? (
+                                        {expandedId === item._id ? (
                                             <ChevronUp className="h-4 w-4 text-electric-cyan" />
                                         ) : (
                                             <ChevronDown className="h-4 w-4 text-white/40" />
@@ -365,7 +336,7 @@ ${item.stories_document || ''}`;
                             </CardContent>
 
                             {/* Expanded Content */}
-                            {expandedId === item.id && (
+                            {expandedId === item._id && (
                                 <div className="border-t border-electric-cyan/20 p-4 bg-black/20 space-y-4">
                                     {item.output_mode === 'bmad' ? (
                                         /* Project Protocol Expanded View */
@@ -387,8 +358,8 @@ ${item.stories_document || ''}`;
                                                         key={tab}
                                                         onClick={(e) => { e.stopPropagation(); setActiveDocTab(tab); }}
                                                         className={`px-4 py-2 text-sm font-medium transition-colors ${activeDocTab === tab
-                                                                ? 'text-electric-cyan border-b-2 border-electric-cyan'
-                                                                : 'text-white/50 hover:text-white'
+                                                            ? 'text-electric-cyan border-b-2 border-electric-cyan'
+                                                            : 'text-white/50 hover:text-white'
                                                             }`}
                                                     >
                                                         {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -448,7 +419,7 @@ ${item.stories_document || ''}`;
 
                                             {/* Rating */}
                                             <div className="border-t border-electric-cyan/20 pt-2">
-                                                <RatingStars requestId={item.id} />
+                                                <RatingStars requestId={item._id} />
                                             </div>
                                         </>
                                     ) : (

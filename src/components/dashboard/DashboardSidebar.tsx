@@ -2,19 +2,16 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
     LayoutDashboard,
     Zap,
     History,
-    Bookmark,
-    Settings,
-    LogOut,
     ChevronLeft,
     ChevronRight,
-    Menu,
-    LifeBuoy
+    LifeBuoy,
+    Settings,
+    LogOut
 } from "lucide-react";
 import { SidebarNavItem } from "./SidebarNavItem";
 import { Button } from "@/components/ui/Button";
@@ -38,7 +35,6 @@ const NAV_LINKS = [
 export function DashboardSidebar() {
     const [isCollapsed, setIsCollapsed] = React.useState(false);
     const { user, signOut } = useAuth();
-    const pathname = usePathname();
 
     const { userData } = useUser();
 
@@ -54,7 +50,7 @@ export function DashboardSidebar() {
                 <div className="h-16 flex items-center justify-between px-4 border-b border-electric-cyan/10">
                     {!isCollapsed && (
                         <Link href="/dashboard" className="flex items-center space-x-2 pl-2">
-                            <span className="font-display text-2xl tracking-widest text-white glow-sm uppercase" style={{ fontFamily: 'Comodo', letterSpacing: '0.05em' }}>ELOQUO</span>
+                            <span className="font-display text-2xl tracking-widest text-white glow-sm uppercase font-[Comodo] tracking-[0.05em]">ELOQUO</span>
                         </Link>
                     )}
                     {isCollapsed && (

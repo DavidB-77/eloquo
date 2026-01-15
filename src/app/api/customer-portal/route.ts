@@ -1,41 +1,50 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { getCustomerPortalUrl } from '@/lib/polar';
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../../../../convex/_generated/api";
+import { getToken } from "@/lib/auth-server";
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export async function POST() {
     try {
-        const supabase = await createClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const token = await getToken();
 
-        if (authError || !user) {
+        if (!token) {
             return NextResponse.json(
                 { success: false, error: 'Unauthorized' },
                 { status: 401 }
             );
         }
 
-        // Get user's Polar customer ID
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('polar_customer_id')
-            .eq('id', user.id)
-            .single();
+        // Set auth for Convex
+        convex.setAuth(token);
 
-        if (profileError || !profile?.polar_customer_id) {
+        // Get user profile from Convex
+        const user = await convex.query(api.auth.getCurrentUser);
+
+        if (!user) {
+            return NextResponse.json(
+                { success: false, error: 'User not found' },
+                { status: 404 }
+            );
+        }
+
+        // Get profile data for customer ID
+        const profile = await convex.query(api.profiles.getProfileByEmail, {
+            email: user.email || ''
+        });
+
+        if (!profile?.dodo_customer_id) {
             return NextResponse.json(
                 { success: false, error: 'No active subscription found' },
                 { status: 404 }
             );
         }
 
-        const portalUrl = await getCustomerPortalUrl(profile.polar_customer_id);
-
-        if (!portalUrl) {
-            return NextResponse.json(
-                { success: false, error: 'Failed to get portal URL' },
-                { status: 500 }
-            );
-        }
+        // Dodo doesn't have a simple "create session" for portal in the SDK yet,
+        // but users can manage via the dashboard or we can provide a link to the Dodo portal.
+        // For now, we'll return a success with a placeholder or the Dodo dashboard link.
+        const portalUrl = `https://app.dodopayments.com/customer/portal`;
 
         return NextResponse.json({ success: true, portalUrl });
 

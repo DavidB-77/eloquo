@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/providers/AuthProvider";
+import { ConvexClientProvider } from "@/providers/ConvexProvider";
+import { BetterAuthProvider } from "@/providers/BetterAuthProvider";
 import QueryProvider from "@/providers/QueryProvider";
 import { cn } from "@/lib/utils";
 import { UserProvider } from "@/providers/UserProvider";
@@ -15,6 +16,10 @@ const outfit = Outfit({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  themeColor: "#09B7B4",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://eloquo.io'),
   title: {
@@ -26,7 +31,7 @@ export const metadata: Metadata = {
     "AI prompt optimizer",
     "prompt engineering tool",
     "ChatGPT prompt optimizer",
-    "Claude prompt optimizer", 
+    "Claude prompt optimizer",
     "Gemini prompt optimizer",
     "AI prompt generator",
     "prompt improvement tool",
@@ -178,7 +183,6 @@ export default function RootLayout({
       <head>
         <link rel="canonical" href="https://eloquo.io" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <meta name="theme-color" content="#09B7B4" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -192,12 +196,14 @@ export default function RootLayout({
         )}
       >
         <QueryProvider>
-          <AuthProvider>
-            <UserProvider>
-              <OverlayManager />
-              {children}
-            </UserProvider>
-          </AuthProvider>
+          <ConvexClientProvider>
+            <BetterAuthProvider>
+              <UserProvider>
+                <OverlayManager />
+                {children}
+              </UserProvider>
+            </BetterAuthProvider>
+          </ConvexClientProvider>
         </QueryProvider>
       </body>
     </html>
