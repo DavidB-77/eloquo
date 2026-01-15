@@ -240,3 +240,16 @@ export const getFreeTierStats = query({
         };
     },
 });
+/**
+ * Get all admin users
+ */
+export const getAdmins = query({
+    args: {},
+    handler: async (ctx) => {
+        const admins = await ctx.db
+            .query("profiles")
+            .filter((q) => q.eq(q.field("isAdmin"), true))
+            .collect();
+        return admins;
+    },
+});
