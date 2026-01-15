@@ -19,7 +19,7 @@ export async function POST(request: Request) {
         }
 
         // Send welcome email via Convex Resend
-        const { api } = await import('../../../../convex/_generated/api');
+        const { api } = await import('../../../../../convex/_generated/api');
         await convex.mutation(api.email.sendWelcomeEmail, {
             email,
             name,

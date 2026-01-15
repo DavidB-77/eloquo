@@ -19,7 +19,7 @@ export async function POST(request: Request) {
         }
 
         // Import Convex API
-        const { api } = await import('../../../../convex/_generated/api');
+        const { api } = await import('../../../../../convex/_generated/api');
 
         // Create reset token in Convex
         const { token } = await convex.mutation(api.passwordReset.createResetToken, {

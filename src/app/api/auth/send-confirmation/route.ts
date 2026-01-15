@@ -20,7 +20,7 @@ export async function POST(request: Request) {
 
         // Call Convex function to send email
         // Using dynamic import to avoid build-time issues
-        const { api } = await import('../../../../convex/_generated/api');
+        const { api } = await import('../../../../../convex/_generated/api');
 
         await convex.mutation(api.email.sendConfirmationEmail, {
             email,
