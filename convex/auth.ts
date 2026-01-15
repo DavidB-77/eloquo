@@ -9,7 +9,7 @@ import { query, mutation } from "./_generated/server";
 import { betterAuth } from "better-auth/minimal";
 import authConfig from "./auth.config";
 
-const siteUrl = process.env.SITE_URL!;
+const siteUrl = process.env.SITE_URL || "https://eloquo.io";
 
 // The component client has methods needed for integrating Convex with Better Auth
 export const authComponent = createClient<DataModel>(components.betterAuth);
@@ -26,7 +26,8 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
             requireEmailVerification: false, // Handle via Resend separately
         },
 
-        // Social providers
+        // Social providers - Disabled until keys are added
+        /*
         socialProviders: {
             google: {
                 enabled: true,
@@ -39,6 +40,7 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
                 clientSecret: process.env.GITHUB_CLIENT_SECRET!,
             },
         },
+        */
 
         // Session configuration
         session: {
