@@ -1,9 +1,22 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { User, Session } from "@supabase/supabase-js";
+// import { User, Session } from "@supabase/supabase-js";
 // import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+
+// Mock types to replace Supabase types
+export interface User {
+    id: string;
+    email?: string;
+    [key: string]: any;
+}
+
+export interface Session {
+    user: User;
+    access_token: string;
+    [key: string]: any;
+}
 
 interface AuthContextType {
     user: User | null;
