@@ -1,3 +1,5 @@
+"use client";
+
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { useAuth } from "@/providers/BetterAuthProvider";
 import { useQuery } from "convex/react";

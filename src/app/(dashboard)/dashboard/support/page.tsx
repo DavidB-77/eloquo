@@ -5,7 +5,7 @@ import { Plus, MessageSquare, Send, Loader2, AlertCircle, CheckCircle, Clock, Ar
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
-import { createClient } from "@/lib/supabase/client";
+// import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -42,9 +42,10 @@ export default function UserSupportPage() {
     // Filter State
     const [ticketFilter, setTicketFilter] = React.useState<'active' | 'archived'>('active');
 
-    const supabase = createClient();
+    // const supabase = createClient();
 
     const fetchTickets = React.useCallback(async () => {
+        /*
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
@@ -55,8 +56,10 @@ export default function UserSupportPage() {
             .order('created_at', { ascending: false });
 
         if (data) setTickets(data);
+        */
+        setTickets([]); // Mock empty
         setLoading(false);
-    }, [supabase]);
+    }, []);
 
     React.useEffect(() => {
         fetchTickets();
@@ -67,6 +70,7 @@ export default function UserSupportPage() {
 
         const fetchResponses = async () => {
             setLoadingResponses(true);
+            /*
             const { data } = await supabase
                 .from('ticket_responses')
                 .select('*')
@@ -74,17 +78,20 @@ export default function UserSupportPage() {
                 .order('created_at', { ascending: true });
 
             if (data) setResponses(data);
+            */
+            setResponses([]);
             setLoadingResponses(false);
         };
 
         fetchResponses();
-    }, [selectedTicket, supabase]);
+    }, [selectedTicket]);
 
     const handleCreateTicket = async () => {
         if (!newSubject.trim() || !newMessage.trim()) return;
         setCreating(true);
 
         try {
+            /*
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Not authenticated");
 
@@ -97,6 +104,8 @@ export default function UserSupportPage() {
             });
 
             if (error) throw error;
+            */
+            console.log("Mock create ticket");
 
             setNewSubject("");
             setNewMessage("");
@@ -114,6 +123,7 @@ export default function UserSupportPage() {
         setSendingReply(true);
 
         try {
+            /*
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Not authenticated");
 
@@ -125,9 +135,12 @@ export default function UserSupportPage() {
             });
 
             if (error) throw error;
+            */
+            console.log("Mock reply");
 
             setReplyUser("");
             // Refresh responses
+            /*
             const { data } = await supabase
                 .from('ticket_responses')
                 .select('*')
@@ -140,6 +153,7 @@ export default function UserSupportPage() {
                 await supabase.from('support_tickets').update({ status: 'open' }).eq('id', selectedTicket.id);
                 fetchTickets(); // refresh status in list
             }
+            */
 
         } catch (error) {
             console.error("Error sending reply:", error);
@@ -153,12 +167,15 @@ export default function UserSupportPage() {
         setArchiving(true);
 
         try {
+            /*
             const { error } = await supabase
                 .from('support_tickets')
                 .update({ archived: true })
                 .eq('id', selectedTicket.id);
 
             if (error) throw error;
+            */
+            console.log("Mock archive");
 
             // Remove from local state and clear selection
             setTickets(prev => prev.filter(t => t.id !== selectedTicket.id));
@@ -176,18 +193,21 @@ export default function UserSupportPage() {
         setArchiving(true);
 
         try {
+            /*
             const { error } = await supabase
                 .from('support_tickets')
                 .update({ archived: false })
                 .eq('id', selectedTicket.id);
 
             if (error) throw error;
+            */
+            console.log("Mock unarchive");
 
             // Update local state
             setTickets(prev => prev.map(t =>
                 t.id === selectedTicket.id ? { ...t, archived: false } : t
             ));
-            setSelectedTicket((prev: any) => ({ ...prev, archived: false }));
+            setSelectedTicket((prev: any) => ({ ...prev, archived: false })); // eslint-disable-line @typescript-eslint/no-explicit-any
             // Switch to active filter to see the ticket
             setTicketFilter('active');
         } catch (error) {

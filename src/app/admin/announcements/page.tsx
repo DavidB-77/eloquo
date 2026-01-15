@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/Label";
-import { createClient } from "@/lib/supabase/client";
+// import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -38,17 +38,20 @@ export default function AdminAnnouncementsPage() {
     const [expiresAt, setExpiresAt] = React.useState("");
     const [saveError, setSaveError] = React.useState<string | null>(null);
 
-    const supabase = createClient();
+    // const supabase = createClient();
 
     const fetchAnnouncements = React.useCallback(async () => {
+        /*
         const { data, error } = await supabase
             .from('announcements')
             .select('*')
             .order('created_at', { ascending: false });
 
         if (data) setAnnouncements(data);
+        */
+        setAnnouncements([]); // Mock empty
         setLoading(false);
-    }, [supabase]);
+    }, []);
 
     React.useEffect(() => {
         fetchAnnouncements();
@@ -67,6 +70,7 @@ export default function AdminAnnouncementsPage() {
             expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
         };
 
+        /*
         let error;
         if (editingId) {
             const { error: updateError } = await supabase.from('announcements').update(payload).eq('id', editingId);
@@ -81,6 +85,8 @@ export default function AdminAnnouncementsPage() {
             setSaveError(error.message || "Failed to save announcement");
             return;
         }
+        */
+        console.log("Mock Save:", payload);
 
         resetForm();
         fetchAnnouncements();
@@ -88,7 +94,8 @@ export default function AdminAnnouncementsPage() {
 
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this announcement?")) return;
-        await supabase.from('announcements').delete().eq('id', id);
+        // await supabase.from('announcements').delete().eq('id', id);
+        console.log("Mock Delete:", id);
         fetchAnnouncements();
     };
 
@@ -126,7 +133,8 @@ export default function AdminAnnouncementsPage() {
     };
 
     const toggleStatus = async (id: string, currentStatus: boolean) => {
-        await supabase.from('announcements').update({ is_active: !currentStatus }).eq('id', id);
+        // await supabase.from('announcements').update({ is_active: !currentStatus }).eq('id', id);
+        console.log("Mock Toggle:", id);
         fetchAnnouncements();
     };
 

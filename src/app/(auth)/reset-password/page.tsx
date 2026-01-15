@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+// import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/forms/FormField";
@@ -14,7 +14,7 @@ export default function ResetPasswordPage() {
     const [confirmPassword, setConfirmPassword] = React.useState("");
     const [error, setError] = React.useState<string | null>(null);
     const [isLoading, setIsLoading] = React.useState(false);
-    const supabase = createClient();
+    // const supabase = createClient();
     const router = useRouter();
 
     const handleReset = async (e: React.FormEvent) => {
@@ -28,6 +28,11 @@ export default function ResetPasswordPage() {
 
         setIsLoading(true);
 
+        // Mocked - Supabase removed
+        setError("Password reset is currently undergoing maintenance. Please contact support.");
+        setIsLoading(false);
+
+        /*
         const { error } = await supabase.auth.updateUser({
             password: password,
         });
@@ -38,6 +43,7 @@ export default function ResetPasswordPage() {
         } else {
             router.push("/login?message=Password updated successfully");
         }
+        */
     };
 
     return (

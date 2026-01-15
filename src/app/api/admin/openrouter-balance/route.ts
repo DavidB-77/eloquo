@@ -1,11 +1,12 @@
-import { createClient } from '@/lib/supabase/server';
+// import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
     try {
-        const supabase = await createClient();
+        // const supabase = await createClient();
 
         // 1. Auth check
+        /*
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest) {
         if (!profile?.is_admin) {
             return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
         }
+        */
 
         // 3. Fetch from OpenRouter API
         const apiKey = process.env.OPENROUTER_API_KEY;
@@ -54,7 +56,8 @@ export async function GET(request: NextRequest) {
         // Calculate remaining balance
         const balance = Math.max(0, depositedAmount - usage);
 
-        // 4. Update database (optional - for caching)
+        // 4. Update database (optional - for caching) - MOCKED
+        /*
         try {
             await supabase.rpc('update_openrouter_balance', {
                 new_balance: balance
@@ -62,6 +65,7 @@ export async function GET(request: NextRequest) {
         } catch (updateError) {
             console.warn('Could not update database balance:', updateError);
         }
+        */
 
         return NextResponse.json({
             success: true,

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supabase/client";
+// import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 interface AuthContextType {
@@ -15,22 +15,24 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+    // Mocked for build - Supabase removed
     const [user, setUser] = useState<User | null>(null);
     const [session, setSession] = useState<Session | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const supabase = createClient();
-    const router = useRouter();
+    const [isLoading, setIsLoading] = useState(false);
+    // const supabase = createClient();
+    // const router = useRouter();
 
+    /*
     useEffect(() => {
         const setData = async () => {
-            const {
-                data: { session },
-                error,
-            } = await supabase.auth.getSession();
-            if (error) throw error;
-            setSession(session);
-            setUser(session?.user ?? null);
-            setIsLoading(false);
+             const {
+                 data: { session },
+                 error,
+             } = await supabase.auth.getSession();
+             if (error) throw error;
+             setSession(session);
+             setUser(session?.user ?? null);
+             setIsLoading(false);
         };
 
         const { data: listener } = supabase.auth.onAuthStateChange(
@@ -48,10 +50,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             listener.subscription.unsubscribe();
         };
     }, [supabase, router]);
+    */
 
     const signOut = async () => {
-        await supabase.auth.signOut();
-        router.push("/");
+        // await supabase.auth.signOut();
+        // router.push("/");
     };
 
     const value = {

@@ -7,7 +7,7 @@ import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
+// import { createClient } from "@/lib/supabase/client";
 import { WaitlistModal } from "./WaitlistModal";
 
 const NAV_LINKS = [
@@ -32,9 +32,12 @@ export function Navbar() {
         window.addEventListener("scroll", handleScroll);
 
         const checkUser = async () => {
+            /*
             const supabase = createClient();
             const { data: { session } } = await supabase.auth.getSession();
             setIsLoggedIn(!!session);
+            */
+            setIsLoggedIn(false);
             setIsLoading(false);
         };
 

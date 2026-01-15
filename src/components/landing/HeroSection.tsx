@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { ArrowRight, Sparkles, Target, Star, Paperclip } from "lucide-react";
 
-import { createClient } from "@/lib/supabase/client";
+// import { createClient } from "@/lib/supabase/client";
 import { HeroDemo } from "@/components/landing/HeroDemo";
 import { WaitlistModal } from "@/components/landing/WaitlistModal";
 
@@ -38,9 +38,10 @@ export function HeroSection() {
 
         // Check session
         const checkUser = async () => {
-            const supabase = createClient();
-            const { data: { session } } = await supabase.auth.getSession();
-            setIsLoggedIn(!!session);
+            // const supabase = createClient();
+            // const { data: { session } } = await supabase.auth.getSession();
+            // setIsLoggedIn(!!session);
+            setIsLoggedIn(false); // Default to false during migration
         };
         checkUser();
 

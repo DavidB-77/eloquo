@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+// import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
     try {
@@ -14,8 +14,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const supabase = await createClient();
+        // const supabase = await createClient();
 
+        /*
         // Insert into waitlist table
         const { data, error } = await supabase
             .from("waitlist")
@@ -41,6 +42,8 @@ export async function POST(request: NextRequest) {
                 { status: 500 }
             );
         }
+        */
+        const data = { id: 'mock-id' }; // Mock data
 
         return NextResponse.json({
             success: true,

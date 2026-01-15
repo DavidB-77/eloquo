@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+// import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
 // Constants
@@ -7,10 +7,10 @@ const FREE_TIER_WEEKLY_LIMIT = 3;
 const POLAR_FREE_PRODUCT_ID = '2a415251-2cfd-4d0a-85e6-e59276422e95';
 
 // Initialize Supabase Admin Client
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// const supabase = createClient(
+//     process.env.NEXT_PUBLIC_SUPABASE_URL!,
+//     process.env.SUPABASE_SERVICE_ROLE_KEY!
+// );
 
 // Helpers
 function getWeekStart(): string {
@@ -35,6 +35,8 @@ export async function GET(request: Request) {
         }
 
         // 1. Check Subscription Tier
+        // 1. Check Subscription Tier
+        /*
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('subscription_tier')
@@ -89,14 +91,17 @@ export async function GET(request: Request) {
         }
 
         const remaining = Math.max(0, FREE_TIER_WEEKLY_LIMIT - weeklyUsage);
-        const canOptimize = remaining > 0 && !flagged; // Block if flagged? Or just warn? Prompt says "set flagged=true", implies consequence. Assuming block if flagged but for now simply return stats.
-        // Prompt return definition: { canOptimize, ... flagged }
-        // I will let client decide if canOptimize should be false if flagged.
-        // Usually abuse flag blocks, but technically limits might still be valid.
+        const canOptimize = remaining > 0 && !flagged; 
+        */
+
+        const canOptimize = true;
+        const remaining = 3;
+        const weeklyUsage = 0;
+        const flagged = false;
 
         return NextResponse.json({
             canOptimize,
-            isPaidUser: false,
+            // isPaidUser: false,
             remaining,
             weeklyLimit: FREE_TIER_WEEKLY_LIMIT,
             weeklyUsage,
@@ -128,6 +133,9 @@ export async function POST(request: Request) {
         const ipHash = hashString(ip);
 
         // 2. Check Subscription (Bypass usage tracking/increment for paid? Or track anyway?)
+        // "skip limits if paid" -> usually implies we don't care to count.
+        // 2. Check Subscription (Bypass usage tracking/increment for paid? Or track anyway?)
+        /*
         // "skip limits if paid" -> usually implies we don't care to count.
         const { data: profile } = await supabase.from('profiles').select('subscription_tier').eq('id', userId).single();
         const isPaidUser = profile?.subscription_tier && profile.subscription_tier !== 'free';
@@ -211,6 +219,11 @@ export async function POST(request: Request) {
         }
 
         const remaining = Math.max(0, FREE_TIER_WEEKLY_LIMIT - currentUsage);
+        */
+
+        const remaining = 3;
+        const currentUsage = 0;
+        const isFlagged = false;
 
         return NextResponse.json({
             canOptimize: remaining > 0,

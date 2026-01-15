@@ -1,20 +1,23 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { callOrchestrate } from '@/lib/n8n';
-import { checkOrchestrationLimits, incrementUsage, saveToHistory } from '@/lib/usage';
+// import { createClient } from '@/lib/supabase/server';
+// import { checkOrchestrationLimits, incrementUsage, saveToHistory } from '@/lib/usage';
 
 export async function POST(request: Request) {
     try {
         // 1. Get user from session
-        const supabase = await createClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        // 1. Get user from session
+        // const supabase = await createClient();
+        // const { data: { user }, error: authError } = await supabase.auth.getUser();
 
+        /*
         if (authError || !user) {
             return NextResponse.json(
                 { success: false, error: 'Unauthorized' },
                 { status: 401 }
             );
         }
+        */
+        const user = { id: 'mock-user' };
 
         // 2. Parse request body
         const body = await request.json();
@@ -27,6 +30,7 @@ export async function POST(request: Request) {
             );
         }
 
+        /*
         // 3. Call n8n webhook for orchestration
         const result = await callOrchestrate({
             prompt,
@@ -70,6 +74,14 @@ export async function POST(request: Request) {
                 null, // no single improvements array
                 { segmentsCount, premiumCreditsUsed: premiumCreditsNeeded }
             );
+        }
+        */
+
+        // Mock response
+        const result = { success: false, error: "Orchestration temporarily unavailable during migration." };
+
+        if (true) { // Placeholder block to match structure
+            // ...
         }
 
         // 7. Return result

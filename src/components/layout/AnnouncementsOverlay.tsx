@@ -4,7 +4,7 @@ import * as React from "react";
 import { usePathname } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/Button";
-import { createClient } from "@/lib/supabase/client";
+// import { createClient } from "@/lib/supabase/client";
 import { Megaphone, X } from "lucide-react";
 
 export function AnnouncementsOverlay({ onOpenChange }: { onOpenChange?: (open: boolean) => void }) {
@@ -15,11 +15,12 @@ export function AnnouncementsOverlay({ onOpenChange }: { onOpenChange?: (open: b
         setIsOpen(open);
         onOpenChange?.(open);
     };
-    const supabase = createClient();
+    // const supabase = createClient();
     const pathname = usePathname();
 
     React.useEffect(() => {
         const checkAnnouncements = async () => {
+            /*
             const now = new Date().toISOString();
             const { data } = await supabase
                 .from('announcements')
@@ -53,10 +54,12 @@ export function AnnouncementsOverlay({ onOpenChange }: { onOpenChange?: (open: b
                 setAnnouncement(next);
                 setOpen(true);
             }
+            */
+            setAnnouncement(null);
         };
 
         checkAnnouncements();
-    }, [supabase, pathname]);
+    }, [pathname]);
 
     const handleDismiss = () => {
         if (!announcement) return;
