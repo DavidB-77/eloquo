@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     const startTime = Date.now();
     try {
         // 1. Get user from Better Auth session
-        let token: string | null = null;
+        let token: string | undefined = undefined;
         try {
             token = await getToken();
         } catch (tokenError) {
