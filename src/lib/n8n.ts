@@ -271,17 +271,28 @@ export async function callOptimize(request: OptimizeRequest): Promise<OptimizeRe
             target_model: request.targetModel || 'auto',
         };
 
+        console.log(`[AGENT-V3] Requesting ${AGENT_URL}/optimize (Tier: ${v3Tier}, Model: ${v3Request.target_model}, Answers: ${!!v3Request.clarification_answers})`);
+
+        // Add 50s timeout to avoid Nginx 504 (default 60s)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 50000);
+
         const response = await fetch(`${AGENT_URL}/optimize`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(v3Request),
+            signal: controller.signal,
         });
 
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
+            console.error(`[AGENT-V3] Error response: ${response.status}`);
             return { success: false, error: `Agent error: ${response.status}` };
         }
 
         const v3Response: V3OptimizeResponse = await response.json();
+        console.log(`[AGENT-V3] Received response (Status: ${v3Response.status}, Time: ${v3Response.processing_time_ms}ms)`);
 
         // Map V3 response to legacy format
         return mapV3ToLegacyResponse(
@@ -290,7 +301,11 @@ export async function callOptimize(request: OptimizeRequest): Promise<OptimizeRe
             request.comprehensiveCreditsRemaining ?? 3
         );
 
-    } catch (error) {
+    } catch (error: any) {
+        if (error.name === 'AbortError') {
+            console.error('Agent V3 optimize timeout (50s reached)');
+            return { success: false, error: 'Optimization service timed out. The prompt might be too complex or the service is busy.' };
+        }
         console.error('Agent V3 optimize error:', error);
         return { success: false, error: 'Failed to connect to optimization service' };
     }
