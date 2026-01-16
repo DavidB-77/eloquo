@@ -169,6 +169,8 @@ export const getUsage = query({
             hasMcpAccess: profile.subscription_tier !== 'free' && profile.subscription_tier !== 'basic',
             comprehensiveCreditsRemaining: profile.comprehensive_credits_remaining,
             subscriptionStatus: profile.subscription_status,
+            isAdmin: profile.is_admin ?? false,
+            displayName: profile.display_name || profile.full_name,
         };
     },
 });

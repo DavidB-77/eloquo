@@ -1,7 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
-import { useAuth } from "@/providers/BetterAuthProvider";
+import { createContext, useContext, useMemo, ReactNode } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
@@ -16,6 +15,8 @@ interface UserData {
     hasMcpAccess: boolean;
     comprehensiveCreditsRemaining: number;
     subscriptionStatus?: string;
+    isAdmin: boolean;
+    displayName?: string;
 }
 
 interface UserContextType {
@@ -27,26 +28,24 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-    const { user } = useAuth();
     const convexUsage = useQuery(api.profiles.getUsage);
-    const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        if (convexUsage !== undefined) {
-            setIsLoading(false);
-        }
-    }, [convexUsage]);
+    // Derive loading state from query result instead of using effect
+    const isLoading = convexUsage === undefined;
+
+    const contextValue = useMemo(() => ({
+        userData: (convexUsage as UserData) || null,
+        isLoading,
+        refreshUserData: () => { } // Convex handles automatic updates
+    }), [convexUsage, isLoading]);
 
     return (
-        <UserContext.Provider value={{
-            userData: convexUsage as any || null,
-            isLoading,
-            refreshUserData: () => { } // Convex handles automatic updates
-        }}>
+        <UserContext.Provider value={contextValue}>
             {children}
         </UserContext.Provider>
     );
 }
+
 export function useUser() {
     const context = useContext(UserContext);
     if (context === undefined) {
@@ -54,3 +53,4 @@ export function useUser() {
     }
     return context;
 }
+

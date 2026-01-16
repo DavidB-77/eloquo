@@ -1,16 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { Search, Bell, Menu } from "lucide-react";
+import { Search, Bell, Menu, Shield } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
 import { useAuth } from "@/providers/BetterAuthProvider";
 import { FreeTierIndicator } from '@/components/FreeTierIndicator';
+import { useUser } from "@/providers/UserProvider";
 import Link from "next/link";
 
 export function DashboardHeader() {
     const { user, signOut } = useAuth();
+    const { userData } = useUser();
 
     return (
         <header className="h-16 border-b border-electric-cyan/10 bg-midnight/40 backdrop-blur-md sticky top-0 z-30 px-4 flex items-center justify-between glass rounded-none border-x-0 border-t-0">
@@ -58,9 +60,14 @@ export function DashboardHeader() {
                     <DropdownItem asChild className="hover:bg-electric-cyan/10 hover:text-white cursor-pointer transition-colors">
                         <Link href="/dashboard/settings">Profile Settings</Link>
                     </DropdownItem>
-                    <DropdownItem asChild className="hover:bg-electric-cyan/10 hover:text-white cursor-pointer transition-colors">
-                        <Link href="/dashboard/settings?tab=subscription">Subscription</Link>
-                    </DropdownItem>
+                    {userData?.isAdmin && (
+                        <DropdownItem asChild className="hover:bg-electric-cyan/10 hover:text-white cursor-pointer transition-colors">
+                            <Link href="/admin" className="flex items-center gap-2">
+                                <Shield className="h-3.5 w-3.5" />
+                                Admin Dashboard
+                            </Link>
+                        </DropdownItem>
+                    )}
                     <DropdownItem onClick={signOut} className="text-terracotta focus:bg-terracotta/10 focus:text-terracotta cursor-pointer transition-colors">
                         Sign Out
                     </DropdownItem>

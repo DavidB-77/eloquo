@@ -11,7 +11,8 @@ import {
     ChevronRight,
     LifeBuoy,
     Settings,
-    LogOut
+    LogOut,
+    Shield
 } from "lucide-react";
 import { SidebarNavItem } from "./SidebarNavItem";
 import { Button } from "@/components/ui/Button";
@@ -37,6 +38,12 @@ export function DashboardSidebar() {
     const { user, signOut } = useAuth();
 
     const { userData } = useUser();
+
+    // Format tier display name
+    const getTierDisplay = (tier: string) => {
+        if (tier === "enterprise") return "Business";
+        return tier.charAt(0).toUpperCase() + tier.slice(1);
+    };
 
     return (
         <aside
@@ -79,6 +86,16 @@ export function DashboardSidebar() {
                             isCollapsed={isCollapsed}
                         />
                     ))}
+
+                    {/* Admin Dashboard Link - Only for Admins */}
+                    {userData?.isAdmin && (
+                        <SidebarNavItem
+                            href="/admin"
+                            icon={Shield}
+                            label="Admin"
+                            isCollapsed={isCollapsed}
+                        />
+                    )}
                 </nav>
 
                 {/* Usage Display - Show Credits for Paid Users Only */}
@@ -90,7 +107,7 @@ export function DashboardSidebar() {
                             </div>
                             <div className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em] mb-4">Subscription Tier</div>
                             <div className="font-display text-md mb-4 capitalize text-white flex items-center gap-2">
-                                {userData.tier === "enterprise" ? "Business" : userData.tier}
+                                {getTierDisplay(userData.tier)}
                                 <Badge variant="pro" className="py-0 px-1.5 h-4">Active</Badge>
                             </div>
                             <UsageBar
@@ -120,15 +137,29 @@ export function DashboardSidebar() {
                         </Avatar>
                         {!isCollapsed && (
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate text-white">
-                                    {user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? "User"}
-                                </p>
-                                <button
-                                    onClick={signOut}
-                                    className="text-xs text-white/40 hover:text-terracotta flex items-center mt-0.5 transition-colors"
-                                >
-                                    <LogOut className="h-3 w-3 mr-1" /> Sign Out
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-sm font-medium truncate text-white">
+                                        {userData?.displayName ?? user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? "User"}
+                                    </p>
+                                    {userData?.isAdmin && (
+                                        <Badge variant="outline" className="py-0 px-1 h-4 text-[9px] border-terracotta/50 text-terracotta">
+                                            Admin
+                                        </Badge>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    {userData && (
+                                        <Badge variant="outline" className="py-0 px-1 h-4 text-[9px] border-electric-cyan/30 text-electric-cyan/70">
+                                            {getTierDisplay(userData.tier)}
+                                        </Badge>
+                                    )}
+                                    <button
+                                        onClick={signOut}
+                                        className="text-xs text-white/40 hover:text-terracotta flex items-center transition-colors"
+                                    >
+                                        <LogOut className="h-3 w-3 mr-1" /> Sign Out
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>

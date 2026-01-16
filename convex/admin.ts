@@ -398,3 +398,53 @@ export const migrateFromSupabase = mutation({
         return { migrated: results.length, results };
     },
 });
+
+/**
+ * SIMPLE: Create admin profile directly - NO INPUT NEEDED
+ * Just click "Run Function" and it creates your admin profile
+ */
+export const createAdminNow = mutation({
+    args: {},
+    handler: async (ctx) => {
+        const adminEmail = "dj.blaney77@gmail.com";
+        const adminUserId = "k57fz79596dd5wk0k075az36h7zbq4d"; // Your Better Auth userId
+
+        // Check if profile already exists
+        const existing = await ctx.db
+            .query("profiles")
+            .withIndex("by_email", (q) => q.eq("email", adminEmail))
+            .first();
+
+        if (existing) {
+            // Update existing profile to be admin with correct userId
+            await ctx.db.patch(existing._id, {
+                userId: adminUserId,
+                is_admin: true,
+                subscription_tier: "enterprise",
+                subscription_status: "active",
+                comprehensive_credits_remaining: 999999,
+                optimizations_remaining: 10000,
+            });
+            return { status: "updated", message: "Admin profile updated!", profileId: existing._id };
+        }
+
+        // Create new admin profile
+        const profileId = await ctx.db.insert("profiles", {
+            userId: adminUserId,
+            email: adminEmail,
+            full_name: "QubeShare",
+            display_name: "QubeShare",
+            subscription_tier: "enterprise",
+            subscription_status: "active",
+            optimizations_remaining: 10000,
+            optimizations_used: 0,
+            comprehensive_credits_remaining: 999999,
+            is_admin: true,
+            is_founding_member: true,
+            founding_wave: 1,
+            created_at: Date.now(),
+        });
+
+        return { status: "created", message: "Admin profile created!", profileId };
+    },
+});
