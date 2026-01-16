@@ -33,7 +33,21 @@ export async function POST(request: Request) {
     const startTime = Date.now();
     try {
         // 1. Get user from Better Auth session
-        const token = await getToken();
+        let token: string | null = null;
+        try {
+            token = await getToken();
+        } catch (tokenError) {
+            console.error('Optimize API: getToken error:', tokenError);
+            // Log full error details
+            if (tokenError instanceof Error) {
+                console.error('Token error message:', tokenError.message);
+                console.error('Token error cause:', (tokenError as any).cause);
+            }
+            return NextResponse.json(
+                { success: false, error: 'Authentication service unavailable' },
+                { status: 503 }
+            );
+        }
 
         if (!token) {
             return NextResponse.json(
