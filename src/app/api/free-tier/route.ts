@@ -29,6 +29,8 @@ export async function GET(request: Request) {
         const userId = request.headers.get('x-user-id');
         const userEmail = request.headers.get('x-user-email');
 
+        console.log('[FREE-TIER] userId:', userId, 'userEmail:', userEmail);
+
         if (!userId) {
             return NextResponse.json({ error: 'Missing User ID' }, { status: 400 });
         }
@@ -39,13 +41,21 @@ export async function GET(request: Request) {
 
         try {
             // Try to get profile by userId, with email fallback
+            console.log('[FREE-TIER] Querying Convex with userId:', userId, 'email:', userEmail);
             const profile = await convex.query(api.profiles.getProfileByUserId, {
                 userId,
                 email: userEmail || undefined
             });
+            console.log('[FREE-TIER] Profile result:', profile ? {
+                tier: profile.subscription_tier,
+                email: profile.email,
+                userId: profile.userId
+            } : 'null');
+
             if (profile) {
                 userTier = profile.subscription_tier || 'free';
                 isPaidUser = userTier !== 'free';
+                console.log('[FREE-TIER] isPaidUser:', isPaidUser, 'userTier:', userTier);
             }
         } catch (convexError) {
             console.error('[FREE-TIER] Error fetching profile from Convex:', convexError);
