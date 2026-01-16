@@ -132,7 +132,8 @@ export const getOptimizationHistory = query({
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
         if (!identity) {
-            throw new Error("Unauthenticated");
+            // Return empty array instead of throwing - user just hasn't logged in yet
+            return [];
         }
 
         const optimizations = await ctx.db
