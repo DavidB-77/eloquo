@@ -4,7 +4,6 @@ import { calculateTokenSavings, countTokens } from '@/lib/tokenizer';
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../convex/_generated/api";
 import { getToken } from "@/lib/auth-server";
-import { headers } from "next/headers";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -138,6 +137,8 @@ export async function POST(request: Request) {
             );
         }
 
+        console.log(`[OPTIMIZE][${Date.now() - startTime}ms] Pre-checks complete. Prompt length: ${prompt?.length}`);
+
         if (!prompt || !prompt.trim()) {
             return NextResponse.json(
                 { success: false, error: 'Prompt is required' },
@@ -173,6 +174,7 @@ export async function POST(request: Request) {
                 generationModel: "test-mode-mock"
             } as ExtendedOptimizeResult;
         } else {
+            console.log(`[OPTIMIZE][${Date.now() - startTime}ms] Calling Agent V3 at ${process.env.AGENT_URL || 'http://localhost:8001'}`);
             const n8nRequest: OptimizeRequest = {
                 prompt,
                 targetModel,
@@ -191,6 +193,7 @@ export async function POST(request: Request) {
             };
 
             result = await callOptimize(n8nRequest) as ExtendedOptimizeResult | any;
+            console.log(`[OPTIMIZE][${Date.now() - startTime}ms] Agent V3 responded. Success: ${'success' in result ? result.success : 'N/A'}`);
         }
 
         // 7. Handle special statuses
@@ -208,6 +211,8 @@ export async function POST(request: Request) {
             const outputTokens = successResult.metrics?.optimizedTokens || tokenData.optimized || 0;
             const model = successResult.analytics?.generationModel || successResult.generationModel || 'deepseek/deepseek-chat';
             const apiCost = calculateCost(inputTokens, outputTokens, model);
+
+            console.log(`[OPTIMIZE][${Date.now() - startTime}ms] Saving optimization to Convex...`);
 
             // Call Convex mutation to save optimization and update usage
             // The mutation handles credit deduction and logging
@@ -234,6 +239,8 @@ export async function POST(request: Request) {
                 outputMode: successResult.metrics?.outputMode,
                 creditsUsed: successResult.metrics?.creditsUsed || 1,
             });
+
+            console.log(`[OPTIMIZE][${Date.now() - startTime}ms] Saved successfully.`);
 
             // Ensure frontend gets calculated metrics
             if (!successResult.metrics) {
