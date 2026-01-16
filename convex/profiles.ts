@@ -148,10 +148,21 @@ export const getUsage = query({
         const identity = await ctx.auth.getUserIdentity();
         if (!identity) return null;
 
-        const profile = await ctx.db
+        // First try to find by userId
+        let profile = await ctx.db
             .query("profiles")
             .withIndex("by_user", (q) => q.eq("userId", identity.subject))
             .unique();
+
+        // If not found by userId, try by email (handles OAuth login scenarios)
+        if (!profile && identity.email) {
+            profile = await ctx.db
+                .query("profiles")
+                .withIndex("by_email", (q) => q.eq("email", identity.email!.toLowerCase()))
+                .unique();
+
+            // Note: Can't update userId in a query, but ensureProfile mutation handles this
+        }
 
         if (!profile) return null;
 
