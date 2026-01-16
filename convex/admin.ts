@@ -1,4 +1,4 @@
-import { query } from "./_generated/server";
+import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
 /**
@@ -253,3 +253,52 @@ export const getAdmins = query({
         return admins;
     },
 });
+
+/**
+ * Setup Admin Profile - Run this once to create your admin profile
+ * Usage: Run from Convex Dashboard -> Functions -> admin:setupAdminProfile
+ */
+export const setupAdminProfile = mutation({
+    args: {
+        userId: v.string(),
+        email: v.string(),
+        fullName: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        // Check if profile already exists
+        const existing = await ctx.db
+            .query("profiles")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .first();
+
+        if (existing) {
+            // Update existing profile to be admin
+            await ctx.db.patch(existing._id, {
+                is_admin: true,
+                subscription_tier: "enterprise",
+                subscription_status: "active",
+            });
+            return { status: "updated", profileId: existing._id };
+        }
+
+        // Create new admin profile
+        const profileId = await ctx.db.insert("profiles", {
+            userId: args.userId,
+            email: args.email,
+            full_name: args.fullName || "Admin",
+            display_name: args.fullName || "Admin",
+            subscription_tier: "enterprise",
+            subscription_status: "active",
+            optimizations_remaining: 10000,
+            optimizations_used: 0,
+            comprehensive_credits_remaining: 1000,
+            is_admin: true,
+            is_founding_member: true,
+            founding_wave: 1,
+            created_at: Date.now(),
+        });
+
+        return { status: "created", profileId };
+    },
+});
+
