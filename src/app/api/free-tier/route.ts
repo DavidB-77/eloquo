@@ -101,7 +101,7 @@ export async function GET(request: Request) {
 
         return NextResponse.json({
             canOptimize,
-            // isPaidUser: false,
+            isPaidUser: false,
             remaining,
             weeklyLimit: FREE_TIER_WEEKLY_LIMIT,
             weeklyUsage,
