@@ -60,7 +60,14 @@ export function BetterAuthProvider({ children }: { children: ReactNode }) {
         : null;
 
     const handleSignOut = async () => {
-        await authSignOut();
+        await authSignOut({
+            fetchOptions: {
+                onSuccess: () => {
+                    // Redirect to login page after sign out
+                    window.location.href = "/login";
+                }
+            }
+        });
     };
 
     const value: AuthContextType = {
