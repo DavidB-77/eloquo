@@ -212,6 +212,8 @@ export async function POST(request: Request) {
             // Call Convex mutation to save optimization and update usage
             // The mutation handles credit deduction and logging
             await convex.mutation(api.optimizations.createOptimization, {
+                userId: actualUserId,
+                userEmail: actualEmail || undefined,
                 originalPrompt: prompt,
                 optimizedPrompt: optimizedPrompt || '',
                 targetModel: targetModel,
