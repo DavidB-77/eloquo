@@ -73,6 +73,38 @@ export async function POST(request: NextRequest) {
         const result = await agentResponse.json();
         console.log('[PROJECT PROTOCOL] Agent response received');
 
+        // Save to Convex optimization history
+        try {
+            await convex.mutation(api.optimizations.createOptimizationForAgent, {
+                userId: actualUserId,
+                userEmail: userEmail || undefined,
+                originalPrompt: projectIdea,
+                optimizedPrompt: result.project_summary || projectIdea.slice(0, 200),
+                targetModel: "gemini-2.5-flash",
+                optimizationType: "comprehensive" as const,
+                strength: "default",
+                context: JSON.stringify({ projectType, techPreferences, targetAudience }),
+                improvements: ["PRD Generated", "Architecture Created", "Stories Created"],
+                metrics: {
+                    qualityScore: 8.5,
+                    total_tokens: result.total_tokens || 0,
+                    processing_time_sec: (result.processing_time_ms || 0) / 1000,
+                    api_cost_usd: 0,
+                },
+                outputMode: "project-protocol",
+                creditsUsed: 5,
+                projectName: result.project_name || "Untitled Project",
+                projectSummary: result.project_summary || "",
+                prdDocument: result.documents?.prd || result.prd || "",
+                architectureDocument: result.documents?.architecture || result.architecture || "",
+                storiesDocument: result.documents?.stories || result.stories || "",
+            });
+            console.log('[PROJECT PROTOCOL] Saved to history');
+        } catch (saveError) {
+            console.error('[PROJECT PROTOCOL] Failed to save to history:', saveError);
+            // Don't fail the request, just log - user still gets their result
+        }
+
         return NextResponse.json({
             success: true,
             projectName: result.project_name || result.projectName || "Untitled Project",

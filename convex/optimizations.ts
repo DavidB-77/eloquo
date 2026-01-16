@@ -169,3 +169,78 @@ export const getOptimization = query({
         return optimization;
     },
 });
+
+/**
+ * Create optimization record for agent API (no auth required, uses userId directly)
+ * Used by Project Protocol and other agent-based features
+ */
+export const createOptimizationForAgent = mutation({
+    args: {
+        userId: v.string(),
+        userEmail: v.optional(v.string()),
+        originalPrompt: v.string(),
+        optimizedPrompt: v.string(),
+        targetModel: v.string(),
+        optimizationType: v.union(v.literal("standard"), v.literal("comprehensive")),
+        strength: v.string(),
+        context: v.optional(v.string()),
+        improvements: v.optional(v.array(v.string())),
+        metrics: v.optional(v.object({
+            qualityScore: v.optional(v.number()),
+            total_tokens: v.optional(v.number()),
+            processing_time_sec: v.optional(v.number()),
+            api_cost_usd: v.optional(v.number()),
+        })),
+        outputMode: v.optional(v.string()),
+        creditsUsed: v.optional(v.number()),
+        projectName: v.optional(v.string()),
+        projectSummary: v.optional(v.string()),
+        prdDocument: v.optional(v.string()),
+        architectureDocument: v.optional(v.string()),
+        storiesDocument: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        // Find profile by userId or email (like we do for credits)
+        let profile = await ctx.db
+            .query("profiles")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .unique();
+
+        if (!profile && args.userEmail) {
+            profile = await ctx.db
+                .query("profiles")
+                .withIndex("by_email", (q) => q.eq("email", args.userEmail!.toLowerCase()))
+                .unique();
+        }
+
+        // Use the actual userId from profile if found, otherwise the provided userId
+        const actualUserId = profile?.userId || args.userId;
+
+        // Create optimization record
+        const optimizationId = await ctx.db.insert("optimizations", {
+            user_id: actualUserId,
+            original_prompt: args.originalPrompt,
+            optimized_prompt: args.optimizedPrompt,
+            target_model: args.targetModel,
+            optimization_type: args.optimizationType,
+            strength: args.strength,
+            context: args.context,
+            improvements: args.improvements,
+            metrics: args.metrics,
+            was_orchestrated: false,
+            output_mode: args.outputMode,
+            credits_used: args.creditsUsed,
+            project_name: args.projectName,
+            project_summary: args.projectSummary,
+            prd_document: args.prdDocument,
+            architecture_document: args.architectureDocument,
+            stories_document: args.storiesDocument,
+            created_at: Date.now(),
+        });
+
+        return {
+            optimizationId,
+            success: true,
+        };
+    },
+});
