@@ -17,27 +17,33 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { user_id, action, amount } = body;
+        const { user_id, email, action, amount } = body;
 
         if (!user_id) {
             return NextResponse.json({ error: "user_id required" }, { status: 400 });
         }
 
+        console.log('[AGENT CREDITS] Request:', { user_id, email, action, amount });
+
         if (action === "check") {
             // Check credits
             const credits = await convex.query(api.profiles.getCreditsForAgent, {
-                userId: user_id
+                userId: user_id,
+                email: email || undefined,
             });
 
             if (!credits) {
+                console.log('[AGENT CREDITS] User not found for:', user_id, email);
                 return NextResponse.json({ error: "User not found" }, { status: 404 });
             }
 
+            console.log('[AGENT CREDITS] Found user, credits:', credits.comprehensive_credits_remaining);
             return NextResponse.json({
                 success: true,
                 comprehensive_credits_remaining: credits.comprehensive_credits_remaining,
                 optimizations_remaining: credits.optimizations_remaining,
                 subscription_tier: credits.subscription_tier,
+                userId: credits.userId,  // Return actual userId for deduct call
             });
 
         } else if (action === "deduct") {
@@ -48,6 +54,7 @@ export async function POST(request: NextRequest) {
 
             const result = await convex.mutation(api.profiles.deductCreditsForAgent, {
                 userId: user_id,
+                email: email || undefined,
                 amount: amount,
             });
 

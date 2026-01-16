@@ -294,18 +294,27 @@ export const updateSubscriptionStatus = mutation({
 });
 
 /**
- * Get credits for a user by userId (for agent API)
+ * Get credits for a user by userId or email (for agent API)
  */
 export const getCreditsForAgent = query({
     args: {
         userId: v.string(),
+        email: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         // Try by userId first
-        const profile = await ctx.db
+        let profile = await ctx.db
             .query("profiles")
             .withIndex("by_user", (q) => q.eq("userId", args.userId))
             .unique();
+
+        // If not found and email provided, try by email
+        if (!profile && args.email) {
+            profile = await ctx.db
+                .query("profiles")
+                .withIndex("by_email", (q) => q.eq("email", args.email!.toLowerCase()))
+                .unique();
+        }
 
         if (!profile) return null;
 
@@ -313,6 +322,7 @@ export const getCreditsForAgent = query({
             comprehensive_credits_remaining: profile.comprehensive_credits_remaining,
             optimizations_remaining: profile.optimizations_remaining,
             subscription_tier: profile.subscription_tier,
+            userId: profile.userId,  // Return actual userId for subsequent calls
         };
     },
 });
@@ -323,14 +333,23 @@ export const getCreditsForAgent = query({
 export const deductCreditsForAgent = mutation({
     args: {
         userId: v.string(),
+        email: v.optional(v.string()),
         amount: v.number(),
     },
     handler: async (ctx, args) => {
-        // Find profile by userId
-        const profile = await ctx.db
+        // Find profile by userId first
+        let profile = await ctx.db
             .query("profiles")
             .withIndex("by_user", (q) => q.eq("userId", args.userId))
             .unique();
+
+        // If not found and email provided, try by email
+        if (!profile && args.email) {
+            profile = await ctx.db
+                .query("profiles")
+                .withIndex("by_email", (q) => q.eq("email", args.email!.toLowerCase()))
+                .unique();
+        }
 
         if (!profile) {
             return { success: false, error: "User not found" };
@@ -357,3 +376,4 @@ export const deductCreditsForAgent = mutation({
         };
     },
 });
+
