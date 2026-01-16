@@ -34,14 +34,11 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
                 clientId: process.env.GOOGLE_CLIENT_ID!,
                 clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
             },
-            // GitHub - uncomment when keys are added
-            /*
             github: {
                 enabled: true,
                 clientId: process.env.GITHUB_CLIENT_ID!,
                 clientSecret: process.env.GITHUB_CLIENT_SECRET!,
             },
-            */
         },
 
         // Session configuration
