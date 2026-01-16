@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     try {
         // Parse body first to get user info as fallback
         const body = await request.json();
-        const { projectIdea, projectType, techPreferences, targetAudience, additionalContext, userId, userTier: clientTier } = body;
+        const { projectIdea, projectType, techPreferences, targetAudience, additionalContext, userId, userEmail, userTier: clientTier } = body;
 
         if (!projectIdea || projectIdea.length < 20) {
             return NextResponse.json({ error: "Project idea must be at least 20 characters" }, { status: 400 });
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
                 target_audience: targetAudience || null,
                 additional_context: additionalContext || null,
                 user_id: actualUserId,
+                user_email: userEmail || null,
                 user_tier: agentTier,
             }),
         });

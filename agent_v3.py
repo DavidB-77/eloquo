@@ -582,6 +582,7 @@ class ProjectProtocolRequest(BaseModel):
     target_audience: Optional[str] = Field(default=None, description="Who is this for")
     additional_context: Optional[str] = Field(default=None, description="Any other context")
     user_id: str = Field(..., description="User ID for credit deduction")
+    user_email: Optional[str] = Field(default=None, description="User email for fallback lookup")
     user_tier: str = Field(default="basic", description="User tier for tracking")
 
 class ProjectAnalysis(BaseModel):
@@ -1199,6 +1200,7 @@ async def generate_project_protocol(request: ProjectProtocolRequest):
                 },
                 json={
                     "user_id": request.user_id,
+                    "email": request.user_email,
                     "action": "check"
                 }
             )
@@ -1227,6 +1229,7 @@ async def generate_project_protocol(request: ProjectProtocolRequest):
                 },
                 json={
                     "user_id": request.user_id,
+                    "email": request.user_email,
                     "action": "deduct",
                     "amount": PROJECT_PROTOCOL_COST
                 }

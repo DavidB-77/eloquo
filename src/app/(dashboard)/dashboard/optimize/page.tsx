@@ -266,6 +266,7 @@ export default function OptimizePage() {
                         targetAudience: payload.target_audience,
                         additionalContext: payload.additional_context,
                         userId: payload.user_id,
+                        userEmail: user?.email || '',
                         userTier: payload.user_tier,
                     }),
                 });
