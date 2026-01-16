@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus, Edit2, Trash2, Megaphone, Calendar, AlertCircle, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Plus, Edit2, Trash2, Megaphone, Calendar, AlertCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/Label";
 // import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+// import { format } from "date-fns";
 
 type Announcement = {
     id: string;
@@ -132,7 +132,7 @@ export default function AdminAnnouncementsPage() {
         setIsCreateOpen(false);
     };
 
-    const toggleStatus = async (id: string, currentStatus: boolean) => {
+    const toggleStatus = async (id: string, _currentStatus: boolean) => {
         // await supabase.from('announcements').update({ is_active: !currentStatus }).eq('id', id);
         console.log("Mock Toggle:", id);
         fetchAnnouncements();
@@ -172,6 +172,7 @@ export default function AdminAnnouncementsPage() {
                                         value={priority}
                                         onChange={e => setPriority(e.target.value)}
                                         className="w-full bg-black/20 border border-white/10 rounded-md p-2 text-sm"
+                                        aria-label="Priority"
                                     >
                                         <option value="low">Low</option>
                                         <option value="normal">Normal</option>
@@ -185,6 +186,7 @@ export default function AdminAnnouncementsPage() {
                                         value={target}
                                         onChange={e => setTarget(e.target.value)}
                                         className="w-full bg-black/20 border border-white/10 rounded-md p-2 text-sm"
+                                        aria-label="Target"
                                     >
                                         <option value="both">Both (All)</option>
                                         <option value="dashboard">Dashboard Only</option>
@@ -199,6 +201,7 @@ export default function AdminAnnouncementsPage() {
                                     value={expiresAt}
                                     onChange={e => setExpiresAt(e.target.value)}
                                     className="bg-black/20 border-white/10 [color-scheme:dark]"
+                                    aria-label="Expires At"
                                 />
                             </div>
                             <div className="flex items-center space-x-2 pt-2">

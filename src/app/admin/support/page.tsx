@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, Filter, MessageSquare, Clock, CheckCircle, AlertCircle, Send, Loader2, Trash2, AlertTriangle, Archive } from "lucide-react";
+import { Search, MessageSquare, Clock, CheckCircle, AlertCircle, Send, Loader2, Trash2, AlertTriangle, Archive } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -17,12 +17,15 @@ const STATUS_STYLES = {
 };
 
 export default function AdminSupportPage() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [tickets, setTickets] = React.useState<any[]>([]);
     const [loading, setLoading] = React.useState(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [selectedTicket, setSelectedTicket] = React.useState<any | null>(null);
     const [filterStatus, setFilterStatus] = React.useState<string | null>(null);
     const [response, setResponse] = React.useState("");
     const [sendingResponse, setSendingResponse] = React.useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [ticketResponses, setTicketResponses] = React.useState<any[]>([]);
     const [loadingResponses, setLoadingResponses] = React.useState(false);
 
@@ -96,6 +99,7 @@ export default function AdminSupportPage() {
         // Optimistic update
         setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: newStatus } : t));
         if (selectedTicket?.id === ticketId) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setSelectedTicket((prev: any) => ({ ...prev, status: newStatus }));
         }
 
@@ -495,6 +499,7 @@ export default function AdminSupportPage() {
                                             value={selectedTicket.status}
                                             onChange={(e) => handleUpdateStatus(selectedTicket.id, e.target.value)}
                                             className="text-xs bg-[#111] border border-white/10 rounded-lg px-3 py-1.5 text-gray-300 focus:outline-none focus:border-electric-cyan capitalize"
+                                            aria-label="Ticket Status"
                                         >
                                             <option value="open">Open</option>
                                             <option value="pending">Pending</option>
@@ -607,7 +612,7 @@ export default function AdminSupportPage() {
                         </DialogTitle>
                         <DialogDescription className="text-gray-400">
                             This action cannot be undone. This will permanently delete the ticket
-                            <span className="text-white font-medium"> "{selectedTicket?.subject}"</span> and all
+                            <span className="text-white font-medium"> &quot;{selectedTicket?.subject}&quot;</span> and all
                             {ticketResponses.length > 0 ? ` ${ticketResponses.length} ` : ' '}
                             associated responses.
                         </DialogDescription>
