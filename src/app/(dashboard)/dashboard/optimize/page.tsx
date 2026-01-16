@@ -16,7 +16,7 @@ import { FreeTierBadge } from "@/components/FreeTierIndicator";
 import { AlertCircle, Zap, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/providers/UserProvider";
-import { useAuth } from "@/providers/AuthProvider";
+import { useAuth } from "@/providers/BetterAuthProvider";
 import { useFreeTierStatus } from "@/hooks/useFingerprint";
 
 // Response types from n8n

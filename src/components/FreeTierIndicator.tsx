@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth } from '@/providers/BetterAuthProvider';
 import { useFreeTierStatus } from '@/hooks/useFingerprint';
 import { cn } from '@/lib/utils';
 

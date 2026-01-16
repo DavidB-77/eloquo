@@ -17,7 +17,7 @@ import { SidebarNavItem } from "./SidebarNavItem";
 import { Button } from "@/components/ui/Button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
-import { useAuth } from "@/providers/AuthProvider";
+import { useAuth } from "@/providers/BetterAuthProvider";
 import { useUser } from "@/providers/UserProvider";
 
 import { UsageBar } from "@/components/dashboard/UsageBar";

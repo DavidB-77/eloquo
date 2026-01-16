@@ -5,7 +5,7 @@ import { Search, Bell, Menu } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
-import { useAuth } from "@/providers/AuthProvider";
+import { useAuth } from "@/providers/BetterAuthProvider";
 import { FreeTierIndicator } from '@/components/FreeTierIndicator';
 import Link from "next/link";
 

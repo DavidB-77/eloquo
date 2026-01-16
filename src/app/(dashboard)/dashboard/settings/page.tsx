@@ -11,7 +11,7 @@ import { FormField } from "@/components/forms/FormField";
 import { ApiKeyManager } from "@/components/settings/ApiKeyManager";
 import { UsageBar } from "@/components/dashboard/UsageBar";
 import { User, CreditCard, Key, Shield, Check, ExternalLink } from "lucide-react";
-import { useAuth } from "@/providers/AuthProvider";
+import { useAuth } from "@/providers/BetterAuthProvider";
 import { useUser } from "@/providers/UserProvider";
 
 

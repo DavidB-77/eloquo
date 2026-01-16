@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Rocket, Zap, FileText, Building2, ListChecks, Copy, Check, Download, ArrowLeft, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/providers/UserProvider";
-import { useAuth } from "@/providers/AuthProvider";
+import { useAuth } from "@/providers/BetterAuthProvider";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import JSZip from "jszip";
