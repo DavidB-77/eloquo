@@ -2,71 +2,54 @@
 
 import * as React from "react";
 import { usePathname } from "next/navigation";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/Button";
-// import { createClient } from "@/lib/supabase/client";
-import { Megaphone, X } from "lucide-react";
+import { Megaphone } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 export function AnnouncementsOverlay({ onOpenChange }: { onOpenChange?: (open: boolean) => void }) {
     const [announcement, setAnnouncement] = React.useState<any>(null);
     const [isOpen, setIsOpen] = React.useState(false);
 
+    // Fetch active announcements from Convex
+    const announcements = useQuery(api.announcements.getActiveAnnouncements) || [];
+
     const setOpen = (open: boolean) => {
         setIsOpen(open);
         onOpenChange?.(open);
     };
-    // const supabase = createClient();
+
     const pathname = usePathname();
 
     React.useEffect(() => {
-        const checkAnnouncements = async () => {
-            /*
-            const now = new Date().toISOString();
-            const { data } = await supabase
-                .from('announcements')
-                .select('*')
-                .eq('is_active', true)
-                .or(`expires_at.is.null,expires_at.gt.${now}`)
-                .order('created_at', { ascending: false });
-
-            if (!data || data.length === 0) return;
-
-            // Filter based on Target
-            const filtered = data.filter((a: any) => {
-                const target = a.target || 'both';
-                if (target === 'both') return true;
-                if (target === 'dashboard' && pathname?.startsWith('/dashboard')) return true;
-                if (target === 'landing' && pathname === '/') return true;
-                return false;
-            });
-
-            if (filtered.length === 0) return;
-
-            // Simple Priority Sorting
-            const priorityMap: Record<string, number> = { critical: 4, high: 3, normal: 2, low: 1 };
-            const sorted = filtered.sort((a, b) => (priorityMap[b.priority] || 0) - (priorityMap[a.priority] || 0));
-
-            // Find first undismissed
-            const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
-            const next = sorted.find(a => !dismissed.includes(a.id));
-
-            if (next) {
-                setAnnouncement(next);
-                setOpen(true);
-            }
-            */
+        if (announcements.length === 0) {
             setAnnouncement(null);
-        };
+            return;
+        }
 
-        checkAnnouncements();
-    }, [pathname]);
+        // Check dismissed announcements
+        const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
+
+        // Sort by priority (higher first)
+        const sorted = [...announcements].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+
+        // Find first undismissed
+        const next = sorted.find(a => !dismissed.includes(a._id));
+
+        if (next) {
+            setAnnouncement(next);
+            setOpen(true);
+        } else {
+            setAnnouncement(null);
+        }
+    }, [announcements, pathname]);
 
     const handleDismiss = () => {
         if (!announcement) return;
         const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
-        localStorage.setItem('dismissed_announcements', JSON.stringify([...dismissed, announcement.id]));
+        localStorage.setItem('dismissed_announcements', JSON.stringify([...dismissed, announcement._id]));
         setOpen(false);
-        // Optionally show next? for now just close.
     };
 
     if (!announcement) return null;

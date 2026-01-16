@@ -138,4 +138,60 @@ export default defineSchema({
     })
         .index("by_email", ["email"])
         .index("by_token", ["token"]),
+
+    // Support Tickets
+    support_tickets: defineTable({
+        user_id: v.string(),
+        user_email: v.string(),
+        subject: v.string(),
+        message: v.string(),
+        category: v.union(
+            v.literal("bug"),
+            v.literal("feature"),
+            v.literal("question"),
+            v.literal("feedback"),
+            v.literal("other")
+        ),
+        status: v.union(
+            v.literal("open"),
+            v.literal("pending"),
+            v.literal("resolved"),
+            v.literal("archived")
+        ),
+        priority: v.optional(v.union(
+            v.literal("low"),
+            v.literal("medium"),
+            v.literal("high")
+        )),
+        created_at: v.number(),
+        updated_at: v.optional(v.number()),
+    })
+        .index("by_user", ["user_id"])
+        .index("by_status", ["status"])
+        .index("by_created_at", ["created_at"]),
+
+    // Ticket Responses
+    ticket_responses: defineTable({
+        ticket_id: v.id("support_tickets"),
+        user_id: v.string(),
+        is_admin: v.boolean(),
+        message: v.string(),
+        created_at: v.number(),
+    })
+        .index("by_ticket", ["ticket_id"]),
+
+    // Announcements
+    announcements: defineTable({
+        title: v.string(),
+        content: v.string(),
+        is_active: v.boolean(),
+        priority: v.optional(v.number()),
+        start_date: v.optional(v.number()),
+        end_date: v.optional(v.number()),
+        created_by: v.optional(v.string()),
+        created_at: v.number(),
+        updated_at: v.optional(v.number()),
+    })
+        .index("by_active", ["is_active"])
+        .index("by_created_at", ["created_at"]),
 });

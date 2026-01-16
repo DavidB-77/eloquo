@@ -9,6 +9,7 @@
  */
 
 import type * as admin from "../admin.js";
+import type * as announcements from "../announcements.js";
 import type * as auth from "../auth.js";
 import type * as dodopayments from "../dodopayments.js";
 import type * as email from "../email.js";
@@ -19,6 +20,7 @@ import type * as pendingSignups from "../pendingSignups.js";
 import type * as profiles from "../profiles.js";
 import type * as rateLimits from "../rateLimits.js";
 import type * as settings from "../settings.js";
+import type * as support from "../support.js";
 
 import type {
   ApiFromModules,
@@ -28,6 +30,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
+  announcements: typeof announcements;
   auth: typeof auth;
   dodopayments: typeof dodopayments;
   email: typeof email;
@@ -38,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   profiles: typeof profiles;
   rateLimits: typeof rateLimits;
   settings: typeof settings;
+  support: typeof support;
 }>;
 
 /**
