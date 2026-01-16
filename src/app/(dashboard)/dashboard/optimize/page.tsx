@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { OptimizeForm, type OptimizeFormData, type ContextFile } from "@/components/optimize/OptimizeForm";
+import { OptimizeForm, type OptimizeFormData } from "@/components/optimize/OptimizeForm";
 import { ResultsTabs } from "@/components/optimize/ResultsTabs";
 import { InputSummary } from "@/components/optimize/InputSummary";
 import { QuestionsForm, type ClarificationQuestion } from "@/components/optimize/QuestionsForm";
@@ -350,6 +350,10 @@ export default function OptimizePage() {
                     contextAnswers: contextAnswers || null,
                     forceStandard: forceStandard || false,
                     isFollowUpSubmission: isFollowUpSubmission, // Prevent double-charging
+                    // User identification for auth fallback
+                    userId: user?.id || userData?.userId,
+                    userEmail: user?.email || userData?.email,
+                    userTier: userTier,
                 }),
             });
 

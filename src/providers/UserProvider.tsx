@@ -17,6 +17,8 @@ interface UserData {
     subscriptionStatus?: string;
     isAdmin: boolean;
     displayName?: string;
+    userId: string;
+    email: string;
 }
 
 interface UserContextType {

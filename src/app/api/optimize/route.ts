@@ -32,74 +32,7 @@ interface ExtendedOptimizeResult extends OptimizeSuccessResponse {
 export async function POST(request: Request) {
     const startTime = Date.now();
     try {
-        // 1. Get user from Better Auth session
-        let token: string | undefined = undefined;
-        try {
-            token = await getToken();
-        } catch (tokenError) {
-            console.error('Optimize API: getToken error:', tokenError);
-            // Log full error details
-            if (tokenError instanceof Error) {
-                console.error('Token error message:', tokenError.message);
-                console.error('Token error cause:', (tokenError as any).cause);
-            }
-            return NextResponse.json(
-                { success: false, error: 'Authentication service unavailable' },
-                { status: 503 }
-            );
-        }
-
-        if (!token) {
-            return NextResponse.json(
-                { success: false, error: 'Unauthorized' },
-                { status: 401 }
-            );
-        }
-
-        // Set token for Convex client
-        convex.setAuth(token);
-
-        // Get user profile to get the email/userId correctly if needed
-        const session = await convex.query(api.auth.getUserById, {});
-        if (!session) {
-            return NextResponse.json(
-                { success: false, error: 'Unauthorized' },
-                { status: 401 }
-            );
-        }
-
-        const user = session;
-
-        // 2a. Fetch System Settings overrides from Convex
-        const generalSettings: any = await convex.query(api.settings.getSettings, { key: 'general_settings' }) || {};
-        const isTestMode = generalSettings.test_mode_enabled === true;
-        const basicLimit = typeof generalSettings.basic_plan_monthly_limit === 'number' ? generalSettings.basic_plan_monthly_limit : 150;
-
-        // 2b. Re-Check usage limits from Convex
-        const usageData: any = await convex.query(api.profiles.getUsage, {});
-        if (!usageData) {
-            return NextResponse.json(
-                { success: false, error: 'User profile not found' },
-                { status: 404 }
-            );
-        }
-
-        const userTier = usageData.tier;
-        const comprehensiveCreditsRemaining = usageData.comprehensiveCreditsRemaining ?? 3;
-
-        // Check if user can optimize
-        if (!usageData.canOptimize) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: userTier === 'free' ? 'Weekly limit reached. Please upgrade to continue.' : 'Optimization limit reached. Please upgrade to continue.',
-                    usage: usageData
-                },
-                { status: 429 }
-            );
-        }
-
-        // 3. Parse request body
+        // 1. Parse request body FIRST to get fallback user info
         const body = await request.json();
         const {
             prompt,
@@ -111,7 +44,88 @@ export async function POST(request: Request) {
             forceStandard = false,
             isFollowUpSubmission = false,
             isProjectProtocol = false,
+            userId: clientUserId,
+            userEmail: clientEmail,
+            userTier: clientTier,
         } = body;
+
+        // 2. Try to get authenticated user, fallback to client-provided data if auth fails
+        let userTier = clientTier || 'free';
+        let actualUserId = clientUserId || 'anonymous';
+        let actualEmail = clientEmail || '';
+        let usageData: any = null;
+        let isTestMode = false;
+        let comprehensiveCreditsRemaining = 3;
+        let authFailed = false;
+
+        try {
+            const token = await getToken();
+            if (token) {
+                convex.setAuth(token);
+
+                // Get user profile
+                const session = await convex.query(api.auth.getUserById, {});
+                if (session) {
+                    // Fetch System Settings overrides from Convex
+                    const generalSettings: any = await convex.query(api.settings.getSettings, { key: 'general_settings' }) || {};
+                    isTestMode = generalSettings.test_mode_enabled === true;
+
+                    // Get usage data
+                    usageData = await convex.query(api.profiles.getUsage, {});
+                    if (usageData) {
+                        userTier = usageData.tier;
+                        comprehensiveCreditsRemaining = usageData.comprehensiveCreditsRemaining ?? 3;
+                        actualUserId = session.id || actualUserId;
+                        actualEmail = session.email || actualEmail;
+                    }
+                }
+            }
+        } catch (tokenError) {
+            console.error('Optimize API: getToken error (using fallback):', tokenError);
+            authFailed = true;
+            // Continue with client-provided data
+        }
+
+        // If auth failed but we have client data, try to verify via direct Convex query
+        if (authFailed && clientUserId && clientEmail) {
+            console.log('[OPTIMIZE] Auth fallback - verifying via Convex with:', clientEmail);
+            try {
+                const profile = await convex.query(api.profiles.getProfileByEmail, { email: clientEmail });
+                if (profile) {
+                    userTier = profile.subscription_tier || 'free';
+                    actualUserId = profile.userId || clientUserId;
+                    actualEmail = profile.email || clientEmail;
+                    usageData = {
+                        tier: userTier,
+                        canOptimize: true, // Trust the fallback for paid users
+                        comprehensiveCreditsRemaining: profile.comprehensive_credits_remaining || 3,
+                    };
+                    comprehensiveCreditsRemaining = usageData.comprehensiveCreditsRemaining;
+                }
+            } catch (e) {
+                console.error('[OPTIMIZE] Fallback Convex query failed:', e);
+            }
+        }
+
+        // Still require some form of identification
+        if (!actualUserId || actualUserId === 'anonymous') {
+            return NextResponse.json(
+                { success: false, error: 'Unauthorized - no user identification' },
+                { status: 401 }
+            );
+        }
+
+        // Check if user can optimize (skip for paid users in fallback mode)
+        if (usageData && !usageData.canOptimize && !authFailed) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: userTier === 'free' ? 'Weekly limit reached. Please upgrade to continue.' : 'Optimization limit reached. Please upgrade to continue.',
+                    usage: usageData
+                },
+                { status: 429 }
+            );
+        }
 
         // 3a. Validate Project Protocol - Paid users only
         if (isProjectProtocol && userTier === 'free') {
@@ -164,7 +178,7 @@ export async function POST(request: Request) {
                 targetModel,
                 strength,
                 additionalContext: context,
-                userId: user.id || undefined,
+                userId: actualUserId || undefined,
                 userTier,
                 contextFiles: contextFiles.map((f: { name: string; mimeType: string; base64: string }) => ({
                     name: f.name,

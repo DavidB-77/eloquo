@@ -218,6 +218,8 @@ export const getUsage = query({
             subscriptionStatus: profile.subscription_status,
             isAdmin,
             displayName: profile.display_name || profile.full_name,
+            userId: profile.userId,
+            email: profile.email,
         };
     },
 });
