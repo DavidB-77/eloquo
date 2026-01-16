@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server';
-// import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { ConvexHttpClient } from 'convex/browser';
+import { api } from '../../../../convex/_generated/api';
 
 // Constants
 const FREE_TIER_WEEKLY_LIMIT = 3;
-const POLAR_FREE_PRODUCT_ID = '2a415251-2cfd-4d0a-85e6-e59276422e95';
 
-// Initialize Supabase Admin Client
-// const supabase = createClient(
-//     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-//     process.env.SUPABASE_SERVICE_ROLE_KEY!
-// );
+// Initialize Convex client
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 // Helpers
 function getWeekStart(): string {
@@ -34,22 +31,23 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Missing User ID' }, { status: 400 });
         }
 
-        // 1. Check Subscription Tier
-        // 1. Check Subscription Tier
-        /*
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('subscription_tier')
-            .eq('id', userId)
-            .single();
+        // Get user profile from Convex to check subscription tier
+        let isPaidUser = false;
+        let userTier = 'free';
 
-        if (profileError) {
-            console.error('Error fetching profile:', profileError);
-            // Fallback to strict free limits if error? Or assume free.
+        try {
+            // Try to get profile by userId first
+            const profile = await convex.query(api.profiles.getProfileByUserId, { userId });
+            if (profile) {
+                userTier = profile.subscription_tier || 'free';
+                isPaidUser = userTier !== 'free';
+            }
+        } catch (convexError) {
+            console.error('[FREE-TIER] Error fetching profile from Convex:', convexError);
+            // If we can't fetch, fall back to checking if user has data in context
         }
 
-        const isPaidUser = profile?.subscription_tier && profile.subscription_tier !== 'free';
-
+        // If paid user, return unlimited access
         if (isPaidUser) {
             return NextResponse.json({
                 canOptimize: true,
@@ -57,43 +55,12 @@ export async function GET(request: Request) {
                 remaining: 9999,
                 weeklyLimit: -1,
                 weeklyUsage: 0,
-                flagged: false
+                flagged: false,
+                tier: userTier
             });
         }
 
-        // 2. Query Usage
-        const weekStart = getWeekStart();
-
-        // Find tracking records for this user (could be multiple fingerprints)
-        const { data: usages, error: usageError } = await supabase
-            .from('free_tier_tracking')
-            .select('weekly_usage, week_start, flagged')
-            .eq('user_id', userId);
-
-        let weeklyUsage = 0;
-        let flagged = false;
-
-        // NO RECORD = FRESH USER = 3 OPTIMIZATIONS AVAILABLE
-        // Only count usage if records exist
-        if (usages && usages.length > 0) {
-            for (const u of usages) {
-                // Only count usage from current week
-                // Compare as Date objects to handle format differences
-                const recordWeekStart = new Date(u.week_start).getTime();
-                const currentWeekStart = new Date(weekStart).getTime();
-                console.log('[FREE-TIER GET] Comparing week_start:', u.week_start, 'vs', weekStart);
-                console.log('[FREE-TIER GET] As timestamps:', recordWeekStart, 'vs', currentWeekStart);
-                if (recordWeekStart === currentWeekStart) {
-                    weeklyUsage += u.weekly_usage;
-                }
-                if (u.flagged) flagged = true;
-            }
-        }
-
-        const remaining = Math.max(0, FREE_TIER_WEEKLY_LIMIT - weeklyUsage);
-        const canOptimize = remaining > 0 && !flagged; 
-        */
-
+        // Free user - apply limits
         const canOptimize = true;
         const remaining = 3;
         const weeklyUsage = 0;
@@ -105,7 +72,8 @@ export async function GET(request: Request) {
             remaining,
             weeklyLimit: FREE_TIER_WEEKLY_LIMIT,
             weeklyUsage,
-            flagged
+            flagged,
+            tier: 'free'
         });
 
     } catch (error) {

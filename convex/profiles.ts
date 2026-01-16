@@ -140,6 +140,25 @@ export const ensureProfile = mutation({
 });
 
 /**
+ * Get profile by userId (for server-side API calls)
+ * This is a public query that doesn't require authentication
+ */
+export const getProfileByUserId = query({
+    args: {
+        userId: v.string(),
+    },
+    handler: async (ctx, args) => {
+        // First try by userId
+        const profile = await ctx.db
+            .query("profiles")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .unique();
+
+        return profile;
+    },
+});
+
+/**
  * Get user usage statistics
  */
 export const getUsage = query({
