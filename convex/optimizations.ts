@@ -11,6 +11,8 @@ import { checkRateLimit } from "./rateLimits";
  */
 export const createOptimization = mutation({
     args: {
+        userId: v.optional(v.string()),
+        userEmail: v.optional(v.string()),
         originalPrompt: v.string(),
         optimizedPrompt: v.string(),
         targetModel: v.string(),
@@ -38,24 +40,37 @@ export const createOptimization = mutation({
         storiesDocument: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        // 1. Get authenticated user
+        // 1. Get user identity or fallback to provided userId/email
         const identity = await ctx.auth.getUserIdentity();
-        if (!identity) {
-            throw new Error("Unauthenticated");
+        let userId = identity?.subject || args.userId;
+        let userEmail = identity?.email || args.userEmail;
+
+        if (!userId) {
+            throw new Error("Unauthenticated: No user identity or userId provided");
         }
 
         // 2. Get user profile
-        const profile = await ctx.db
+        let profile = await ctx.db
             .query("profiles")
-            .withIndex("by_user", (q) => q.eq("userId", identity.subject))
-            .first();
+            .withIndex("by_user", (q) => q.eq("userId", userId!))
+            .unique();
+
+        if (!profile && userEmail) {
+            profile = await ctx.db
+                .query("profiles")
+                .withIndex("by_email", (q) => q.eq("email", userEmail!.toLowerCase()))
+                .unique();
+        }
 
         if (!profile) {
             throw new Error("Profile not found");
         }
 
+        // Use the actual userId from profile if found
+        const finalUserId = profile.userId;
+
         // 3. Check rate limits
-        await checkRateLimit(ctx, profile);
+        await checkRateLimit(ctx, profile as any);
 
         // 4. Check if user has credits (basic validation)
         const isPaidUser = profile.subscription_tier !== "free";
@@ -65,7 +80,7 @@ export const createOptimization = mutation({
 
         // 4. Create optimization record
         const optimizationId = await ctx.db.insert("optimizations", {
-            user_id: identity.subject,
+            user_id: finalUserId,
             original_prompt: args.originalPrompt,
             optimized_prompt: args.optimizedPrompt,
             target_model: args.targetModel,
@@ -93,18 +108,18 @@ export const createOptimization = mutation({
         // 5. Update user's optimization count
         if (!isPaidUser) {
             await ctx.db.patch(profile._id, {
-                optimizations_remaining: profile.optimizations_remaining - 1,
-                optimizations_used: profile.optimizations_used + 1,
+                optimizations_remaining: (profile.optimizations_remaining || 0) - 1,
+                optimizations_used: (profile.optimizations_used || 0) + 1,
             });
         } else {
             await ctx.db.patch(profile._id, {
-                optimizations_used: profile.optimizations_used + 1,
+                optimizations_used: (profile.optimizations_used || 0) + 1,
             });
         }
 
         // 6. Log the optimization
         await ctx.db.insert("optimization_logs", {
-            user_id: identity.subject,
+            user_id: finalUserId,
             feature: "optimize",
             input_tokens: args.originalPrompt.length, // Simplified
             output_tokens: args.optimizedPrompt.length, // Simplified
