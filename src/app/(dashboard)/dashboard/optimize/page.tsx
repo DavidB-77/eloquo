@@ -257,10 +257,17 @@ export default function OptimizePage() {
 
                 console.log('Sending to Project Protocol:', payload);
 
-                const response = await fetch('https://agent.eloquo.io/project-protocol', {
+                const response = await fetch('/api/project-protocol', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
+                    body: JSON.stringify({
+                        projectIdea: payload.project_idea,
+                        projectType: payload.project_type,
+                        targetAudience: payload.target_audience,
+                        additionalContext: payload.additional_context,
+                        userId: payload.user_id,
+                        userTier: payload.user_tier,
+                    }),
                 });
 
                 if (!response.ok) {
