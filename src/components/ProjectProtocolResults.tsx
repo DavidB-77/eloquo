@@ -224,15 +224,15 @@ ${result.documents.stories}
                         <div className="flex items-center gap-4 md:gap-6 text-xs md:text-sm text-white/50">
                             <span className="flex items-center gap-1">
                                 <span>⏱</span>
-                                <span>{result.metrics.processing_time_sec.toFixed(1)}s</span>
+                                <span>{(result.metrics?.processing_time_sec ?? 0).toFixed(1)}s</span>
                             </span>
                             <span className="flex items-center gap-1">
                                 <span>📊</span>
-                                <span>{result.metrics.total_tokens.toLocaleString()} tokens</span>
+                                <span>{(result.metrics?.total_tokens ?? 0).toLocaleString()} tokens</span>
                             </span>
                             <span className="flex items-center gap-1">
                                 <span>🎫</span>
-                                <span>{result.credits_used} credits</span>
+                                <span>{result.credits_used ?? 5} credits</span>
                             </span>
                         </div>
                     </div>
