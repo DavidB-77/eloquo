@@ -27,6 +27,8 @@ function hashString(input: string): string {
 export async function GET(request: Request) {
     try {
         const userId = request.headers.get('x-user-id');
+        const userEmail = request.headers.get('x-user-email');
+
         if (!userId) {
             return NextResponse.json({ error: 'Missing User ID' }, { status: 400 });
         }
@@ -36,8 +38,11 @@ export async function GET(request: Request) {
         let userTier = 'free';
 
         try {
-            // Try to get profile by userId first
-            const profile = await convex.query(api.profiles.getProfileByUserId, { userId });
+            // Try to get profile by userId, with email fallback
+            const profile = await convex.query(api.profiles.getProfileByUserId, {
+                userId,
+                email: userEmail || undefined
+            });
             if (profile) {
                 userTier = profile.subscription_tier || 'free';
                 isPaidUser = userTier !== 'free';

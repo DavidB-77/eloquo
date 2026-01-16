@@ -53,7 +53,7 @@ interface UseFreeTierStatusResult extends FreeTierStatus {
     recordUsage: () => Promise<boolean>; // Returns true if usage recorded/allowed
 }
 
-export function useFreeTierStatus(userId: string | null): UseFreeTierStatusResult {
+export function useFreeTierStatus(userId: string | null, userEmail?: string | null): UseFreeTierStatusResult {
     const { fingerprint, isLoading: fingerprintLoading, error: fingerprintError } = useFingerprint();
 
     // Default to optimistic values so we don't block prematurely with stale data
@@ -82,6 +82,7 @@ export function useFreeTierStatus(userId: string | null): UseFreeTierStatusResul
         try {
             const headers: HeadersInit = { 'Content-Type': 'application/json' };
             if (userId) headers['x-user-id'] = userId;
+            if (userEmail) headers['x-user-email'] = userEmail;
             if (fingerprint) headers['x-fingerprint'] = fingerprint; // Not used in GET per spec but good context
 
             const res = await fetch('/api/free-tier', { method: 'GET', headers });

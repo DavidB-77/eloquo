@@ -124,7 +124,7 @@ export default function OptimizePage() {
         remaining,
         recordUsage,
         isLoading: statusLoading
-    } = useFreeTierStatus(user?.id || null);
+    } = useFreeTierStatus(user?.id || null, user?.email);
 
     // Project Protocol state
     const [ppResult, setPpResult] = React.useState<ProjectProtocolResponse | null>(null);

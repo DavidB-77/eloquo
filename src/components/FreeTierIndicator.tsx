@@ -19,7 +19,7 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
         isLoading,
         updateStatus,
         checkStatus
-    } = useFreeTierStatus(user?.id ?? null);
+    } = useFreeTierStatus(user?.id ?? null, user?.email);
 
     // Fetch fresh data on component mount (e.g., when navigating back to page)
     useEffect(() => {
@@ -150,7 +150,7 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
 
 export function FreeTierBadge({ className }: { className?: string }) {
     const { user } = useAuth();
-    const { isPaidUser, remaining, weeklyLimit, isLoading } = useFreeTierStatus(user?.id ?? null);
+    const { isPaidUser, remaining, weeklyLimit, isLoading } = useFreeTierStatus(user?.id ?? null, user?.email);
 
     if (isLoading || isPaidUser) return null;
 

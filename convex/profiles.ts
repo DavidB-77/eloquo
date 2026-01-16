@@ -140,19 +140,28 @@ export const ensureProfile = mutation({
 });
 
 /**
- * Get profile by userId (for server-side API calls)
+ * Get profile by userId or email (for server-side API calls)
  * This is a public query that doesn't require authentication
  */
 export const getProfileByUserId = query({
     args: {
         userId: v.string(),
+        email: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         // First try by userId
-        const profile = await ctx.db
+        let profile = await ctx.db
             .query("profiles")
             .withIndex("by_user", (q) => q.eq("userId", args.userId))
             .unique();
+
+        // If not found and email provided, try by email
+        if (!profile && args.email) {
+            profile = await ctx.db
+                .query("profiles")
+                .withIndex("by_email", (q) => q.eq("email", args.email!.toLowerCase()))
+                .unique();
+        }
 
         return profile;
     },
