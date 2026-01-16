@@ -194,21 +194,29 @@ export const getUsage = query({
 
         if (!profile) return null;
 
+        // Determine if admin (unlimited access)
+        const isAdmin = profile.is_admin ?? false;
+
+        // Calculate tier-based limits (enterprise = business tier)
+        const tier = profile.subscription_tier;
+        const tierLimit = isAdmin ? Infinity :
+            tier === 'pro' ? 400 :
+                tier === 'business' || tier === 'enterprise' ? 1000 :
+                    tier === 'basic' ? 150 : 12;
+
         // Map Convex profile to UserData structure used in the app
         return {
             tier: profile.subscription_tier,
             optimizationsUsed: profile.optimizations_used,
-            optimizationsLimit: profile.subscription_tier === 'pro' ? 400 :
-                profile.subscription_tier === 'business' ? 1000 :
-                    profile.subscription_tier === 'basic' ? 150 : 12,
+            optimizationsLimit: tierLimit,
             premiumCreditsUsed: 0, // Placeholder
-            premiumCreditsLimit: profile.subscription_tier === 'pro' ? 100 : 0,
-            canOptimize: profile.optimizations_remaining > 0 || profile.subscription_tier !== 'free',
-            canOrchestrate: profile.subscription_tier === 'pro' || profile.subscription_tier === 'business',
-            hasMcpAccess: profile.subscription_tier !== 'free' && profile.subscription_tier !== 'basic',
-            comprehensiveCreditsRemaining: profile.comprehensive_credits_remaining,
+            premiumCreditsLimit: tier === 'pro' || tier === 'business' || tier === 'enterprise' ? 100 : 0,
+            canOptimize: isAdmin || profile.optimizations_remaining > 0 || tier !== 'free',
+            canOrchestrate: isAdmin || tier === 'pro' || tier === 'business' || tier === 'enterprise',
+            hasMcpAccess: isAdmin || (tier !== 'free' && tier !== 'basic'),
+            comprehensiveCreditsRemaining: isAdmin ? 9999 : profile.comprehensive_credits_remaining,
             subscriptionStatus: profile.subscription_status,
-            isAdmin: profile.is_admin ?? false,
+            isAdmin,
             displayName: profile.display_name || profile.full_name,
         };
     },

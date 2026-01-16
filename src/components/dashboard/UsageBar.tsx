@@ -27,7 +27,7 @@ export function UsageBar({
                 <span>{label}</span>
                 {showNumbers && (
                     <span className="text-white">
-                        {used} / {limit}
+                        {limit === Infinity ? 'Unlimited' : `${used} / ${limit}`}
                     </span>
                 )}
             </div>
