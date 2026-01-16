@@ -302,3 +302,99 @@ export const setupAdminProfile = mutation({
     },
 });
 
+/**
+ * Migrate profiles from Supabase CSV data
+ * This imports the 4 users from the original Supabase database
+ */
+export const migrateFromSupabase = mutation({
+    args: {},
+    handler: async (ctx) => {
+        // The 4 profiles from Supabase profiles_rows.csv
+        const supabaseProfiles = [
+            {
+                supabaseId: "c93a4854-dce8-4339-860a-992bb6ff41bc",
+                email: "dj.blaney77@gmail.com",
+                subscription_tier: "enterprise" as const,
+                subscription_status: "active",
+                is_admin: true,
+                comprehensive_credits_remaining: 999969,
+                is_founding_member: false,
+                optimizations_used: 0,
+                created_at: new Date("2025-12-26T15:12:16.106167Z").getTime(),
+            },
+            {
+                supabaseId: "4145d0d5-46dd-433a-9948-77b88b386aec",
+                email: "dcdgllc14@gmail.com",
+                subscription_tier: "basic" as const,
+                subscription_status: "active",
+                is_admin: false,
+                comprehensive_credits_remaining: 0,
+                is_founding_member: true,
+                founding_wave: 1,
+                optimizations_used: 0,
+                created_at: new Date("2026-01-04T02:13:38.901618Z").getTime(),
+            },
+            {
+                supabaseId: "7ff513ec-d197-43ee-b640-3c903aa15f40",
+                email: "formatt.ricradio@gmail.com",
+                subscription_tier: "free" as const,
+                subscription_status: "trialing",
+                is_admin: false,
+                comprehensive_credits_remaining: 3,
+                is_founding_member: true,
+                founding_wave: 1,
+                polar_customer_id: "aa160c8e-b9cc-4d1f-a034-101e9f459822",
+                optimizations_used: 0,
+                created_at: new Date("2026-01-07T20:52:54.371258Z").getTime(),
+            },
+            {
+                supabaseId: "d12bf9b1-48d1-40c2-b3c6-9550d108101a",
+                email: "isac@polar.sh",
+                subscription_tier: "pro" as const,
+                subscription_status: "canceled",
+                is_admin: false,
+                comprehensive_credits_remaining: 3,
+                is_founding_member: true,
+                founding_wave: 1,
+                polar_customer_id: "fbfc505a-0baa-4e82-8023-d4e1127bc7ea",
+                optimizations_used: 0,
+                created_at: new Date("2026-01-13T08:25:35.480067Z").getTime(),
+            },
+        ];
+
+        const results = [];
+
+        for (const profile of supabaseProfiles) {
+            // Check if profile already exists
+            const existing = await ctx.db
+                .query("profiles")
+                .withIndex("by_email", (q) => q.eq("email", profile.email))
+                .first();
+
+            if (existing) {
+                results.push({ email: profile.email, status: "skipped", reason: "already exists" });
+                continue;
+            }
+
+            // Create profile
+            const profileId = await ctx.db.insert("profiles", {
+                userId: profile.supabaseId, // Use Supabase ID as userId for now
+                email: profile.email,
+                subscription_tier: profile.subscription_tier,
+                subscription_status: profile.subscription_status,
+                optimizations_remaining: 10000, // Set high limit
+                optimizations_used: profile.optimizations_used,
+                comprehensive_credits_remaining: profile.comprehensive_credits_remaining,
+                is_admin: profile.is_admin,
+                is_founding_member: profile.is_founding_member,
+                founding_wave: profile.founding_wave,
+                polar_customer_id: profile.polar_customer_id,
+                created_at: profile.created_at,
+            });
+
+            results.push({ email: profile.email, status: "created", profileId });
+        }
+
+        return { migrated: results.length, results };
+    },
+});
