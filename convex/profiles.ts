@@ -292,3 +292,68 @@ export const updateSubscriptionStatus = mutation({
         return false;
     },
 });
+
+/**
+ * Get credits for a user by userId (for agent API)
+ */
+export const getCreditsForAgent = query({
+    args: {
+        userId: v.string(),
+    },
+    handler: async (ctx, args) => {
+        // Try by userId first
+        const profile = await ctx.db
+            .query("profiles")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .unique();
+
+        if (!profile) return null;
+
+        return {
+            comprehensive_credits_remaining: profile.comprehensive_credits_remaining,
+            optimizations_remaining: profile.optimizations_remaining,
+            subscription_tier: profile.subscription_tier,
+        };
+    },
+});
+
+/**
+ * Deduct comprehensive credits (for agent API)
+ */
+export const deductCreditsForAgent = mutation({
+    args: {
+        userId: v.string(),
+        amount: v.number(),
+    },
+    handler: async (ctx, args) => {
+        // Find profile by userId
+        const profile = await ctx.db
+            .query("profiles")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .unique();
+
+        if (!profile) {
+            return { success: false, error: "User not found" };
+        }
+
+        const currentCredits = profile.comprehensive_credits_remaining;
+        if (currentCredits < args.amount) {
+            return {
+                success: false,
+                error: "Insufficient credits",
+                credits_remaining: currentCredits,
+            };
+        }
+
+        // Deduct credits
+        await ctx.db.patch(profile._id, {
+            comprehensive_credits_remaining: currentCredits - args.amount,
+            updated_at: new Date().toISOString(),
+        });
+
+        return {
+            success: true,
+            credits_remaining: currentCredits - args.amount,
+        };
+    },
+});
