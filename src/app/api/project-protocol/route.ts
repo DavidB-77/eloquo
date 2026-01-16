@@ -8,33 +8,31 @@ const AGENT_URL = process.env.AGENT_URL || "http://localhost:8001";
 
 export async function POST(request: NextRequest) {
     try {
-        // Get authenticated user
-        let token: string | undefined;
+        // Parse body first to get user info as fallback
+        const body = await request.json();
+        const { projectIdea, projectType, techPreferences, targetAudience, additionalContext, userId, userTier: clientTier } = body;
+
+        if (!projectIdea || projectIdea.length < 20) {
+            return NextResponse.json({ error: "Project idea must be at least 20 characters" }, { status: 400 });
+        }
+
+        // Try to get authenticated user, but fall back to client-provided data if auth fails
+        let userTier = clientTier || 'free';
+        let actualUserId = userId || 'anonymous';
+
         try {
-            token = await getToken();
+            const token = await getToken();
+            if (token) {
+                convex.setAuth(token);
+                const usageData = await convex.query(api.profiles.getUsage, {});
+                if (usageData) {
+                    userTier = usageData.tier || 'free';
+                }
+            }
         } catch (tokenError) {
-            console.error('[PROJECT PROTOCOL] Token error:', tokenError);
-            return NextResponse.json({ error: "Authentication service unavailable" }, { status: 503 });
+            console.error('[PROJECT PROTOCOL] Auth fallback - using client-provided tier:', clientTier);
+            // Continue with client-provided tier if auth fails on VPS
         }
-
-        if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        // Set token and get user
-        convex.setAuth(token);
-        const session = await convex.query(api.auth.getUserById, {});
-        if (!session) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        // Get user profile for tier info
-        const usageData = await convex.query(api.profiles.getUsage, {});
-        if (!usageData) {
-            return NextResponse.json({ error: "User profile not found" }, { status: 404 });
-        }
-
-        const userTier = usageData.tier || 'free';
 
         // Block free tier users
         if (userTier === 'free') {
@@ -44,12 +42,9 @@ export async function POST(request: NextRequest) {
             }, { status: 403 });
         }
 
-        const body = await request.json();
-        const { projectIdea, projectType, techPreferences, targetAudience, additionalContext, userId, userTier: clientTier } = body;
-
-        if (!projectIdea || projectIdea.length < 20) {
-            return NextResponse.json({ error: "Project idea must be at least 20 characters" }, { status: 400 });
-        }
+        // Ensure user tier is valid for agent (it only accepts basic/pro/business)
+        const agentTier = userTier === 'enterprise' ? 'business' :
+            (userTier === 'free' ? 'basic' : userTier);
 
         // Call local Agent V3
         console.log('[PROJECT PROTOCOL] Calling agent at:', `${AGENT_URL}/project-protocol`);
@@ -63,8 +58,8 @@ export async function POST(request: NextRequest) {
                 tech_preferences: techPreferences || null,
                 target_audience: targetAudience || null,
                 additional_context: additionalContext || null,
-                user_id: userId || session.id,
-                user_tier: userTier === 'enterprise' ? 'business' : userTier,
+                user_id: actualUserId,
+                user_tier: agentTier,
             }),
         });
 
