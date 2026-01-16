@@ -1,5 +1,9 @@
 // import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../../../../../convex/_generated/api";
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export async function GET(request: NextRequest) {
     try {
@@ -45,9 +49,19 @@ export async function GET(request: NextRequest) {
 
         const openRouterData = await response.json();
 
+        // Get deposited amount from Convex settings (fallback to env var)
+        let depositedAmount = parseFloat(process.env.OPENROUTER_DEPOSITED_AMOUNT || "35");
+        try {
+            const convexSetting = await convex.query(api.settings.getSettings, { key: "openrouter_deposited_amount" });
+            if (convexSetting !== null) {
+                depositedAmount = parseFloat(convexSetting);
+            }
+        } catch (e) {
+            console.warn("Could not fetch setting from Convex, using env var");
+        }
+
         // OpenRouter returns usage (amount spent), NOT balance
         // We need to calculate: balance = deposited - usage
-        const depositedAmount = parseFloat(process.env.OPENROUTER_DEPOSITED_AMOUNT || "20");
         const usage = openRouterData?.data?.usage || 0;
         const usageDaily = openRouterData?.data?.usage_daily || 0;
         const usageWeekly = openRouterData?.data?.usage_weekly || 0;

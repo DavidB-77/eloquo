@@ -11,6 +11,79 @@ import { useMutation, useQuery, useConvex } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Doc } from "../../../../convex/_generated/dataModel";
 
+// Integration Settings Component
+function IntegrationSettings() {
+    const [deposited, setDeposited] = React.useState("");
+    const [saving, setSaving] = React.useState(false);
+    const [saved, setSaved] = React.useState(false);
+
+    const currentValue = useQuery(api.settings.getSettings, { key: "openrouter_deposited_amount" });
+    const updateSetting = useMutation(api.settings.updateSettings);
+
+    React.useEffect(() => {
+        if (currentValue !== undefined && currentValue !== null) {
+            setDeposited(String(currentValue));
+        }
+    }, [currentValue]);
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            await updateSetting({ key: "openrouter_deposited_amount", value: deposited });
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+        } catch (e) {
+            console.error("Failed to save:", e);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <section className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6">
+            <h2 className="text-lg font-semibold text-white mb-6">🔗 Integration Settings</h2>
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-sm font-medium text-white">OpenRouter Deposited Amount</p>
+                        <p className="text-xs text-gray-500">Total USD deposited in OpenRouter (for balance calculation)</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-gray-400">$</span>
+                        <Input
+                            type="number"
+                            step="0.01"
+                            value={deposited}
+                            onChange={(e) => setDeposited(e.target.value)}
+                            className="w-24 bg-[#111] border-white/10 text-white text-right"
+                            placeholder="35"
+                        />
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="h-9 border-white/10 hover:bg-white/5"
+                        >
+                            {saving ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : saved ? (
+                                <Check className="h-4 w-4 text-green-400" />
+                            ) : (
+                                <Save className="h-4 w-4" />
+                            )}
+                        </Button>
+                    </div>
+                </div>
+                <p className="text-xs text-gray-600 mt-2">
+                    Balance is calculated as: Deposited - API Usage. Update this when you add more credits.
+                </p>
+            </div>
+        </section>
+    );
+}
+
+
 export default function AdminSettingsPage() {
     const [settings, setSettings] = React.useState<GeneralSettings | null>(null);
     const [loadingSettings, setLoadingSettings] = React.useState(true);
@@ -300,14 +373,8 @@ export default function AdminSettingsPage() {
                 </div>
             </section>
 
-            {/* Integration Settings (Placeholder for now, keeping UI) */}
-            <section className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 opacity-60 pointer-events-none grayscale">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-white">🔗 Integration Settings</h2>
-                    <span className="text-xs border border-white/20 px-2 py-1 rounded text-white/50">Coming Soon</span>
-                </div>
-                <p className="text-sm text-gray-500">Integration configuration will be available in the next update.</p>
-            </section>
+            {/* Integration Settings */}
+            <IntegrationSettings />
 
             {/* Admin Users */}
             <section className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6">
