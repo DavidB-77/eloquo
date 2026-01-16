@@ -273,9 +273,9 @@ export async function callOptimize(request: OptimizeRequest): Promise<OptimizeRe
 
         console.log(`[AGENT-V3] Requesting ${AGENT_URL}/optimize (Tier: ${v3Tier}, Model: ${v3Request.target_model}, Answers: ${!!v3Request.clarification_answers})`);
 
-        // Add 50s timeout to avoid Nginx 504 (default 60s)
+        // Add 120s timeout to avoid Nginx 504 and handle multi-stage LLM chains
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 50000);
+        const timeoutId = setTimeout(() => controller.abort(), 120000);
 
         const response = await fetch(`${AGENT_URL}/optimize`, {
             method: 'POST',
