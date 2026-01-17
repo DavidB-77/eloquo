@@ -57,6 +57,45 @@ export const getMyTickets = query({
 });
 
 /**
+ * Count user's tickets with unread admin responses
+ */
+export const countUnreadResponses = query({
+    args: {},
+    handler: async (ctx) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) return 0;
+
+        // Get user's tickets
+        const tickets = await ctx.db
+            .query("support_tickets")
+            .withIndex("by_user", (q) => q.eq("user_id", identity.subject))
+            .collect();
+
+        let unreadCount = 0;
+        for (const ticket of tickets) {
+            // Get last admin response
+            const responses = await ctx.db
+                .query("ticket_responses")
+                .withIndex("by_ticket", (q) => q.eq("ticket_id", ticket._id))
+                .order("desc")
+                .collect();
+
+            // If the last response is from admin and newer than user's last view, count as unread
+            const lastResponse = responses[0];
+            if (lastResponse && lastResponse.is_admin) {
+                // Check if user has responded after this
+                const userResponses = responses.filter(r => !r.is_admin);
+                if (userResponses.length === 0 || userResponses[0].created_at < lastResponse.created_at) {
+                    unreadCount++;
+                }
+            }
+        }
+
+        return unreadCount;
+    },
+});
+
+/**
  * Get ticket with responses
  */
 export const getTicketWithResponses = query({
@@ -168,6 +207,32 @@ export const getAllTickets = query({
         }
 
         return tickets;
+    },
+});
+
+/**
+ * Count open tickets for admin (tickets needing attention)
+ */
+export const countOpenTickets = query({
+    args: {},
+    handler: async (ctx) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) return 0;
+
+        // Verify admin
+        const profile = await ctx.db
+            .query("profiles")
+            .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+            .unique();
+
+        if (!profile?.is_admin) return 0;
+
+        const openTickets = await ctx.db
+            .query("support_tickets")
+            .withIndex("by_status", (q) => q.eq("status", "open"))
+            .collect();
+
+        return openTickets.length;
     },
 });
 

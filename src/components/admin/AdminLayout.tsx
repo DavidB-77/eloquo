@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 const NAV_ITEMS = [
     { href: "/admin", label: "Overview", icon: LayoutDashboard },
@@ -38,6 +40,9 @@ interface AdminLayoutProps {
 export function AdminLayout({ children }: AdminLayoutProps) {
     const pathname = usePathname();
     const [collapsed, setCollapsed] = React.useState(false);
+
+    // Fetch open ticket count for admin
+    const openTicketCount = useQuery(api.support.countOpenTickets) ?? 0;
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] flex">
@@ -78,14 +83,24 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                 key={item.href}
                                 href={item.href}
                                 className={cn(
-                                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all",
+                                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all relative",
                                     isActive
                                         ? "bg-[#09B7B4]/20 text-[#09B7B4]"
                                         : "text-gray-400 hover:bg-white/5 hover:text-white"
                                 )}
                             >
-                                <Icon className="h-5 w-5 shrink-0" />
-                                {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+                                <div className="relative">
+                                    <Icon className="h-5 w-5 shrink-0" />
+                                    {item.href === "/admin/support" && openTicketCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-red-500 rounded-full animate-pulse" />
+                                    )}
+                                </div>
+                                {!collapsed && <span className="text-sm font-medium flex-1">{item.label}</span>}
+                                {!collapsed && item.href === "/admin/support" && openTicketCount > 0 && (
+                                    <span className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                        {openTicketCount > 9 ? "9+" : openTicketCount}
+                                    </span>
+                                )}
                             </Link>
                         );
                     })}

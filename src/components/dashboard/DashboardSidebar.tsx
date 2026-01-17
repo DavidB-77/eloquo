@@ -25,6 +25,9 @@ import { UsageBar } from "@/components/dashboard/UsageBar";
 
 import { FreeTierIndicator } from '@/components/FreeTierIndicator';
 
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+
 const NAV_LINKS = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
     { href: "/dashboard/optimize", icon: Zap, label: "Optimize" },
@@ -38,6 +41,9 @@ export function DashboardSidebar() {
     const { user, signOut } = useAuth();
 
     const { userData } = useUser();
+
+    // Fetch support notification count
+    const unreadSupportCount = useQuery(api.support.countUnreadResponses) ?? 0;
 
     // Format tier display name
     const getTierDisplay = (tier: string) => {
@@ -84,6 +90,7 @@ export function DashboardSidebar() {
                             icon={link.icon}
                             label={link.label}
                             isCollapsed={isCollapsed}
+                            notificationCount={link.href === "/dashboard/support" ? unreadSupportCount : undefined}
                         />
                     ))}
 
