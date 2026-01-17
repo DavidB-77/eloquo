@@ -105,19 +105,37 @@ export function DashboardSidebar() {
                             <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
                                 <Zap className="h-12 w-12 text-electric-cyan" />
                             </div>
-                            <div className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em] mb-4">Subscription Tier</div>
-                            <div className="font-display text-md mb-4 capitalize text-white flex items-center gap-2">
-                                {getTierDisplay(userData.tier)}
-                                <Badge variant="pro" className="py-0 px-1.5 h-4">Active</Badge>
+                            <div className="text-[10px] font-bold text-electric-cyan uppercase tracking-[0.2em] mb-4">
+                                {userData.isAdmin ? "Admin Access" : "Subscription Tier"}
                             </div>
-                            <UsageBar
-                                used={userData.optimizationsUsed}
-                                limit={userData.optimizationsLimit}
-                                label="Credits"
-                                showNumbers={true}
-                            />
+                            <div className="font-display text-md mb-4 capitalize text-white flex items-center gap-2">
+                                {userData.isAdmin ? (
+                                    <>
+                                        <Shield className="h-4 w-4 text-terracotta" />
+                                        <span className="text-terracotta">Administrator</span>
+                                        <Badge variant="pro" className="py-0 px-1.5 h-4 bg-terracotta/20 text-terracotta border-terracotta/30">Full Access</Badge>
+                                    </>
+                                ) : (
+                                    <>
+                                        {getTierDisplay(userData.tier)}
+                                        <Badge variant="pro" className="py-0 px-1.5 h-4">Active</Badge>
+                                    </>
+                                )}
+                            </div>
+                            {userData.isAdmin ? (
+                                <div className="text-sm text-white/60">
+                                    <span className="text-terracotta font-bold">∞ Unlimited</span> credits
+                                </div>
+                            ) : (
+                                <UsageBar
+                                    used={userData.optimizationsUsed}
+                                    limit={userData.optimizationsLimit}
+                                    label="Credits"
+                                    showNumbers={true}
+                                />
+                            )}
                             <div className="mt-2 text-[9px] text-white/30 font-mono">
-                                1 opt = 1 credit • Project Protocol = 5
+                                {userData.isAdmin ? "Admin • All features unlocked" : "1 opt = 1 credit • Project Protocol = 5"}
                             </div>
                         </div>
                     </div>
