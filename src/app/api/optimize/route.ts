@@ -71,12 +71,13 @@ export async function POST(request: Request) {
 
                     // Get usage data
                     usageData = await convex.query(api.profiles.getUsage, {});
-                    if (usageData) {
-                        userTier = usageData.tier;
-                        comprehensiveCreditsRemaining = usageData.comprehensiveCreditsRemaining ?? 3;
-                        actualUserId = session.id || actualUserId;
-                        actualEmail = session.email || actualEmail;
-                    }
+                    userTier = usageData.tier;
+                    comprehensiveCreditsRemaining = usageData.comprehensiveCreditsRemaining ?? 3;
+
+                    // PRIORITIZE SESSION ID: Always use the ID from the active better-auth session
+                    // over any ID found in an old profile to ensure history sync works for new sessions.
+                    actualUserId = session.id;
+                    actualEmail = session.email;
                 }
             }
         } catch (tokenError) {

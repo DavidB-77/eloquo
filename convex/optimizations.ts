@@ -67,19 +67,18 @@ export const createOptimization = mutation({
         }
 
         // Use the actual userId from profile if found
-        const profileUserId = profile.userId;
+        let profileUserId = profile.userId;
 
-        // SYNC LOGIC: If the provided userId (from Better Auth) doesn't match the profile's userId,
-        // we should update the profile so future queries (like history) work correctly.
         if (args.userId && profileUserId !== args.userId) {
             console.log(`[SYNC] Updating profile userId from ${profileUserId} to ${args.userId}`);
             await ctx.db.patch(profile._id, {
                 userId: args.userId,
                 updated_at: new Date().toISOString()
             });
+            profileUserId = args.userId; // Use the updated ID
         }
 
-        const finalUserId = args.userId || profileUserId;
+        const finalUserId = profileUserId;
 
         // 3. Check rate limits
         await checkRateLimit(ctx, profile);
@@ -159,17 +158,53 @@ export const getOptimizationHistory = query({
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
         if (!identity) {
-            // Return empty array instead of throwing - user just hasn't logged in yet
             return [];
         }
 
-        const optimizations = await ctx.db
-            .query("optimizations")
-            .withIndex("by_user", (q) => q.eq("user_id", identity.subject))
-            .order("desc")
-            .take(args.limit ?? 50);
+        // 1. Try to find profile to get the "correct" userId
+        let profile = await ctx.db
+            .query("profiles")
+            .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+            .unique();
 
-        return optimizations;
+        if (!profile && identity.email) {
+            const userEmail = identity.email.toLowerCase();
+            profile = await ctx.db
+                .query("profiles")
+                .withIndex("by_email", (q) => q.eq("email", userEmail))
+                .unique();
+        }
+
+        // 2. Determine which IDs to query for
+        // We query by the profile's userId AND the current identity's subject
+        // to catch all records during the transition period.
+        const searchIds = [identity.subject];
+        if (profile?.userId && profile.userId !== identity.subject) {
+            searchIds.push(profile.userId);
+        }
+
+        // 3. Collect optimizations for both IDs and sort
+        // Note: For simplicity and since volume is low, we fetch both and merge
+        // A more efficient way would be a single query if Convex supported IN, but it doesn't.
+        const allOptimizations = [];
+        for (const uid of searchIds) {
+            const results = await ctx.db
+                .query("optimizations")
+                .withIndex("by_user", (q) => q.eq("user_id", uid))
+                .order("desc")
+                .take(args.limit ?? 50);
+            allOptimizations.push(...results);
+        }
+
+        // Deduplicate and sort
+        const uniqueMap = new Map();
+        for (const opt of allOptimizations) {
+            uniqueMap.set(opt._id, opt);
+        }
+
+        return Array.from(uniqueMap.values())
+            .sort((a, b) => b.created_at - a.created_at)
+            .slice(0, args.limit ?? 50);
     },
 });
 
