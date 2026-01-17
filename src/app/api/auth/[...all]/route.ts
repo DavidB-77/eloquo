@@ -10,14 +10,18 @@ export const dynamic = "force-dynamic";
 // Helper to sanitize headers and create a safe request object
 const getSafeRequest = (request: Request): Request => {
     const headers = new Headers(request.headers);
-    // 'connection' header can cause "invalid connection header" errors in node's fetch/undici
+    // Problematic headers for Node's fetch (undici)
     headers.delete("connection");
+    headers.delete("keep-alive");
+    headers.delete("proxy-connection");
+    headers.delete("transfer-encoding");
+    headers.delete("host"); // Let fetch set the correct host based on request.url
 
     return new Request(request.url, {
         method: request.method,
         headers: headers,
-        body: request.body,
-        duplex: "half", // Required for streaming bodies in Node environments
+        body: request.method === "POST" ? request.body : undefined,
+        duplex: "half",
     } as any);
 };
 
