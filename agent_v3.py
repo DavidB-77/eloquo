@@ -58,7 +58,15 @@ TIER_MODELS = {
         "analyze": "google/gemini-2.0-flash-001",
         "generate": "google/gemini-2.0-flash-001",
     },
+    "enterprise": {
+        "classify": "google/gemini-2.0-flash-lite-preview-02-05",
+        "analyze": "google/gemini-2.0-flash-001",
+        "generate": "google/gemini-2.0-flash-001",
+    },
 }
+
+def get_models_for_tier(tier: str):
+    return TIER_MODELS.get(tier, TIER_MODELS["business"])
 # Cost per 1M tokens (input/output)
 MODEL_COSTS = {
     "google/gemini-2.5-flash-lite": {"input": 0.10, "output": 0.40},
@@ -771,7 +779,7 @@ async def optimize(request: OptimizeRequest):
                     "model": FILE_ANALYSIS_MODEL,
                     "files_count": len(request.files)
                 }
-        models = TIER_MODELS[request.user_tier]
+        models = get_models_for_tier(request.user_tier)
         
         # Stage 1: Classify
         logger.info(f"[STAGE 1] Starting Classification (Model: {models['classify']})...")
