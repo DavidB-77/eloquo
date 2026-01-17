@@ -10,9 +10,16 @@
 
 import type * as admin from "../admin.js";
 import type * as announcements from "../announcements.js";
+import type * as api_keys from "../api_keys.js";
 import type * as auth from "../auth.js";
+import type * as debug_identity from "../debug_identity.js";
+import type * as debug_profiles from "../debug_profiles.js";
+import type * as debug_qube from "../debug_qube.js";
+import type * as debug_recent from "../debug_recent.js";
 import type * as dodopayments from "../dodopayments.js";
 import type * as email from "../email.js";
+import type * as fix_profile from "../fix_profile.js";
+import type * as free_tier from "../free_tier.js";
 import type * as http from "../http.js";
 import type * as optimizations from "../optimizations.js";
 import type * as passwordReset from "../passwordReset.js";
@@ -31,9 +38,16 @@ import type {
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   announcements: typeof announcements;
+  api_keys: typeof api_keys;
   auth: typeof auth;
+  debug_identity: typeof debug_identity;
+  debug_profiles: typeof debug_profiles;
+  debug_qube: typeof debug_qube;
+  debug_recent: typeof debug_recent;
   dodopayments: typeof dodopayments;
   email: typeof email;
+  fix_profile: typeof fix_profile;
+  free_tier: typeof free_tier;
   http: typeof http;
   optimizations: typeof optimizations;
   passwordReset: typeof passwordReset;

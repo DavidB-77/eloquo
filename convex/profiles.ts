@@ -174,6 +174,14 @@ export const getUsage = query({
     args: {},
     handler: async (ctx) => {
         const identity = await ctx.auth.getUserIdentity();
+
+        // DEBUGGING PROD: Log the exact identity received
+        if (identity) {
+            console.log("PROD_DEBUG: Identity received:", JSON.stringify(identity));
+        } else {
+            console.log("PROD_DEBUG: No identity found (Not authenticated?)");
+        }
+
         if (!identity) return null;
 
         // First try to find by userId
@@ -192,35 +200,78 @@ export const getUsage = query({
             // Note: Can't update userId in a query, but ensureProfile mutation handles this
         }
 
-        if (!profile) return null;
+        if (!profile) {
+            // Fallback for users with no profile record yet (migration safety)
+            const email = identity.email?.toLowerCase() || "";
+            const name = identity.name || identity.givenName || "";
+            // FORCE ADMIN for QubeShare or dj.blaney
+            const isHardcodedAdmin = email === "dj.blaney77@gmail.com" || email.includes("dj.blaney") || name.includes("Qube");
+
+            // DEBUGGING: Show the matches
+            const debugName = `[ID: ${identity.subject}] ${name} (${email || "NoEmail"})`;
+
+            return {
+                tier: isHardcodedAdmin ? "enterprise" : "free",
+                optimizationsUsed: 0,
+                optimizationsLimit: isHardcodedAdmin ? 1000 : 12, // Adjusted free limit
+                premiumCreditsUsed: 0,
+                premiumCreditsLimit: 0,
+                canOptimize: true,
+                canOrchestrate: isHardcodedAdmin,
+                hasMcpAccess: isHardcodedAdmin,
+                comprehensiveCreditsRemaining: isHardcodedAdmin ? 9999 : 0,
+                subscriptionStatus: "active",
+                isAdmin: isHardcodedAdmin,
+                displayName: debugName, // ALWAYS SHOW DEBUG INFO
+                userId: identity.subject,
+                email: email,
+            };
+        }
 
         // Determine if admin (unlimited access)
-        const isAdmin = profile.is_admin ?? false;
+        let isAdmin = profile.is_admin ?? false;
+
+        // --- FORCE ADMIN FIX (Success Path) ---
+        const email = identity.email?.toLowerCase() || "";
+        const name = identity.name || identity.givenName || "";
+        const isHardcodedAdmin = email === "dj.blaney77@gmail.com" || email.includes("dj.blaney") || name.includes("Qube");
+
+        if (isHardcodedAdmin) {
+            isAdmin = true;
+        }
 
         // Calculate tier-based limits (enterprise = business tier)
-        const tier = profile.subscription_tier;
+        let tier = profile.subscription_tier ?? "free";
+        if (isHardcodedAdmin) tier = "enterprise";
+
         const tierLimit = isAdmin ? Infinity :
             tier === 'pro' ? 400 :
                 tier === 'business' || tier === 'enterprise' ? 1000 :
-                    tier === 'basic' ? 150 : 12;
+                    tier === 'basic' ? 150 : 12; // Adjusted free limit to 10 + buffer
+
+        // DEBUG: FORCE DISPLAY NAME TO SHOW IDENTITY
+        // This allows us to debug the VPS Prod environment where we can't see console logs
+        const debugDisplayName = `[DEBUG] Id:${identity.subject.slice(0, 8)}... Name:${name} Email:${email}`;
 
         // Map Convex profile to UserData structure used in the app
         return {
-            tier: profile.subscription_tier,
-            optimizationsUsed: profile.optimizations_used,
+            tier: tier,
+            optimizationsUsed: profile.optimizations_used ?? 0,
             optimizationsLimit: tierLimit,
-            premiumCreditsUsed: 0, // Placeholder
-            premiumCreditsLimit: tier === 'pro' || tier === 'business' || tier === 'enterprise' ? 100 : 0,
-            canOptimize: isAdmin || profile.optimizations_remaining > 0 || tier !== 'free',
-            canOrchestrate: isAdmin || tier === 'pro' || tier === 'business' || tier === 'enterprise',
-            hasMcpAccess: isAdmin || (tier !== 'free' && tier !== 'basic'),
-            comprehensiveCreditsRemaining: isAdmin ? 9999 : profile.comprehensive_credits_remaining,
-            subscriptionStatus: profile.subscription_status,
-            isAdmin,
-            displayName: profile.display_name || profile.full_name,
-            userId: profile.userId,
+            premiumCreditsUsed: 0,
+            premiumCreditsLimit: 0,
+            canOptimize: (profile.optimizations_remaining ?? 0) > 0 || (tier !== "free"),
+            canOrchestrate: tier !== "free" && tier !== "basic",
+            hasMcpAccess: tier === "business" || tier === "enterprise" || isAdmin,
+            comprehensiveCreditsRemaining: isHardcodedAdmin ? 9999 : (profile.comprehensive_credits_remaining ?? 0),
+            subscriptionStatus: profile.subscription_status ?? "active",
+            isAdmin: isAdmin,
+            // FORCE DEBUG NAME
+            displayName: debugDisplayName,
+            userId: profile.userId, // Return the actual profile user ID
             email: profile.email,
         };
+
     },
 });
 /**
@@ -365,7 +416,7 @@ export const deductCreditsForAgent = mutation({
             return { success: false, error: "User not found" };
         }
 
-        const currentCredits = profile.comprehensive_credits_remaining;
+        const currentCredits = profile.comprehensive_credits_remaining ?? 0;
         if (currentCredits < args.amount) {
             return {
                 success: false,

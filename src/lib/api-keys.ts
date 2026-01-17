@@ -6,6 +6,11 @@
 import { createHash, randomBytes } from 'crypto';
 // import { TIER_LIMITS, SubscriptionTier } from './usage'; // DEPRECATED
 
+import { ConvexHttpClient } from 'convex/browser';
+import { api } from '../../convex/_generated/api';
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
 export type SubscriptionTier = 'free' | 'basic' | 'pro' | 'business' | 'enterprise';
 
 export const TIER_LIMITS: Record<SubscriptionTier, { hasMcpAccess: boolean }> = {
@@ -60,45 +65,27 @@ export async function validateApiKey(key: string): Promise<{
         return null;
     }
 
-    // DB Logic removed for build fix
-    /*
-    const supabase = await createClient();
-    const keyHash = hashApiKey(key);
+    try {
+        const keyHash = hashApiKey(key);
 
-    // Look up the key hash
-    const { data: apiKey, error } = await supabase
-        .from('api_keys')
-        .select('user_id, revoked_at')
-        .eq('key_hash', keyHash)
-        .single();
+        // Call Convex mutation to validate and update usage
+        // @ts-ignore
+        const result = await convex.mutation(api.api_keys.validateApiKey, { keyHash });
 
-    if (error || !apiKey || apiKey.revoked_at) {
+        if (!result) return null;
+
+        const tier = result.tier as SubscriptionTier;
+        const hasMcpAccess = TIER_LIMITS[tier]?.hasMcpAccess || false;
+
+        return {
+            userId: result.userId,
+            tier,
+            hasMcpAccess,
+        };
+    } catch (error) {
+        console.error("API Key Validation Error:", error);
         return null;
     }
-
-    // Get user's profile for tier
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('subscription_tier')
-        .eq('id', apiKey.user_id)
-        .single();
-
-    const tier = (profile?.subscription_tier as SubscriptionTier) || 'free';
-    const hasMcpAccess = TIER_LIMITS[tier].hasMcpAccess;
-
-    // Update last_used_at
-    await supabase
-        .from('api_keys')
-        .update({ last_used_at: new Date().toISOString() })
-        .eq('key_hash', keyHash);
-
-    return {
-        userId: apiKey.user_id,
-        tier,
-        hasMcpAccess,
-    };
-    */
-    return null;
 }
 
 /**
@@ -109,90 +96,75 @@ export async function createApiKey(
     userId: string,
     name: string
 ): Promise<{ key: string; id: string } | null> {
-    /*
-    // Get user's tier
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('subscription_tier')
-        .eq('id', userId)
-        .single();
-    */
-    const profile = { subscription_tier: 'free' }; // Mock for build
+    try {
+        // Get user's tier
+        const profile = await convex.query(api.profiles.getProfileByUserId, { userId });
+        const tier = (profile?.subscription_tier as SubscriptionTier) || 'free';
 
+        // Check if user has MCP access
+        if (!TIER_LIMITS[tier]?.hasMcpAccess) {
+            console.warn(`User ${userId} on tier ${tier} tried to create API key without access`);
+            return null;
+        }
 
-    const tier = (profile?.subscription_tier as SubscriptionTier) || 'free';
+        // Generate and store key
+        const key = generateApiKey(tier);
+        const keyHash = hashApiKey(key);
+        const keyPrefix = getKeyPrefix(key);
 
-    // Check if user has MCP access
-    if (!TIER_LIMITS[tier].hasMcpAccess) {
-        return null;
-    }
-
-    // Generate and store key
-    const key = generateApiKey(tier);
-    const keyHash = hashApiKey(key);
-    const keyPrefix = getKeyPrefix(key);
-
-    /*
-    const { data, error } = await supabase
-        .from('api_keys')
-        .insert({
-            user_id: userId,
-            key_hash: keyHash,
-            key_prefix: keyPrefix,
+        // @ts-ignore
+        const { id } = await convex.mutation(api.api_keys.createApiKey, {
+            userId,
             name,
-        })
-        .select('id')
-        .single();
+            keyHash,
+            keyPrefix
+        });
 
-    if (error) {
+        return { key, id };
+    } catch (error) {
         console.error('Failed to create API key:', error);
         return null;
     }
-
-    return { key, id: data.id };
-    */
-    return null;
-
 }
 
 /**
  * Revoke an API key
  */
 export async function revokeApiKey(userId: string, keyId: string): Promise<boolean> {
-    /*
-    const supabase = await createClient();
-
-    const { error } = await supabase
-        .from('api_keys')
-        .update({ revoked_at: new Date().toISOString() })
-        .eq('id', keyId)
-        .eq('user_id', userId);
-
-    return !error;
-    */
-    return false;
-
+    try {
+        // Requires importing Id type if we want strict typing for keyId, but string is usually fine in args passing
+        // Casting keyId to match Convex ID type
+        // @ts-ignore
+        await convex.mutation(api.api_keys.revokeApiKey, { userId, keyId });
+        return true;
+    } catch (error) {
+        console.error('Failed to revoke API key:', error);
+        return false;
+    }
 }
 
 /**
  * List user's API keys (only prefix and metadata, never the full key)
  */
 export async function listApiKeys(userId: string) {
-    /*
-    const supabase = await createClient();
+    try {
+        // @ts-ignore
+        const keys = await convex.query(api.api_keys.listApiKeys, { userId });
 
-    const { data, error } = await supabase
-        .from('api_keys')
-        .select('id, key_prefix, name, last_used_at, created_at, revoked_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        // Filter out revoked keys if desired, or return all with status
+        // Current implementation returns all, but we can filter or map.
+        // Returning raw convex result is fine as it matches expected structure mostly
 
-    if (error) {
+        return keys.map((k: any) => ({
+            id: k._id,
+            key_prefix: k.key_prefix,
+            name: k.name,
+            last_used_at: k.last_used_at ? new Date(k.last_used_at).toISOString() : null,
+            created_at: new Date(k.created_at).toISOString(),
+            revoked_at: k.revoked_at ? new Date(k.revoked_at).toISOString() : null,
+        }));
+    } catch (error) {
         console.error('Failed to list API keys:', error);
         return [];
     }
-    return data;
-    */
-    return [];
-
 }

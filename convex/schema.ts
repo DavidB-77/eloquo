@@ -9,28 +9,22 @@ export default defineSchema({
     profiles: defineTable({
         userId: v.string(), // Maps to Supabase auth.users.id
         email: v.string(),
-        full_name: v.optional(v.string()),
-        display_name: v.optional(v.string()),
-        subscription_tier: v.union(
-            v.literal("free"),
-            v.literal("basic"),
-            v.literal("pro"),
-            v.literal("business"),
-            v.literal("enterprise")
-        ),
-        subscription_status: v.optional(v.string()),
-        polar_customer_id: v.optional(v.string()),
-        dodo_payment_id: v.optional(v.string()),
-        dodo_customer_id: v.optional(v.string()),
-        optimizations_remaining: v.number(),
-        optimizations_used: v.number(),
-        comprehensive_credits_remaining: v.number(),
-        is_admin: v.boolean(),
-        is_founding_member: v.boolean(),
-        founding_wave: v.optional(v.number()),
-        created_at: v.number(), // Unix timestamp
-        last_sign_in_at: v.optional(v.number()),
-        updated_at: v.optional(v.string()),
+        full_name: v.optional(v.union(v.string(), v.null())),
+        display_name: v.optional(v.union(v.string(), v.null())),
+        subscription_tier: v.optional(v.union(v.string(), v.null())),
+        subscription_status: v.optional(v.union(v.string(), v.null())),
+        polar_customer_id: v.optional(v.union(v.string(), v.null())),
+        dodo_payment_id: v.optional(v.union(v.string(), v.null())),
+        dodo_customer_id: v.optional(v.union(v.string(), v.null())),
+        optimizations_remaining: v.optional(v.union(v.number(), v.null())),
+        optimizations_used: v.optional(v.union(v.number(), v.null())),
+        comprehensive_credits_remaining: v.optional(v.union(v.number(), v.null())),
+        is_admin: v.optional(v.union(v.boolean(), v.null())),
+        is_founding_member: v.optional(v.union(v.boolean(), v.null())),
+        founding_wave: v.optional(v.union(v.number(), v.null())),
+        created_at: v.optional(v.union(v.number(), v.null())), // Unix timestamp
+        last_sign_in_at: v.optional(v.union(v.number(), v.null())),
+        updated_at: v.optional(v.union(v.string(), v.null())),
     })
         .index("by_user", ["userId"])
         .index("by_email", ["email"])
@@ -91,22 +85,90 @@ export default defineSchema({
         .index("by_user", ["user_id"])
         .index("by_created_at", ["created_at"]),
 
-    // Optimization Logs (for analytics)
+    // Optimization Logs (detailed analytics, replaces Supabase agent_requests)
     optimization_logs: defineTable({
         user_id: v.string(),
-        feature: v.string(), // "optimize", "refine", "project-protocol", etc.
+        request_id: v.optional(v.string()), // Made optional for legacy data compatibility
+        status: v.optional(v.string()), // Made optional
+        error_message: v.optional(v.string()),
+
+        // Legacy Fields (found in Prod)
+        cost_usd: v.optional(v.number()),
+        feature: v.optional(v.string()),
+        model_used: v.optional(v.string()),
+
+        // Detailed Token Usage
         input_tokens: v.number(),
         output_tokens: v.number(),
-        model_used: v.string(),
-        cost_usd: v.number(),
+        total_tokens: v.optional(v.number()), // Made optional
+
+        // Granular Costs
+        classify_cost: v.optional(v.number()),
+        analyze_cost: v.optional(v.number()),
+        generate_cost: v.optional(v.number()),
+        total_cost_usd: v.optional(v.number()), // Made optional
+
+        // Models Used
+        classify_model: v.optional(v.string()),
+        analyze_model: v.optional(v.string()),
+        generate_model: v.optional(v.string()),
+        target_model: v.optional(v.string()), // Made optional
+
+        // Performance
         processing_time_ms: v.number(),
+        quality_score: v.optional(v.number()),
+
+        // Metadata
+        complexity: v.optional(v.string()),
+        domain: v.optional(v.string()),
+        stages_used: v.optional(v.array(v.string())),
+        user_tier: v.optional(v.string()), // Made optional
+
         created_at: v.number(),
     })
         .index("by_user", ["user_id"])
-        .index("by_feature", ["feature"])
+        .index("by_status", ["status"])
         .index("by_created_at", ["created_at"]),
 
-    // Free Tier Tracking - DEPRECATED (Moved to Rate Limiter)
+    // Free Tier Tracking (Replaces Supabase free_tier_tracking)
+    free_tier_tracking: defineTable({
+        fingerprint_hash: v.string(),
+        ip_hash: v.optional(v.string()),
+        user_id: v.optional(v.string()),
+
+        weekly_usage: v.number(),
+        week_start: v.number(), // Unix timestamp for start of week
+
+        is_flagged: v.boolean(),
+        flag_reason: v.optional(v.string()),
+
+        created_at: v.number(),
+        updated_at: v.number(),
+    })
+        .index("by_fingerprint", ["fingerprint_hash"])
+        .index("by_ip", ["ip_hash"])
+        .index("by_user", ["user_id"]),
+
+    // Daily Metrics (Replaces Supabase daily_metrics)
+    daily_metrics: defineTable({
+        date: v.string(), // YYYY-MM-DD
+        total_requests: v.number(),
+        unique_users: v.number(),
+        avg_processing_time_ms: v.number(),
+        total_cost_usd: v.number(),
+        total_errors: v.number(),
+
+        // Model breakdowns
+        model_counts: v.optional(v.object({
+            gpt: v.number(),
+            claude: v.number(),
+            gemini: v.number(),
+            deepseek: v.number(),
+            other: v.number(),
+        })),
+
+        created_at: v.number(),
+    }).index("by_date", ["date"]),
 
     // System Settings
     system_settings: defineTable({

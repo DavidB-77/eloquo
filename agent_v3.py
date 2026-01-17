@@ -38,8 +38,8 @@ langfuse = get_client()
 
 # ============== CONFIGURATION ==============
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+# ============== CONFIGURATION ==============
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 # Model configuration per tier
 TIER_MODELS = {
@@ -131,10 +131,12 @@ def get_cot_phrase(domain: str, complexity: str, target_model: str = "auto") -> 
     # Get domain-specific or default CoT phrase
     return COT_PHRASES.get(domain, COT_PHRASES["default"])
 def get_self_refine_instruction(user_tier: str, complexity: str) -> str:
-    """Get self-refine instruction for Pro/Business on complex tasks."""
-    if user_tier not in ["pro", "business"]:
-        return ""
-    if complexity != "complex":
+    """Get self-refine instruction. Enabled for ALL tiers to ensure quality showcase."""
+    # We enable this for everyone now
+    # if user_tier not in ["pro", "business"]: return ""
+    
+    # Only skip for very simple tasks where it might be overkill
+    if complexity == "simple":
         return ""
     
     return """
@@ -189,7 +191,7 @@ class GenerateResult(BaseModel):
 
 class OptimizeRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=10000)
-    user_tier: Literal["basic", "pro", "business"] = Field(default="basic")
+    user_tier: Literal["basic", "pro", "business", "enterprise"] = Field(default="basic")
     context: Optional[str] = Field(default=None)
     clarification_answers: Optional[dict] = Field(default=None)
     files: Optional[list[dict]] = Field(default=None, description="Base64 encoded files")
@@ -216,6 +218,7 @@ class OptimizeResponse(BaseModel):
     # Business tier fields
     alternative_approaches: Optional[list[str]] = None
     ab_variants: Optional[list[str]] = None
+    analytics: Optional[dict] = None # New field for passing detailed logs to Convex
 
 # ============== AGENT PROMPTS ==============
 
@@ -527,26 +530,9 @@ def calculate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
     costs = MODEL_COSTS.get(model, {"input": 0.5, "output": 1.5})
     return (input_tokens * costs["input"] / 1_000_000) + (output_tokens * costs["output"] / 1_000_000)
 
-async def log_to_supabase(data: dict):
-    """Log optimization request to Supabase."""
-    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
-        return
-    
-    try:
-        async with httpx.AsyncClient() as client:
-            await client.post(
-                f"{SUPABASE_URL}/rest/v1/optimization_logs",
-                headers={
-                    "apikey": SUPABASE_SERVICE_KEY,
-                    "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-                    "Content-Type": "application/json",
-                    "Prefer": "return=minimal"
-                },
-                json=data,
-                timeout=5.0
-            )
-    except Exception as e:
-        print(f"Supabase log error: {e}")
+    return (input_tokens * costs["input"] / 1_000_000) + (output_tokens * costs["output"] / 1_000_000)
+
+# Supabase logging removed - analytics passed in response for handling by main app
 
 # ============== EXPORT MODELS ==============
 
@@ -687,7 +673,7 @@ def create_classifier(model_id: str) -> Agent:
     """Create classifier agent."""
     return Agent(
         name="Classifier",
-        model=OpenRouter(id=model_id, api_key=OPENROUTER_API_KEY),
+        model=OpenRouter(id=model_id, api_key=OPENROUTER_API_KEY, timeout=50),
         description=CLASSIFY_SYSTEM,
         output_schema=ClassifyResult,
         markdown=False,
@@ -698,7 +684,7 @@ def create_analyzer(model_id: str) -> Agent:
     """Create analyzer agent."""
     return Agent(
         name="Analyzer",
-        model=OpenRouter(id=model_id, api_key=OPENROUTER_API_KEY),
+        model=OpenRouter(id=model_id, api_key=OPENROUTER_API_KEY, timeout=50),
         description=ANALYZE_SYSTEM,
         output_schema=AnalyzeResult,
         markdown=False,
@@ -709,7 +695,7 @@ def create_generator(model_id: str) -> Agent:
     """Create generator agent."""
     return Agent(
         name="Generator",
-        model=OpenRouter(id=model_id, api_key=OPENROUTER_API_KEY),
+        model=OpenRouter(id=model_id, api_key=OPENROUTER_API_KEY, timeout=50),
         description=GENERATE_SYSTEM,
         output_schema=GenerateResult,
         markdown=False,
@@ -749,7 +735,8 @@ async def health():
         "version": "3.0.0",
         "framework": "agno",
         "openrouter_configured": bool(OPENROUTER_API_KEY),
-        "supabase_configured": bool(SUPABASE_URL),
+        "framework": "agno",
+        "openrouter_configured": bool(OPENROUTER_API_KEY),
         "langfuse_configured": bool(os.getenv("LANGFUSE_SECRET_KEY")),
     }
 
@@ -853,7 +840,7 @@ Missing context: {', '.join(analysis.missing_context)}
 Optimization opportunities: {', '.join(analysis.optimization_opportunities)}
 """
         if request.clarification_answers:
-            generate_prompt += f"User context: {json.dumps(request.clarification_answers)}"
+            generate_prompt += f"\n\nCRITICAL USER CONTEXT (Must be incorporated):\n{json.dumps(request.clarification_answers, indent=2)}"
         
         
         
@@ -915,6 +902,23 @@ Optimization opportunities: {', '.join(analysis.optimization_opportunities)}
             "agent_version": "3.0.0"
         })
         
+        # Prepare analytics payload for Convex
+        analytics_payload = {
+            "status": "success",
+            "completion_tokens": metrics["total_tokens"], # Approx total
+            "total_tokens": metrics["total_tokens"],
+            "total_cost": metrics["total_cost"],
+            "stages_used": stages_used,
+            "complexity": classification.complexity,
+            "domain": classification.domain,
+            "models": {
+                "classify": metrics["stages"].get("classify", {}).get("model"),
+                "analyze": metrics["stages"].get("analyze", {}).get("model"),
+                "generate": metrics["stages"].get("generate", {}).get("model"),
+            },
+            # Add granular costs if tracked in metrics["stages"]
+        }
+
         return OptimizeResponse(
             status="success",
             optimized_prompt=result.optimized_prompt,
@@ -928,6 +932,7 @@ Optimization opportunities: {', '.join(analysis.optimization_opportunities)}
             stages_used=stages_used,
             domain=classification.domain,
             metrics=metrics,
+            analytics=analytics_payload,
             why_this_works=result.why_this_works,
             pro_tips=result.pro_tips,
             alternative_approaches=result.alternative_approaches,

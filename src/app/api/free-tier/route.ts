@@ -10,13 +10,14 @@ const FREE_TIER_WEEKLY_LIMIT = 3;
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 // Helpers
-function getWeekStart(): string {
+// Helpers
+function getWeekStartTimestamp(): number {
     const now = new Date();
     const day = now.getUTCDay();
     const diff = now.getUTCDate() - day + (day === 0 ? -6 : 1); // Monday is 1
     const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), diff));
     monday.setUTCHours(0, 0, 0, 0);
-    return monday.toISOString();
+    return monday.getTime();
 }
 
 function hashString(input: string): string {
@@ -26,43 +27,34 @@ function hashString(input: string): string {
 // GET: Check Limits
 export async function GET(request: Request) {
     try {
-        const userId = request.headers.get('x-user-id');
+        const userId = request.headers.get('x-user-id') || 'anonymous';
         const userEmail = request.headers.get('x-user-email');
-
-        console.log('[FREE-TIER] userId:', userId, 'userEmail:', userEmail);
+        // Optional fingerprint for anonymous/fallback tracking
+        const fingerprint = request.headers.get('x-fingerprint');
 
         if (!userId) {
             return NextResponse.json({ error: 'Missing User ID' }, { status: 400 });
         }
 
-        // Get user profile from Convex to check subscription tier
+        // Get user profile from Convex
         let isPaidUser = false;
         let userTier = 'free';
 
         try {
-            // Try to get profile by userId, with email fallback
-            console.log('[FREE-TIER] Querying Convex with userId:', userId, 'email:', userEmail);
             const profile = await convex.query(api.profiles.getProfileByUserId, {
                 userId,
                 email: userEmail || undefined
             });
-            console.log('[FREE-TIER] Profile result:', profile ? {
-                tier: profile.subscription_tier,
-                email: profile.email,
-                userId: profile.userId
-            } : 'null');
 
             if (profile) {
                 userTier = profile.subscription_tier || 'free';
                 isPaidUser = userTier !== 'free';
-                console.log('[FREE-TIER] isPaidUser:', isPaidUser, 'userTier:', userTier);
             }
         } catch (convexError) {
-            console.error('[FREE-TIER] Error fetching profile from Convex:', convexError);
-            // If we can't fetch, fall back to checking if user has data in context
+            console.error('[FREE-TIER] Error fetching profile:', convexError);
         }
 
-        // If paid user, return unlimited access
+        // 1. Paid User Logic
         if (isPaidUser) {
             return NextResponse.json({
                 canOptimize: true,
@@ -75,14 +67,32 @@ export async function GET(request: Request) {
             });
         }
 
-        // Free user - apply limits
-        const canOptimize = true;
-        const remaining = 3;
-        const weeklyUsage = 0;
-        const flagged = false;
+        // 2. Free User Logic - Check Usage
+        const weekStart = getWeekStartTimestamp();
+        let weeklyUsage = 0;
+        let flagged = false;
+
+        try {
+            // Check usage via Convex
+            // @ts-ignore
+            const usageRecord = await convex.query(api.free_tier.checkUsage, {
+                userId,
+                weekStart,
+                fingerprintHash: fingerprint ? hashString(fingerprint) : undefined
+            });
+
+            if (usageRecord) {
+                weeklyUsage = usageRecord.weekly_usage;
+                flagged = usageRecord.is_flagged;
+            }
+        } catch (err) {
+            console.error('[FREE-TIER] Error checking usage:', err);
+        }
+
+        const remaining = Math.max(0, FREE_TIER_WEEKLY_LIMIT - weeklyUsage);
 
         return NextResponse.json({
-            canOptimize,
+            canOptimize: remaining > 0,
             isPaidUser: false,
             remaining,
             weeklyLimit: FREE_TIER_WEEKLY_LIMIT,
@@ -115,13 +125,19 @@ export async function POST(request: Request) {
         const fingerprintHash = hashString(fingerprint);
         const ipHash = hashString(ip);
 
-        // 2. Check Subscription (Bypass usage tracking/increment for paid? Or track anyway?)
-        // "skip limits if paid" -> usually implies we don't care to count.
-        // 2. Check Subscription (Bypass usage tracking/increment for paid? Or track anyway?)
-        /*
-        // "skip limits if paid" -> usually implies we don't care to count.
-        const { data: profile } = await supabase.from('profiles').select('subscription_tier').eq('id', userId).single();
-        const isPaidUser = profile?.subscription_tier && profile.subscription_tier !== 'free';
+        // 2. Check Subscription (optimization: client should assume free if calling this, but double check?)
+        // Ideally we handled "skip if paid" in FE, but backend should verify.
+        // We can reuse the profile check logic or just blindly increment for "free" tier users.
+        // Let's check profile first to avoid incorrectly limiting paid users if FE calls this by mistake.
+        let isPaidUser = false;
+        try {
+            const profile = await convex.query(api.profiles.getProfileByUserId, { userId });
+            if (profile && profile.subscription_tier !== 'free') {
+                isPaidUser = true;
+            }
+        } catch (_e) {
+            // Ignore (assume free)
+        }
 
         if (isPaidUser) {
             return NextResponse.json({
@@ -134,82 +150,44 @@ export async function POST(request: Request) {
             });
         }
 
-        // 3. Calculate week start for this usage
-        const weekStart = getWeekStart();
+        // 3. Increment Usage in Convex
+        const weekStart = getWeekStartTimestamp();
+        let currentUsage = 0;
+        let remaining = 3;
+        const isFlagged = false;
 
-        // 4. Fetch existing record by user_id + week_start (matches UNIQUE constraint)
-        // This ensures we increment the SAME record instead of creating new ones
-        const { data: existing } = await supabase
-            .from('free_tier_tracking')
-            .select('*')
-            .eq('user_id', userId)
-            .eq('week_start', weekStart)
-            .single();
-
-        console.log('[FREE-TIER POST] Existing record:', existing);
-
-        // 5. Check for abuse (optional - fingerprint mismatch detection)
-        let isFlagged = false;
-        if (existing) {
-            // If fingerprint changes, it might be suspicious (optional check)
-            // But we don't enforce this strictly since UNIQUE is on user_id+week_start
-            if (existing.flagged) isFlagged = true;
-        }
-
-        // 6. Calculate current usage
-        let currentUsage = existing ? existing.weekly_usage : 0;
-        console.log('[FREE-TIER POST] Current usage before increment:', currentUsage);
-
-        // 7. Increment if 'use' action
         if (action === 'use') {
-            if (currentUsage < FREE_TIER_WEEKLY_LIMIT) {
-                currentUsage++;
-                console.log('[FREE-TIER POST] Incremented usage to:', currentUsage);
-            } else {
-                // Limit reached
-                console.warn('[FREE-TIER POST] Limit reached, not incrementing');
-                return NextResponse.json({
-                    canOptimize: false,
-                    isPaidUser: false,
-                    remaining: 0,
-                    weeklyLimit: FREE_TIER_WEEKLY_LIMIT,
-                    weeklyUsage: currentUsage,
-                    flagged: isFlagged
+            try {
+                // @ts-ignore
+                const result = await convex.mutation(api.free_tier.incrementUsage, {
+                    userId,
+                    weekStart,
+                    fingerprintHash,
+                    ipHash,
+                    limit: FREE_TIER_WEEKLY_LIMIT
                 });
+
+                currentUsage = result.usage;
+                remaining = result.allowed ? FREE_TIER_WEEKLY_LIMIT - currentUsage : 0;
+
+                if (!result.allowed) {
+                    return NextResponse.json({
+                        canOptimize: false,
+                        isPaidUser: false,
+                        remaining: 0,
+                        weeklyLimit: FREE_TIER_WEEKLY_LIMIT,
+                        weeklyUsage: currentUsage,
+                        flagged: false
+                    });
+                }
+            } catch (err) {
+                console.error('[FREE-TIER] Increment failed:', err);
+                return NextResponse.json({ error: 'Tracking failed' }, { status: 500 });
             }
         }
 
-        // 8. Update DB with incremented usage
-        console.log('[FREE-TIER POST] Upserting with weekly_usage:', currentUsage);
-
-        const { error: upsertError } = await supabase
-            .from('free_tier_tracking')
-            .upsert({
-                user_id: userId,
-                week_start: weekStart,
-                fingerprint_hash: fingerprintHash,
-                ip_hash: ipHash,
-                weekly_usage: currentUsage,  // This is now properly incremented!
-                flagged: isFlagged,
-                updated_at: new Date().toISOString()
-            }, {
-                onConflict: 'user_id,week_start'  // Match UNIQUE constraint on (user_id, week_start)
-            });
-
-        if (upsertError) {
-            console.error('Upsert error:', upsertError);
-            return NextResponse.json({ error: 'Failed to update tracking' }, { status: 500 });
-        }
-
-        const remaining = Math.max(0, FREE_TIER_WEEKLY_LIMIT - currentUsage);
-        */
-
-        const remaining = 3;
-        const currentUsage = 0;
-        const isFlagged = false;
-
         return NextResponse.json({
-            canOptimize: remaining > 0,
+            canOptimize: true,
             isPaidUser: false,
             remaining,
             weeklyLimit: FREE_TIER_WEEKLY_LIMIT,

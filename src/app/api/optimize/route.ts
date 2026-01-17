@@ -21,9 +21,19 @@ function calculateCost(inputTokens: number, outputTokens: number, model: string)
 }
 
 // Extended type to handle optional analytics fields not present in base n8n type
+// Extended type to handle optional analytics fields not present in base n8n type
 interface ExtendedOptimizeResult extends OptimizeSuccessResponse {
     analytics?: {
+        status: string;
+        completion_tokens?: number;
+        total_tokens: number;
+        total_cost: number;
+        stages_used: string[];
+        complexity?: string;
+        domain?: string;
+        models?: any;
         generationModel?: string;
+        error_message?: string;
     };
     generationModel?: string;
 }
@@ -76,6 +86,12 @@ export async function POST(request: Request) {
 
                     // PRIORITIZE SESSION ID: Always use the ID from the active better-auth session
                     // over any ID found in an old profile to ensure history sync works for new sessions.
+                    const profileUserId = usageData?.userId;
+
+                    console.log(`[AUTH] Session ID: ${session.id}, Profile ID: ${profileUserId}, Client ID: ${clientUserId}`);
+
+                    // Critical: If the profile has a different ID than the session, we use the SESSION ID
+                    // The mutation will handle syncing the profile if needed.
                     actualUserId = session.id;
                     actualEmail = session.email;
                 }
@@ -240,6 +256,7 @@ export async function POST(request: Request) {
                     wasOrchestrated: false,
                     outputMode: successResult.metrics?.outputMode,
                     creditsUsed: successResult.metrics?.creditsUsed || 1,
+                    analytics: successResult.analytics, // Pass detailed logs to Convex
                 });
 
                 console.log(`[OPTIMIZE][${Date.now() - startTime}ms] Saved successfully. ID: ${mutationResult?.optimizationId || 'unknown'}`);

@@ -38,6 +38,19 @@ export const createOptimization = mutation({
         prdDocument: v.optional(v.string()),
         architectureDocument: v.optional(v.string()),
         storiesDocument: v.optional(v.string()),
+
+        // Detailed Analytics (from Agent)
+        analytics: v.optional(v.object({
+            status: v.string(),
+            completion_tokens: v.optional(v.number()),
+            total_tokens: v.number(),
+            total_cost: v.number(),
+            stages_used: v.array(v.string()),
+            complexity: v.optional(v.string()),
+            domain: v.optional(v.string()),
+            models: v.optional(v.any()), // JSON object for model drilldown
+            error_message: v.optional(v.string()),
+        })),
     },
     handler: async (ctx, args) => {
         // 1. Get user identity or fallback to provided userId/email
@@ -69,13 +82,22 @@ export const createOptimization = mutation({
         // Use the actual userId from profile if found
         let profileUserId = profile.userId;
 
+        // Defensive Sync: If the provided userId differs from the profile's userId,
+        // it means better-auth has a different ID for this user than what's in our DB.
+        // We trust the NEW (provided) userId as the definitive "subject" for future auth,
+        // so we update the profile to match.
         if (args.userId && profileUserId !== args.userId) {
-            console.log(`[SYNC] Updating profile userId from ${profileUserId} to ${args.userId}`);
+            console.log(`[SYNC] ID Mismatch Detected! Profile: ${profileUserId}, Request: ${args.userId}, Email: ${userEmail}`);
+
+            // Only sync if we are SURE it's the same user (verified by email lookup above)
+            console.log(`[SYNC] Updating profile userId to match request: ${args.userId}`);
             await ctx.db.patch(profile._id, {
                 userId: args.userId,
                 updated_at: new Date().toISOString()
             });
-            profileUserId = args.userId; // Use the updated ID
+            profileUserId = args.userId; // Use the updated ID for the new record
+        } else {
+            if (args.userId) console.log(`[OPTIMIZE] User IDs match: ${args.userId}`);
         }
 
         const finalUserId = profileUserId;
@@ -128,17 +150,45 @@ export const createOptimization = mutation({
             });
         }
 
-        // 6. Log the optimization
-        await ctx.db.insert("optimization_logs", {
-            user_id: finalUserId,
-            feature: "optimize",
-            input_tokens: args.originalPrompt.length, // Simplified
-            output_tokens: args.optimizedPrompt.length, // Simplified
-            model_used: args.targetModel,
-            cost_usd: 0.001, // Placeholder
-            processing_time_ms: 0, // Would be calculated by actual API
-            created_at: Date.now(),
-        });
+        // 6. Log the optimization (Detailed Analytics)
+        if (args.analytics) {
+            await ctx.db.insert("optimization_logs", {
+                user_id: finalUserId,
+                request_id: optimizationId, // Link to successful optimization
+                status: args.analytics.status,
+                input_tokens: args.tokensOriginal || 0,
+                output_tokens: args.analytics.completion_tokens || 0,
+                total_tokens: args.analytics.total_tokens || 0,
+
+                total_cost_usd: args.analytics.total_cost || 0,
+
+                // Granular metrics if available (simplified for now)
+                processing_time_ms: args.metrics?.processing_time_sec ? args.metrics.processing_time_sec * 1000 : 0,
+
+                target_model: args.targetModel,
+                complexity: args.analytics.complexity,
+                domain: args.analytics.domain,
+                stages_used: args.analytics.stages_used,
+                user_tier: profile.subscription_tier || "unknown",
+
+                created_at: Date.now(),
+            });
+        } else {
+            // Legacy fallback logging
+            await ctx.db.insert("optimization_logs", {
+                user_id: finalUserId,
+                request_id: optimizationId,
+                status: "success",
+                input_tokens: args.originalPrompt.length,
+                output_tokens: args.optimizedPrompt.length,
+                total_tokens: (args.originalPrompt.length + args.optimizedPrompt.length) / 4, // Approx
+                total_cost_usd: 0,
+                processing_time_ms: 0,
+                target_model: args.targetModel,
+                user_tier: profile.subscription_tier || "unknown",
+                created_at: Date.now(),
+            });
+        }
 
         return {
             optimizationId,
@@ -183,20 +233,23 @@ export const getOptimizationHistory = query({
             searchIds.push(profile.userId);
         }
 
-        // 3. Collect optimizations for both IDs and sort
-        // Note: For simplicity and since volume is low, we fetch both and merge
-        // A more efficient way would be a single query if Convex supported IN, but it doesn't.
-        const allOptimizations = [];
-        for (const uid of searchIds) {
-            const results = await ctx.db
-                .query("optimizations")
-                .withIndex("by_user", (q) => q.eq("user_id", uid))
-                .order("desc")
-                .take(args.limit ?? 50);
-            allOptimizations.push(...results);
-        }
+        // 3. Collect optimizations for both IDs
+        // Since Convex doesn't support "OR" queries or "IN" lists efficiently for indexed fields,
+        // we run parallel queries and merge.
+        const results = await Promise.all(
+            searchIds.map(uid =>
+                ctx.db
+                    .query("optimizations")
+                    .withIndex("by_user", (q) => q.eq("user_id", uid))
+                    .order("desc")
+                    .take(args.limit ?? 50)
+            )
+        );
 
-        // Deduplicate and sort
+        // Flatten checks
+        const allOptimizations = results.flat();
+
+        // Deduplicate by ID
         const uniqueMap = new Map();
         for (const opt of allOptimizations) {
             uniqueMap.set(opt._id, opt);
