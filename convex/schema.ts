@@ -242,18 +242,39 @@ export default defineSchema({
     })
         .index("by_ticket", ["ticket_id"]),
 
-    // Announcements
+    // Announcements (Enhanced)
     announcements: defineTable({
         title: v.string(),
         content: v.string(),
         is_active: v.boolean(),
-        priority: v.optional(v.number()),
+        priority: v.optional(v.number()), // 1-10, higher = more important
+
+        // NEW: Where to display
+        display_location: v.optional(v.string()), // "landing", "dashboard", "both", "all"
+
+        // NEW: How to display
+        display_type: v.optional(v.string()), // "modal", "banner", "toast"
+
+        // NEW: Category for filtering
+        category: v.optional(v.string()), // "update", "maintenance", "feature", "promotion", "urgent"
+
+        // NEW: Styling options
+        theme: v.optional(v.string()), // "info", "warning", "success", "danger"
+
+        // NEW: Call to action
+        cta_text: v.optional(v.string()),
+        cta_link: v.optional(v.string()),
+
+        // Scheduling
         start_date: v.optional(v.number()),
         end_date: v.optional(v.number()),
+
+        // Metadata
         created_by: v.optional(v.string()),
         created_at: v.number(),
         updated_at: v.optional(v.number()),
     })
         .index("by_active", ["is_active"])
+        .index("by_location", ["display_location"])
         .index("by_created_at", ["created_at"]),
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus, Edit2, Trash2, Megaphone, Loader2 } from "lucide-react";
+import { Plus, Edit2, Trash2, Megaphone, Loader2, Globe, LayoutDashboard, Bell, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -12,6 +12,33 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { formatDistanceToNow } from "date-fns";
+
+const DISPLAY_LOCATIONS = [
+    { value: "landing", label: "Landing Page Only", icon: Globe },
+    { value: "dashboard", label: "Dashboard Only", icon: LayoutDashboard },
+    { value: "both", label: "Both (Landing + Dashboard)", icon: Bell },
+];
+
+const DISPLAY_TYPES = [
+    { value: "modal", label: "Modal Popup" },
+    { value: "banner", label: "Top Banner" },
+    { value: "toast", label: "Toast Notification" },
+];
+
+const CATEGORIES = [
+    { value: "update", label: "Update" },
+    { value: "maintenance", label: "Maintenance" },
+    { value: "feature", label: "New Feature" },
+    { value: "promotion", label: "Promotion" },
+    { value: "urgent", label: "Urgent" },
+];
+
+const THEMES = [
+    { value: "info", label: "Info (Cyan)", color: "bg-cyan-500" },
+    { value: "success", label: "Success (Green)", color: "bg-green-500" },
+    { value: "warning", label: "Warning (Yellow)", color: "bg-yellow-500" },
+    { value: "danger", label: "Danger (Red)", color: "bg-red-500" },
+];
 
 export default function AdminAnnouncementsPage() {
     // Convex queries and mutations
@@ -26,14 +53,26 @@ export default function AdminAnnouncementsPage() {
     const [title, setTitle] = React.useState("");
     const [content, setContent] = React.useState("");
     const [isActive, setIsActive] = React.useState(true);
-    const [priority, setPriority] = React.useState(0);
+    const [priority, setPriority] = React.useState(5);
+    const [displayLocation, setDisplayLocation] = React.useState("both");
+    const [displayType, setDisplayType] = React.useState("modal");
+    const [category, setCategory] = React.useState("update");
+    const [theme, setTheme] = React.useState("info");
+    const [ctaText, setCtaText] = React.useState("");
+    const [ctaLink, setCtaLink] = React.useState("");
     const [saving, setSaving] = React.useState(false);
 
     const resetForm = () => {
         setTitle("");
         setContent("");
         setIsActive(true);
-        setPriority(0);
+        setPriority(5);
+        setDisplayLocation("both");
+        setDisplayType("modal");
+        setCategory("update");
+        setTheme("info");
+        setCtaText("");
+        setCtaLink("");
         setEditingId(null);
     };
 
@@ -49,6 +88,12 @@ export default function AdminAnnouncementsPage() {
                     content,
                     is_active: isActive,
                     priority,
+                    display_location: displayLocation,
+                    display_type: displayType,
+                    category,
+                    theme,
+                    cta_text: ctaText || undefined,
+                    cta_link: ctaLink || undefined,
                 });
             } else {
                 await createAnnouncement({
@@ -56,6 +101,12 @@ export default function AdminAnnouncementsPage() {
                     content,
                     is_active: isActive,
                     priority,
+                    display_location: displayLocation,
+                    display_type: displayType,
+                    category,
+                    theme,
+                    cta_text: ctaText || undefined,
+                    cta_link: ctaLink || undefined,
                 });
             }
             resetForm();
@@ -72,7 +123,13 @@ export default function AdminAnnouncementsPage() {
         setTitle(announcement.title);
         setContent(announcement.content);
         setIsActive(announcement.is_active);
-        setPriority(announcement.priority || 0);
+        setPriority(announcement.priority || 5);
+        setDisplayLocation(announcement.display_location || "both");
+        setDisplayType(announcement.display_type || "modal");
+        setCategory(announcement.category || "update");
+        setTheme(announcement.theme || "info");
+        setCtaText(announcement.cta_text || "");
+        setCtaLink(announcement.cta_link || "");
         setIsOpen(true);
     };
 
@@ -138,7 +195,7 @@ export default function AdminAnnouncementsPage() {
                         >
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
+                                    <div className="flex items-center gap-3 mb-2 flex-wrap">
                                         <h3 className="text-lg font-bold text-white">{announcement.title}</h3>
                                         <span className={cn(
                                             "text-xs px-2 py-0.5 rounded-full",
@@ -148,13 +205,22 @@ export default function AdminAnnouncementsPage() {
                                         )}>
                                             {announcement.is_active ? "Active" : "Inactive"}
                                         </span>
-                                        {announcement.priority && announcement.priority > 0 && (
-                                            <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400">
-                                                Priority: {announcement.priority}
-                                            </span>
-                                        )}
+                                        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400">
+                                            {announcement.display_location || "both"}
+                                        </span>
+                                        <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400">
+                                            {announcement.display_type || "modal"}
+                                        </span>
+                                        <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400">
+                                            {announcement.category || "update"}
+                                        </span>
                                     </div>
                                     <p className="text-gray-300 text-sm whitespace-pre-wrap">{announcement.content}</p>
+                                    {announcement.cta_text && (
+                                        <p className="text-xs text-electric-cyan mt-2">
+                                            CTA: {announcement.cta_text} → {announcement.cta_link}
+                                        </p>
+                                    )}
                                     <p className="text-xs text-gray-500 mt-3">
                                         Created {formatDistanceToNow(new Date(announcement.created_at))} ago
                                     </p>
@@ -193,11 +259,12 @@ export default function AdminAnnouncementsPage() {
 
             {/* Create/Edit Dialog */}
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent className="bg-midnight border-electric-cyan/20 text-white max-w-lg">
+                <DialogContent className="bg-midnight border-electric-cyan/20 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>{editingId ? "Edit Announcement" : "New Announcement"}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
+                        {/* Title & Content */}
                         <div className="space-y-2">
                             <Label>Title</Label>
                             <Input
@@ -216,15 +283,73 @@ export default function AdminAnnouncementsPage() {
                                 placeholder="Announcement message..."
                             />
                         </div>
-                        <div className="flex gap-4">
-                            <div className="space-y-2 flex-1">
-                                <Label>Priority (0-10)</Label>
+
+                        {/* Display Options Row */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Display Location</Label>
+                                <select
+                                    value={displayLocation}
+                                    onChange={(e) => setDisplayLocation(e.target.value)}
+                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white"
+                                >
+                                    {DISPLAY_LOCATIONS.map(loc => (
+                                        <option key={loc.value} value={loc.value}>{loc.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Display Type</Label>
+                                <select
+                                    value={displayType}
+                                    onChange={(e) => setDisplayType(e.target.value)}
+                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white"
+                                >
+                                    {DISPLAY_TYPES.map(type => (
+                                        <option key={type.value} value={type.value}>{type.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Category & Theme Row */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Category</Label>
+                                <select
+                                    value={category}
+                                    onChange={(e) => setCategory(e.target.value)}
+                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white"
+                                >
+                                    {CATEGORIES.map(cat => (
+                                        <option key={cat.value} value={cat.value}>{cat.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Theme/Color</Label>
+                                <select
+                                    value={theme}
+                                    onChange={(e) => setTheme(e.target.value)}
+                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white"
+                                >
+                                    {THEMES.map(t => (
+                                        <option key={t.value} value={t.value}>{t.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Priority & Status Row */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Priority (1-10, higher = more important)</Label>
                                 <Input
                                     type="number"
-                                    min={0}
+                                    min={1}
                                     max={10}
                                     value={priority}
-                                    onChange={(e) => setPriority(parseInt(e.target.value) || 0)}
+                                    onChange={(e) => setPriority(parseInt(e.target.value) || 5)}
                                     className="bg-black/20 border-white/10"
                                 />
                             </div>
@@ -238,7 +363,32 @@ export default function AdminAnnouncementsPage() {
                                         className="h-4 w-4"
                                         id="is-active"
                                     />
-                                    <label htmlFor="is-active" className="text-sm">Active</label>
+                                    <label htmlFor="is-active" className="text-sm">Active (visible to users)</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Call to Action */}
+                        <div className="border-t border-white/10 pt-4 mt-4">
+                            <Label className="text-electric-cyan">Call to Action (Optional)</Label>
+                            <div className="grid grid-cols-2 gap-4 mt-2">
+                                <div className="space-y-2">
+                                    <Label className="text-xs text-gray-400">Button Text</Label>
+                                    <Input
+                                        value={ctaText}
+                                        onChange={(e) => setCtaText(e.target.value)}
+                                        className="bg-black/20 border-white/10"
+                                        placeholder="e.g., Learn More"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs text-gray-400">Button Link</Label>
+                                    <Input
+                                        value={ctaLink}
+                                        onChange={(e) => setCtaLink(e.target.value)}
+                                        className="bg-black/20 border-white/10"
+                                        placeholder="e.g., /dashboard/settings"
+                                    />
                                 </div>
                             </div>
                         </div>
