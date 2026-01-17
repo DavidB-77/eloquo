@@ -273,9 +273,9 @@ export async function callOptimize(request: OptimizeRequest): Promise<OptimizeRe
 
         console.log(`[AGENT-V3] Requesting ${AGENT_URL}/optimize (Tier: ${v3Tier}, Model: ${v3Request.target_model}, Answers: ${!!v3Request.clarification_answers})`);
 
-        // TEMPORARY: 120s timeout to capture granular stage logs from Agent V3
+        // Increased to 300s to match Nginx timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 120000);
+        const timeoutId = setTimeout(() => controller.abort(), 300000);
 
         const response = await fetch(`${AGENT_URL}/optimize`, {
             method: 'POST',
