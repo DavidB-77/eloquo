@@ -44,19 +44,19 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 # Model configuration per tier
 TIER_MODELS = {
     "basic": {
-        "classify": "google/gemini-2.5-flash-lite",
-        "analyze": "deepseek/deepseek-chat",
-        "generate": "deepseek/deepseek-chat",
+        "classify": "google/gemini-2.0-flash-lite-preview-02-05",
+        "analyze": "google/gemini-2.0-flash-001",
+        "generate": "google/gemini-2.0-flash-001",
     },
     "pro": {
-        "classify": "google/gemini-2.5-flash-lite",
-        "analyze": "deepseek/deepseek-chat",
-        "generate": "deepseek/deepseek-chat",
+        "classify": "google/gemini-2.0-flash-lite-preview-02-05",
+        "analyze": "google/gemini-2.0-flash-001",
+        "generate": "google/gemini-2.0-flash-001",
     },
     "business": {
-        "classify": "google/gemini-2.5-flash-lite",
-        "analyze": "deepseek/deepseek-chat",
-        "generate": "deepseek/deepseek-chat",
+        "classify": "google/gemini-2.0-flash-lite-preview-02-05",
+        "analyze": "google/gemini-2.0-flash-001",
+        "generate": "google/gemini-2.0-flash-001",
     },
 }
 # Cost per 1M tokens (input/output)
@@ -1450,7 +1450,8 @@ Create detailed, actionable stories organized into sprints."""
         raise HTTPException(status_code=500, detail=str(e))
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8002)
+    # Use port 8001 to match Next.js API configuration
+    uvicorn.run(app, host="0.0.0.0", port=8001)
 
 
 # ============== RATING ENDPOINT ==============
