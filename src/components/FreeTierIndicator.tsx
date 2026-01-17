@@ -9,12 +9,7 @@ interface FreeTierIndicatorProps {
     compact?: boolean;
 }
 
-// --- DEBUG IDENTITY ---
-import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
-
 export function FreeTierIndicator({ className, compact = false }: FreeTierIndicatorProps) {
-    const debugAuth = useQuery(api.debug_identity.whoAmI);
 
     // Check Status Logic...
     const { user } = useAuth();
@@ -60,23 +55,13 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
         return () => window.removeEventListener('free-tier-updated', handleUpdate);
     }, [updateStatus]);
 
-    // Debug UI Component
-    const debugUI = (
-        <div className="mb-4 p-2 bg-red-900/20 border border-red-500/20 rounded text-[10px] font-mono text-red-200 break-all">
-            DEBUG ID: {debugAuth?.subject || "Loading..."}<br />
-            Email: {debugAuth?.email || "None"}<br />
-            Name: {debugAuth?.name || "None"}<br />
-            Hook Tier: {isPaidUser ? "Paid" : "Free"} ({remaining})
-        </div>
-    );
-
-    if (isLoading || isPaidUser) return <div className={className}>{debugUI}</div>;
+    // Don't show for paid users
+    if (isLoading || isPaidUser) return null;
 
     // Abuse Flag State
     if (flagged) {
         return (
             <div className={cn("rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400", className)}>
-                {debugUI}
                 <p className="font-semibold">Account Flagged</p>
                 <p className="mt-1 opacity-90">
                     Suspicious activity detected. Please <Link href="/dashboard/settings?tab=subscription" className="underline hover:text-red-300">upgrade to Pro</Link> to continue.
@@ -89,7 +74,6 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
     if (remaining === undefined) {
         return (
             <div className={cn("rounded-lg border border-zinc-800 bg-zinc-900/50 p-3 text-sm", className)}>
-                {debugUI}
                 <div className="flex items-center gap-2">
                     <div className="animate-pulse h-4 w-24 bg-zinc-700 rounded"></div>
                 </div>
@@ -113,7 +97,6 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
     if (compact) {
         return (
             <div className={cn("flex flex-col gap-1.5", className)}>
-                {debugUI}
                 <div className="flex items-center justify-between text-xs">
                     <span className={cn("font-medium", textColor)}>
                         {remaining} left
@@ -134,15 +117,6 @@ export function FreeTierIndicator({ className, compact = false }: FreeTierIndica
 
     return (
         <div className={cn("rounded-xl border border-zinc-800/50 bg-zinc-900/50 p-4 backdrop-blur-sm", className)}>
-
-            {/* DEBUG SECTION */}
-            <div className="mb-4 p-2 bg-red-900/20 border border-red-500/20 rounded text-[10px] font-mono text-red-200 break-all">
-                DEBUG ID: {debugAuth?.subject || "Loading..."}<br />
-                Email: {debugAuth?.email || "None"}<br />
-                Name: {debugAuth?.name || "None"}<br />
-                UserProvider Tier: {isPaidUser ? "Paid" : "Free"} ({remaining})
-            </div>
-
             <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-zinc-300">Free Tier Usage</span>
                 <span className={cn("text-sm font-bold", textColor)}>
