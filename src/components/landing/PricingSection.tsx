@@ -9,108 +9,141 @@ import { Badge } from "@/components/ui/Badge";
 import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const TIERS = [
-    {
-        name: "Free",
-        key: "free",
-        monthlyPrice: 0,
-        foundingPrice: null,
-        credits: 12, // approx 3/week
-        popular: false,
-        features: [
-            { text: "3 optimizations per week", included: true },
-            { text: "Standard AI models", included: true },
-            { text: "Basic prompt analysis", included: true },
-            { text: "Community support", included: true },
-            { text: "Prompt history", included: false },
-            { text: "Export library", included: false },
-            { text: "API Access", included: false },
-        ],
-        cta: "Start Free",
-    },
-    {
-        name: "Basic",
-        key: "basic",
-        monthlyPrice: 7,
-        foundingPrice: null, // No founding discount for Basic
-        credits: 150,
-        popular: false,
-        features: [
-            { text: "150 optimizations/month", included: true },
-            { text: "Full Adaptive AI (learns from your ratings)", included: true },
-            { text: "6-month prompt history", included: true },
-            { text: "Export your library (JSON/CSV)", included: true },
-            { text: "Web dashboard", included: true },
-            { text: "Email support", included: true },
-            { text: "MCP Server Access", included: false },
-            { text: "API Access", included: false },
-        ],
-        cta: "Get Started",
-    },
-    {
-        name: "Pro",
-        key: "pro",
-        monthlyPrice: 15,
-        foundingPrice: 9,
-        credits: 400,
-        popular: true,
-        features: [
-            { text: "400 optimizations/month", included: true },
-            { text: "Full Adaptive AI", included: true },
-            { text: "1-year prompt history", included: true },
-            { text: "Export your library", included: true },
-            { text: "MCP Server Access ⓘ", included: true, tooltip: "Works with Claude Desktop, Cursor, Windsurf & more" },
-            { text: "Full API Access", included: true },
-            { text: "Priority support", included: true },
-        ],
-        cta: "Get Started",
-    },
-    {
-        name: "Business",
-        key: "business",
-        monthlyPrice: 35,
-        foundingPrice: 20,
-        credits: 1000,
-        popular: false,
-        features: [
-            { text: "1000 optimizations/month", included: true },
-            { text: "Full Adaptive AI", included: true },
-            { text: "Unlimited prompt history", included: true },
-            { text: "Bulk export", included: true },
-            { text: "MCP Server Access", included: true },
-            { text: "Full API Access", included: true },
-            { text: "Priority processing", included: true },
-            { text: "Dedicated support", included: true },
-        ],
-        cta: "Get Started",
-    },
-];
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import {
+    PricingConfig as PricingConfigType,
+    FoundingMemberConfig as FoundingMemberConfigType,
+    AnnualDiscountConfig as AnnualDiscountConfigType,
+    GeneralSettings as GeneralSettingsType
+} from "@/lib/settings";
 
 export function PricingSection() {
     const router = useRouter();
     const [isAnnual, setIsAnnual] = React.useState(false);
     const [loadingPlan, setLoadingPlan] = React.useState<string | null>(null);
 
+    // Fetch dynamic settings from Convex
+    const settings = useQuery(api.settings.getAllPricingSettings);
+
+    const pricingConfig = settings?.pricing as PricingConfigType | null;
+    const foundingConfig = settings?.founding as FoundingMemberConfigType | null;
+    const annualConfig = settings?.annual as AnnualDiscountConfigType | null;
+    const generalSettings = settings?.general as GeneralSettingsType | null;
+
+    // Use annual discount percentage from database
+    const discountPercent = annualConfig?.percent || 20;
+
+    // Build tiers dynamically
+    const TIERS = React.useMemo(() => {
+        if (!pricingConfig) return [];
+
+        const getHistoryText = (days: number) => {
+            if (days === 0) return "Unlimited prompt history";
+            if (days >= 365) return "1-year prompt history";
+            if (days >= 30) return `${Math.floor(days / 30)}-month prompt history`;
+            return `${days}-day prompt history`;
+        };
+
+        const tiers = [
+            {
+                name: "Free",
+                key: "free",
+                monthlyPrice: 0,
+                annualPrice: 0,
+                credits: generalSettings?.free_tier_weekly_limit ? generalSettings.free_tier_weekly_limit * 4 : 12,
+                popular: false,
+                features: [
+                    { text: `${generalSettings?.free_tier_weekly_limit || 3} optimizations per week`, included: true },
+                    { text: "Standard AI models", included: true },
+                    { text: "Basic prompt analysis", included: true },
+                    { text: "Community support", included: true },
+                    { text: "Prompt history", included: false },
+                    { text: "Export library", included: false },
+                    { text: "API Access", included: false },
+                ],
+                cta: "Start Free",
+                foundingPrice: null,
+            },
+            {
+                name: "Basic",
+                key: "basic",
+                monthlyPrice: pricingConfig.basic.monthly_price,
+                annualPrice: pricingConfig.basic.annual_price || Math.round(pricingConfig.basic.monthly_price * 12 * (1 - discountPercent / 100)),
+                credits: pricingConfig.basic.optimizations,
+                popular: false,
+                features: [
+                    { text: `${pricingConfig.basic.optimizations} optimizations/month`, included: true },
+                    { text: "Full Adaptive AI", included: true },
+                    { text: getHistoryText(pricingConfig.basic.history_days), included: true },
+                    { text: "Export your library", included: true },
+                    { text: "Web dashboard", included: true },
+                    { text: "Email support", included: true },
+                    { text: "MCP Server Access", included: pricingConfig.basic.api_access },
+                    { text: "API Access", included: pricingConfig.basic.api_access },
+                ],
+                cta: "Get Started",
+                foundingPrice: null,
+            },
+            {
+                name: "Pro",
+                key: "pro",
+                monthlyPrice: pricingConfig.pro.monthly_price,
+                annualPrice: pricingConfig.pro.annual_price || Math.round(pricingConfig.pro.monthly_price * 12 * (1 - discountPercent / 100)),
+                credits: pricingConfig.pro.optimizations,
+                popular: true,
+                features: [
+                    { text: `${pricingConfig.pro.optimizations} optimizations/month`, included: true },
+                    { text: "Full Adaptive AI", included: true },
+                    { text: getHistoryText(pricingConfig.pro.history_days), included: true },
+                    { text: "Export your library", included: true },
+                    { text: "MCP Server Access ⓘ", included: pricingConfig.pro.api_access, tooltip: "Works with Claude Desktop, Cursor, Windsurf & more" },
+                    { text: "Full API Access", included: pricingConfig.pro.api_access },
+                    { text: "Priority support", included: true },
+                ],
+                cta: "Get Started",
+                foundingPrice: (foundingConfig?.enabled && foundingConfig?.waves[0]) ? foundingConfig.waves[0].pro_price : null,
+            },
+            {
+                name: "Business",
+                key: "business",
+                monthlyPrice: pricingConfig.business.monthly_price,
+                annualPrice: pricingConfig.business.annual_price || Math.round(pricingConfig.business.monthly_price * 12 * (1 - discountPercent / 100)),
+                credits: pricingConfig.business.optimizations,
+                popular: false,
+                features: [
+                    { text: `${pricingConfig.business.optimizations} optimizations/month`, included: true },
+                    { text: "Full Adaptive AI", included: true },
+                    { text: getHistoryText(pricingConfig.business.history_days), included: true },
+                    { text: "Bulk export", included: true },
+                    { text: "MCP Server Access", included: pricingConfig.business.api_access },
+                    { text: "Full API Access", included: pricingConfig.business.api_access },
+                    { text: "Priority processing", included: true },
+                    { text: "Dedicated support", included: true },
+                ],
+                cta: "Get Started",
+                foundingPrice: (foundingConfig?.enabled && foundingConfig?.waves[0]) ? foundingConfig.waves[0].business_price : null,
+            }
+        ];
+        return tiers;
+    }, [pricingConfig, foundingConfig, generalSettings, discountPercent]);
+
     const handleCheckout = async (planKey: string) => {
         setLoadingPlan(planKey);
         try {
-            // For free tier, redirect to signup directly if using existing flow (which handles free product assignment)
             if (planKey === 'free') {
                 router.push(`/signup?plan=${planKey}&billing=${isAnnual ? "annual" : "monthly"}`);
                 return;
             }
 
-            // Determine discount code if founding pricing is active
             let discountCode: string | undefined;
             const selectedTier = TIERS.find(t => t.key === planKey);
 
-            if (selectedTier?.foundingPrice) {
-                // Hardcoded discount codes - User must create these in Dodo
+            if (selectedTier?.foundingPrice && foundingConfig?.enabled) {
                 if (planKey === 'pro') discountCode = 'FOUNDING_PRO';
                 if (planKey === 'business') discountCode = 'FOUNDING_BUSINESS';
             }
 
-            // Check if user is authenticated by trying to call checkout
             const res = await fetch('/api/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -123,45 +156,60 @@ export function PricingSection() {
             const data = await res.json();
 
             if (data.success && data.checkoutUrl) {
-                // User is logged in - redirect to checkout
                 window.location.href = data.checkoutUrl;
             } else if (res.status === 401) {
-                // Not logged in - redirect to signup
                 router.push(`/signup?plan=${planKey}&billing=${isAnnual ? "annual" : "monthly"}`);
             } else {
-                console.error('Checkout failed:', data.error);
-                // Fallback to signup
                 router.push(`/signup?plan=${planKey}&billing=${isAnnual ? "annual" : "monthly"}`);
             }
         } catch (error) {
-            console.error('Checkout error:', error);
-            // Fallback to signup
             router.push(`/signup?plan=${planKey}&billing=${isAnnual ? "annual" : "monthly"}`);
         } finally {
             setLoadingPlan(null);
         }
     };
 
+    if (!settings) {
+        return (
+            <section id="pricing" className="py-32 relative scroll-mt-20 overflow-hidden">
+                <Container>
+                    <div className="text-center animate-pulse">
+                        <div className="h-12 w-64 bg-white/10 mx-auto rounded mb-4" />
+                        <div className="h-4 w-48 bg-white/5 mx-auto rounded" />
+                    </div>
+                </Container>
+            </section>
+        );
+    }
+
+    const foundingMemberActive = foundingConfig?.enabled;
+
     return (
         <section id="pricing" className="py-32 relative scroll-mt-20 overflow-hidden">
             <Container>
                 {/* Founding Member Banner */}
-                <div className="max-w-4xl mx-auto mb-12">
-                    <div className="bg-gradient-to-r from-sunset-orange/20 to-midnight border border-sunset-orange/40 rounded-xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between text-center md:text-left shadow-[0_0_30px_rgba(229,120,68,0.2)]">
-                        <div>
-                            <h3 className="text-sunset-orange font-bold font-display uppercase tracking-widest text-sm md:text-base mb-2">
-                                🚀 Founding Member Special - Limited Spots Available
-                            </h3>
-                            <p className="text-white/60 text-xs md:text-sm">
-                                Lock in discounted pricing <span className="text-white font-bold">FOREVER</span>. Price never increases as long as you stay subscribed.
-                            </p>
-                        </div>
-                        <div className="mt-4 md:mt-0 flex flex-col md:items-end text-xs font-mono text-white/40">
-                            <div>Pro: <span className="text-white font-bold">$9/mo</span> <span className="line-through decoration-sunset-orange">Regular $15</span></div>
-                            <div>Business: <span className="text-white font-bold">$20/mo</span> <span className="line-through decoration-sunset-orange">Regular $35</span></div>
+                {foundingMemberActive && (
+                    <div className="max-w-4xl mx-auto mb-12">
+                        <div className="bg-gradient-to-r from-sunset-orange/20 to-midnight border border-sunset-orange/40 rounded-xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between text-center md:text-left shadow-[0_0_30px_rgba(229,120,68,0.2)]">
+                            <div>
+                                <h3 className="text-sunset-orange font-bold font-display uppercase tracking-widest text-sm md:text-base mb-2">
+                                    🚀 Founding Member Special - Limited Spots Available
+                                </h3>
+                                <p className="text-white/60 text-xs md:text-sm">
+                                    Lock in discounted pricing <span className="text-white font-bold">FOREVER</span>. Price never increases as long as you stay subscribed.
+                                </p>
+                            </div>
+                            <div className="mt-4 md:mt-0 flex flex-col md:items-end text-xs font-mono text-white/40">
+                                {TIERS.find(t => t.key === 'pro')?.foundingPrice && (
+                                    <div>Pro: <span className="text-white font-bold">${TIERS.find(t => t.key === 'pro')?.foundingPrice}/mo</span> <span className="line-through decoration-sunset-orange">Regular ${TIERS.find(t => t.key === 'pro')?.monthlyPrice}</span></div>
+                                )}
+                                {TIERS.find(t => t.key === 'business')?.foundingPrice && (
+                                    <div>Business: <span className="text-white font-bold">${TIERS.find(t => t.key === 'business')?.foundingPrice}/mo</span> <span className="line-through decoration-sunset-orange">Regular ${TIERS.find(t => t.key === 'business')?.monthlyPrice}</span></div>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
                 <div className="text-center mb-16">
                     <h2 className="text-4xl md:text-6xl font-normal font-display mb-6 text-white uppercase glow-sm">
@@ -192,7 +240,7 @@ export function PricingSection() {
                             className={cn("text-xs font-bold uppercase tracking-widest transition-colors flex items-center cursor-pointer", isAnnual ? "text-white" : "text-white/40")}
                             onClick={() => setIsAnnual(true)}
                         >
-                            Annual <Badge className="ml-2 px-1.5 py-0.5 text-[8px] bg-electric-cyan text-midnight font-bold border-none">SAVE 20%</Badge>
+                            Annual <Badge className="ml-2 px-1.5 py-0.5 text-[8px] bg-electric-cyan text-midnight font-bold border-none">SAVE {discountPercent}%</Badge>
                         </span>
                     </div>
                 </div>

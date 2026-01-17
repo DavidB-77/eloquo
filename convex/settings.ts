@@ -39,3 +39,25 @@ export const updateSettings = mutation({
         }
     },
 });
+
+/**
+ * Get all pricing-related settings for the frontend
+ */
+export const getAllPricingSettings = query({
+    args: {},
+    handler: async (ctx) => {
+        const [pricing, founding, annual, general] = await Promise.all([
+            ctx.db.query("system_settings").withIndex("by_key", (q) => q.eq("key", "pricing_tiers")).unique(),
+            ctx.db.query("system_settings").withIndex("by_key", (q) => q.eq("key", "founding_member")).unique(),
+            ctx.db.query("system_settings").withIndex("by_key", (q) => q.eq("key", "annual_discount")).unique(),
+            ctx.db.query("system_settings").withIndex("by_key", (q) => q.eq("key", "general_settings")).unique(),
+        ]);
+
+        return {
+            pricing: pricing?.value || null,
+            founding: founding?.value || null,
+            annual: annual?.value || null,
+            general: general?.value || null,
+        };
+    },
+});

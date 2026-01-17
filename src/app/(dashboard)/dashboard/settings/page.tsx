@@ -16,6 +16,13 @@ import { useUser } from "@/providers/UserProvider";
 
 
 
+import { useQuery } from "convex/react";
+import { api } from "../../../../../convex/_generated/api";
+import {
+    PricingConfig as PricingConfigType,
+    GeneralSettings as GeneralSettingsType
+} from "@/lib/settings";
+
 const MOCK_API_KEYS = [
     {
         id: "1",
@@ -27,7 +34,7 @@ const MOCK_API_KEYS = [
     },
 ];
 
-const PLAN_DETAILS: Record<string, { name: string; price: string; color: string }> = {
+const BASE_PLAN_DETAILS: Record<string, { name: string; price: string; color: string }> = {
     free: { name: "Free", price: "$0/mo", color: "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20" },
     basic: { name: "Basic", price: "$7/mo", color: "bg-muted text-muted-foreground" },
     pro: { name: "Pro", price: "$9/mo", color: "bg-primary text-primary-foreground" },
@@ -56,11 +63,27 @@ function SettingsContent() {
 
     const { userData, isLoading } = useUser();
 
+    // Fetch dynamic settings from Convex
+    const settings = useQuery(api.settings.getAllPricingSettings);
+    const pricingConfig = settings?.pricing as PricingConfigType | null;
+    const generalSettings = settings?.general as GeneralSettingsType | null;
+
+    // Build PLAN_DETAILS dynamically
+    const PLAN_DETAILS = React.useMemo(() => {
+        const details = { ...BASE_PLAN_DETAILS };
+        if (pricingConfig) {
+            details.basic = { ...details.basic, price: `$${pricingConfig.basic.monthly_price}/mo` };
+            details.pro = { ...details.pro, price: `$${pricingConfig.pro.monthly_price}/mo` };
+            details.business = { ...details.business, price: `$${pricingConfig.business.monthly_price}/mo` };
+        }
+        return details;
+    }, [pricingConfig]);
+
     // Default fallback if loading or no data
     const usage = userData || {
         tier: "free" as const,
         optimizationsUsed: 0,
-        optimizationsLimit: 3,
+        optimizationsLimit: generalSettings?.free_tier_weekly_limit ? generalSettings.free_tier_weekly_limit * 4 : 12,
         premiumCreditsUsed: 0,
         premiumCreditsLimit: 0,
         hasMcpAccess: false,
@@ -296,14 +319,14 @@ function SettingsContent() {
                                             <ul className="space-y-2 text-sm text-muted-foreground">
                                                 <li className="flex items-center">
                                                     <Check className="h-4 w-4 text-success mr-2" />
-                                                    {credits} credits/month
+                                                    {pricingConfig ? pricingConfig[tier as keyof PricingConfigType].optimizations : credits} credits/month
                                                 </li>
                                                 <li className="flex items-center">
                                                     <Check className="h-4 w-4 text-success mr-2" />
                                                     {tier === "basic" ? "Email" : tier === "pro" ? "Priority" : "Dedicated"} support
                                                 </li>
                                                 <li className="flex items-center">
-                                                    <Check className={`h-4 w-4 mr-2 ${tier === "basic" ? "text-muted" : "text-success"}`} />
+                                                    <Check className={`h-4 w-4 mr-2 ${pricingConfig ? (pricingConfig[tier as keyof PricingConfigType].api_access ? "text-success" : "text-muted") : (tier === "basic" ? "text-muted" : "text-success")}`} />
                                                     MCP/API access
                                                 </li>
                                             </ul>
