@@ -40,6 +40,12 @@ const THEMES = [
     { value: "danger", label: "Danger (Red)", color: "bg-red-500" },
 ];
 
+const DISMISS_BEHAVIORS = [
+    { value: "once", label: "Show Once (User sees it once, then never again)" },
+    { value: "session", label: "Per Session (Shows once per browser session)" },
+    { value: "always", label: "Always Show (Shows every page load until deactivated)" },
+];
+
 export default function AdminAnnouncementsPage() {
     // Convex queries and mutations
     const announcements = useQuery(api.announcements.getAllAnnouncements) || [];
@@ -58,6 +64,7 @@ export default function AdminAnnouncementsPage() {
     const [displayType, setDisplayType] = React.useState("modal");
     const [category, setCategory] = React.useState("update");
     const [theme, setTheme] = React.useState("info");
+    const [dismissBehavior, setDismissBehavior] = React.useState("once");
     const [ctaText, setCtaText] = React.useState("");
     const [ctaLink, setCtaLink] = React.useState("");
     const [saving, setSaving] = React.useState(false);
@@ -71,6 +78,7 @@ export default function AdminAnnouncementsPage() {
         setDisplayType("modal");
         setCategory("update");
         setTheme("info");
+        setDismissBehavior("once");
         setCtaText("");
         setCtaLink("");
         setEditingId(null);
@@ -92,6 +100,7 @@ export default function AdminAnnouncementsPage() {
                     display_type: displayType,
                     category,
                     theme,
+                    dismiss_behavior: dismissBehavior,
                     cta_text: ctaText || undefined,
                     cta_link: ctaLink || undefined,
                 });
@@ -105,6 +114,7 @@ export default function AdminAnnouncementsPage() {
                     display_type: displayType,
                     category,
                     theme,
+                    dismiss_behavior: dismissBehavior,
                     cta_text: ctaText || undefined,
                     cta_link: ctaLink || undefined,
                 });
@@ -128,6 +138,7 @@ export default function AdminAnnouncementsPage() {
         setDisplayType(announcement.display_type || "modal");
         setCategory(announcement.category || "update");
         setTheme(announcement.theme || "info");
+        setDismissBehavior(announcement.dismiss_behavior || "once");
         setCtaText(announcement.cta_text || "");
         setCtaLink(announcement.cta_link || "");
         setIsOpen(true);
@@ -366,6 +377,24 @@ export default function AdminAnnouncementsPage() {
                                     <label htmlFor="is-active" className="text-sm">Active (visible to users)</label>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Dismiss Behavior */}
+                        <div className="space-y-2">
+                            <Label>Dismiss Behavior</Label>
+                            <select
+                                value={dismissBehavior}
+                                onChange={(e) => setDismissBehavior(e.target.value)}
+                                className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white"
+                                aria-label="Dismiss behavior"
+                            >
+                                {DISMISS_BEHAVIORS.map(b => (
+                                    <option key={b.value} value={b.value}>{b.label}</option>
+                                ))}
+                            </select>
+                            <p className="text-xs text-gray-500">
+                                Controls how users can dismiss this announcement
+                            </p>
                         </div>
 
                         {/* Call to Action */}

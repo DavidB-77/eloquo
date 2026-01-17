@@ -261,6 +261,9 @@ export default defineSchema({
         // NEW: Styling options
         theme: v.optional(v.string()), // "info", "warning", "success", "danger"
 
+        // NEW: Dismiss behavior
+        dismiss_behavior: v.optional(v.string()), // "once" (forever), "session" (per session), "always" (every page)
+
         // NEW: Call to action
         cta_text: v.optional(v.string()),
         cta_link: v.optional(v.string()),

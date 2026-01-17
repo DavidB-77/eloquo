@@ -63,6 +63,7 @@ export const createAnnouncement = mutation({
         display_type: v.optional(v.string()), // "modal", "banner", "toast"
         category: v.optional(v.string()), // "update", "maintenance", "feature", "promotion", "urgent"
         theme: v.optional(v.string()), // "info", "warning", "success", "danger"
+        dismiss_behavior: v.optional(v.string()), // "once", "session", "always"
         cta_text: v.optional(v.string()),
         cta_link: v.optional(v.string()),
         start_date: v.optional(v.number()),
@@ -89,6 +90,7 @@ export const createAnnouncement = mutation({
             display_type: args.display_type ?? "modal",
             category: args.category ?? "update",
             theme: args.theme ?? "info",
+            dismiss_behavior: args.dismiss_behavior ?? "once",
             cta_text: args.cta_text,
             cta_link: args.cta_link,
             start_date: args.start_date,
@@ -113,6 +115,7 @@ export const updateAnnouncement = mutation({
         display_type: v.optional(v.string()),
         category: v.optional(v.string()),
         theme: v.optional(v.string()),
+        dismiss_behavior: v.optional(v.string()),
         cta_text: v.optional(v.string()),
         cta_link: v.optional(v.string()),
         start_date: v.optional(v.number()),
