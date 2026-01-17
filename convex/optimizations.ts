@@ -42,8 +42,8 @@ export const createOptimization = mutation({
     handler: async (ctx, args) => {
         // 1. Get user identity or fallback to provided userId/email
         const identity = await ctx.auth.getUserIdentity();
-        let userId = identity?.subject || args.userId;
-        let userEmail = identity?.email || args.userEmail;
+        const userId = identity?.subject || args.userId;
+        const userEmail = identity?.email || args.userEmail;
 
         if (!userId) {
             throw new Error("Unauthenticated: No user identity or userId provided");
@@ -67,10 +67,22 @@ export const createOptimization = mutation({
         }
 
         // Use the actual userId from profile if found
-        const finalUserId = profile.userId;
+        const profileUserId = profile.userId;
+
+        // SYNC LOGIC: If the provided userId (from Better Auth) doesn't match the profile's userId,
+        // we should update the profile so future queries (like history) work correctly.
+        if (args.userId && profileUserId !== args.userId) {
+            console.log(`[SYNC] Updating profile userId from ${profileUserId} to ${args.userId}`);
+            await ctx.db.patch(profile._id, {
+                userId: args.userId,
+                updated_at: new Date().toISOString()
+            });
+        }
+
+        const finalUserId = args.userId || profileUserId;
 
         // 3. Check rate limits
-        await checkRateLimit(ctx, profile as any);
+        await checkRateLimit(ctx, profile);
 
         // 4. Check if user has credits (basic validation)
         const isPaidUser = profile.subscription_tier !== "free";

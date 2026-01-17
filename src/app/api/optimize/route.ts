@@ -212,35 +212,41 @@ export async function POST(request: Request) {
             const model = successResult.analytics?.generationModel || successResult.generationModel || 'deepseek/deepseek-chat';
             const apiCost = calculateCost(inputTokens, outputTokens, model);
 
-            console.log(`[OPTIMIZE][${Date.now() - startTime}ms] Saving optimization to Convex...`);
+            console.log(`[OPTIMIZE] Saving to Convex. User: ${actualUserId}, Email: ${actualEmail}, Tier: ${userTier}`);
 
-            // Call Convex mutation to save optimization and update usage
-            // The mutation handles credit deduction and logging
-            await convex.mutation(api.optimizations.createOptimization, {
-                userId: actualUserId,
-                userEmail: actualEmail || undefined,
-                originalPrompt: prompt,
-                optimizedPrompt: optimizedPrompt || '',
-                targetModel: targetModel,
-                optimizationType: (successResult.metrics?.outputMode as "standard" | "comprehensive") || "standard",
-                strength: strength,
-                context: context || undefined,
+            try {
+                // Call Convex mutation to save optimization and update usage
+                // The mutation handles credit deduction and logging
+                const mutationResult = await convex.mutation(api.optimizations.createOptimization, {
+                    userId: actualUserId || undefined,
+                    userEmail: actualEmail || undefined,
+                    originalPrompt: prompt,
+                    optimizedPrompt: optimizedPrompt || '',
+                    targetModel: targetModel,
+                    optimizationType: (successResult.metrics?.outputMode as "standard" | "comprehensive") || "standard",
+                    strength: strength,
+                    context: context || undefined,
 
-                tokensOriginal: inputTokens,
-                tokensOptimized: outputTokens,
-                improvements: successResult.improvements || [],
-                metrics: {
-                    qualityScore: successResult.validation?.score || 0,
-                    total_tokens: inputTokens + outputTokens,
-                    processing_time_sec: processingTime / 1000,
-                    api_cost_usd: apiCost,
-                },
-                wasOrchestrated: false,
-                outputMode: successResult.metrics?.outputMode,
-                creditsUsed: successResult.metrics?.creditsUsed || 1,
-            });
+                    tokensOriginal: inputTokens,
+                    tokensOptimized: outputTokens,
+                    improvements: successResult.improvements || [],
+                    metrics: {
+                        qualityScore: successResult.validation?.score || 0,
+                        total_tokens: inputTokens + outputTokens,
+                        processing_time_sec: processingTime / 1000,
+                        api_cost_usd: apiCost,
+                    },
+                    wasOrchestrated: false,
+                    outputMode: successResult.metrics?.outputMode,
+                    creditsUsed: successResult.metrics?.creditsUsed || 1,
+                });
 
-            console.log(`[OPTIMIZE][${Date.now() - startTime}ms] Saved successfully.`);
+                console.log(`[OPTIMIZE][${Date.now() - startTime}ms] Saved successfully. ID: ${mutationResult?.optimizationId || 'unknown'}`);
+            } catch (saveError: any) {
+                console.error('[OPTIMIZE] FAILED TO SAVE TO HISTORY:', saveError.message);
+                // We DON'T throw here so the user still gets their result, 
+                // but we need to know why it failed.
+            }
 
             // Ensure frontend gets calculated metrics
             if (!successResult.metrics) {
