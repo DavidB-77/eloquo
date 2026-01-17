@@ -761,7 +761,10 @@ async def optimize(request: OptimizeRequest):
         # Stage 0: File Analysis (if files uploaded)
         file_context = ""
         if request.files:
+            logger.info(f"[STAGE 0] Starting File Analysis for {len(request.files)} files...")
+            file_ts = time.time()
             file_context = await analyze_files(request.files)
+            logger.info(f"[STAGE 0] File Analysis complete in {time.time() - file_ts:.2f}s")
             if file_context:
                 stages_used.append("file_analysis")
                 metrics["stages"]["file_analysis"] = {
@@ -771,6 +774,8 @@ async def optimize(request: OptimizeRequest):
         models = TIER_MODELS[request.user_tier]
         
         # Stage 1: Classify
+        logger.info(f"[STAGE 1] Starting Classification (Model: {models['classify']})...")
+        classify_ts = time.time()
         classifier = create_classifier(models["classify"])
         classify_prompt = f"Analyze this prompt:\n\n{request.prompt}"
         if request.context:
@@ -779,6 +784,7 @@ async def optimize(request: OptimizeRequest):
             classify_prompt += f"\n\nFile analysis: {file_context}"
         classify_response = classifier.run(classify_prompt)
         classification: ClassifyResult = classify_response.content
+        logger.info(f"[STAGE 1] Classification complete in {time.time() - classify_ts:.2f}s (Result: {classification.complexity})")
         stages_used.append("classify")
         
         # Track metrics (Agno doesn't expose token counts directly, estimate)
@@ -803,6 +809,8 @@ async def optimize(request: OptimizeRequest):
         # Stage 2: Analyze (for moderate/complex)
         analysis = None
         if classification.complexity in ["moderate", "complex"]:
+            logger.info(f"[STAGE 2] Starting Analysis (Model: {models['analyze']})...")
+            analyze_ts = time.time()
             analyzer = create_analyzer(models["analyze"])
             analyze_prompt = f"""Original prompt: {request.prompt}
 Classification: {classification.complexity} complexity, {classification.domain} domain
@@ -812,6 +820,7 @@ Classification: {classification.complexity} complexity, {classification.domain} 
             
             analyze_response = analyzer.run(analyze_prompt)
             analysis: AnalyzeResult = analyze_response.content
+            logger.info(f"[STAGE 2] Analysis complete in {time.time() - analyze_ts:.2f}s")
             stages_used.append("analyze")
             
             metrics["stages"]["analyze"] = {
@@ -821,6 +830,8 @@ Classification: {classification.complexity} complexity, {classification.domain} 
             }
         
         # Stage 3: Generate
+        logger.info(f"[STAGE 3] Starting Generation (Model: {models['generate']})...")
+        gen_ts = time.time()
         generator = create_generator(models["generate"])
         generate_prompt = f"""Original prompt: {request.prompt}
 Domain: {classification.domain}
@@ -875,6 +886,7 @@ Optimization opportunities: {', '.join(analysis.optimization_opportunities)}
         
         generate_response = generator.run(generate_prompt)
         result: GenerateResult = generate_response.content
+        logger.info(f"[STAGE 3] Generation complete in {time.time() - gen_ts:.2f}s")
         stages_used.append("generate")
         
         metrics["stages"]["generate"] = {
