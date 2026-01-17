@@ -244,6 +244,13 @@ export const getUsage = query({
         let tier = profile.subscription_tier ?? "free";
         if (isHardcodedAdmin) tier = "enterprise";
 
+        // DYNAMIC COUNT for optimizations used (ensures accuracy)
+        const optimizations = await ctx.db
+            .query("optimizations")
+            .withIndex("by_user", (q) => q.eq("user_id", profile.userId || identity.subject))
+            .collect();
+        const actualOptimizationsUsed = optimizations.length;
+
         const tierLimit = isAdmin ? Infinity :
             tier === 'pro' ? 400 :
                 tier === 'business' || tier === 'enterprise' ? 1000 :
@@ -256,7 +263,7 @@ export const getUsage = query({
         // Map Convex profile to UserData structure used in the app
         return {
             tier: tier,
-            optimizationsUsed: profile.optimizations_used ?? 0,
+            optimizationsUsed: actualOptimizationsUsed,
             optimizationsLimit: tierLimit,
             premiumCreditsUsed: 0,
             premiumCreditsLimit: 0,

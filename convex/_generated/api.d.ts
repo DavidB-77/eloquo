@@ -12,6 +12,7 @@ import type * as admin from "../admin.js";
 import type * as announcements from "../announcements.js";
 import type * as api_keys from "../api_keys.js";
 import type * as auth from "../auth.js";
+import type * as debug_counts from "../debug_counts.js";
 import type * as debug_identity from "../debug_identity.js";
 import type * as debug_profiles from "../debug_profiles.js";
 import type * as debug_qube from "../debug_qube.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   announcements: typeof announcements;
   api_keys: typeof api_keys;
   auth: typeof auth;
+  debug_counts: typeof debug_counts;
   debug_identity: typeof debug_identity;
   debug_profiles: typeof debug_profiles;
   debug_qube: typeof debug_qube;
