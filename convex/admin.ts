@@ -407,7 +407,7 @@ export const createAdminNow = mutation({
     args: {},
     handler: async (ctx) => {
         const adminEmail = "dj.blaney77@gmail.com";
-        const adminUserId = "k57fz79596dd5wk0k075az36h7zbq4d"; // Your Better Auth userId
+        const adminUserId = "k57fz79t96ddd5wk0k075az36h7zbq4d"; // Your Better Auth userId (from DEBUG)
 
         // Check if profile already exists
         const existing = await ctx.db
