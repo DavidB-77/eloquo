@@ -107,7 +107,7 @@ export const createOptimization = mutation({
 
         // 4. Check if user has credits (basic validation)
         const isPaidUser = profile.subscription_tier !== "free";
-        if (!isPaidUser && profile.optimizations_remaining <= 0) {
+        if (!isPaidUser && (profile.optimizations_remaining ?? 0) <= 0) {
             throw new Error("No optimizations remaining. Please upgrade.");
         }
 
