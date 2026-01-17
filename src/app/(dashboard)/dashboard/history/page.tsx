@@ -478,7 +478,7 @@ ${item.stories_document || ''}`;
                                                 <div className="pt-4 border-t border-electric-cyan/10">
                                                     <h4 className="text-xs font-bold uppercase tracking-widest text-white/60 mb-3">Improvements Made</h4>
                                                     <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                                        {item.improvements.map((imp, i) => (
+                                                        {item.improvements.map((imp: string, i: number) => (
                                                             <li key={i} className="flex items-start gap-2 text-xs text-white/80 bg-deep-teal/10 p-2 rounded-lg border border-electric-cyan/5">
                                                                 <span className="text-electric-cyan">✓</span>
                                                                 {imp}
