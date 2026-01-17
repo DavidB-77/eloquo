@@ -16,7 +16,7 @@ export const getDashboardStats = query({
         const totalUsers = users.length;
 
         // 2. User Growth (compare to 7 days ago)
-        const lastWeekUsers = users.filter(u => u.created_at <= sevenDaysAgo).length;
+        const lastWeekUsers = users.filter(u => (u.created_at ?? 0) <= sevenDaysAgo).length;
         const growth = lastWeekUsers > 0
             ? Math.round(((totalUsers - lastWeekUsers) / lastWeekUsers) * 100)
             : 0;
@@ -150,7 +150,7 @@ export const getTopUsersDetailed = query({
                     count: 0,
                     cost: 0,
                     email: profile?.email,
-                    tier: profile?.subscription_tier
+                    tier: profile?.subscription_tier ?? undefined
                 };
             }
             userStats[opt.user_id].count++;
@@ -191,7 +191,7 @@ export const getFinancialSummary = query({
             enterprise: 199
         };
 
-        const totalRevenue = profiles.reduce((sum, p) => sum + (tierPrices[p.subscription_tier] || 0), 0);
+        const totalRevenue = profiles.reduce((sum, p) => sum + (tierPrices[(p.subscription_tier as keyof typeof tierPrices) ?? 'free'] || 0), 0);
         const totalProfit = totalRevenue - totalCost;
 
         return {
