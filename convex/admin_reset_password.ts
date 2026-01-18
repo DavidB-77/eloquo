@@ -3,6 +3,7 @@
 
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { authComponent } from "./auth";
 
 export const resetAdminPassword = mutation({
     args: {
@@ -15,38 +16,31 @@ export const resetAdminPassword = mutation({
             throw new Error("This script is only for the admin email");
         }
 
-        // Import bcrypt-like hashing from Better Auth
-        const bcrypt = await import("bcryptjs");
-        const hashedPassword = await bcrypt.hash(args.newPassword, 10);
+        console.log(`[ADMIN_RESET] Attempting password reset for: ${args.email}`);
 
-        // Find the user in the Better Auth users table
-        const user = await ctx.db
+        // Use Better Auth's internal methods to update password
+        // This is a direct database operation on the Better Auth tables
+        const users = await ctx.db
             .query("betterAuth_user")
-            .withIndex("by_email", (q) => q.eq("email", args.email))
-            .first();
+            .collect();
+
+        console.log(`[ADMIN_RESET] Found ${users.length} users in database`);
+
+        const user = users.find((u) => u.email === args.email);
 
         if (!user) {
-            throw new Error(`User not found: ${args.email}`);
+            throw new Error(`User not found: ${args.email}. Available users: ${users.map(u => u.email).join(", ")}`);
         }
 
-        // Update the password in the Better Auth accounts table
-        const account = await ctx.db
-            .query("betterAuth_account")
-            .withIndex("by_userId", (q) => q.eq("userId", user.id))
-            .filter((q) => q.eq(q.field("providerId"), "credential"))
-            .first();
+        console.log(`[ADMIN_RESET] Found user: ${user.id}`);
 
-        if (!account) {
-            throw new Error("No credential account found for this user");
-        }
-
-        await ctx.db.patch(account._id, {
-            password: hashedPassword,
-        });
-
+        // For now, just return the user info so you can manually reset via the Better Auth dashboard
+        // or we can use the password reset flow
         return {
             success: true,
-            message: `Password reset successfully for ${args.email}`,
+            message: `Found user ${args.email}. Please use the password reset flow at https://eloquo.io/reset-password`,
+            userId: user.id,
+            userEmail: user.email,
         };
     },
 });
