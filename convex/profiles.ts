@@ -239,6 +239,7 @@ export const getUsage = query({
         const name = identity.name || identity.givenName || "";
         const isHardcodedAdmin =
             email === "dj.blaney77@gmail.com" ||
+            email === "dj.blaney77+admin@gmail.com" ||
             email === "dcdgllc14@gmail.com" ||
             email.includes("dj.blaney") ||
             name.includes("Qube");
