@@ -35,6 +35,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
     // Derive loading state from query result instead of using effect
     const isLoading = convexUsage === undefined;
 
+    // DEBUG: Inspect user data
+    if (convexUsage) {
+        console.log("[UserProvider] Received userData:", convexUsage);
+    } else {
+        console.log("[UserProvider] Loading or no data...");
+    }
+
     const contextValue = useMemo(() => ({
         userData: (convexUsage as UserData) || null,
         isLoading,
