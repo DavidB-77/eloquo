@@ -1,64 +1,58 @@
-// Better Auth API Route Handler
-// Proxies auth requests from Next.js to Convex
+import { handler } from '@/lib/auth-server';
+import { NextResponse } from 'next/server';
 
-import { handler } from "@/lib/auth-server";
-import { NextResponse } from "next/server";
+export const dynamic = 'force-dynamic';
 
-// Ensure the route is dynamic
-export const dynamic = "force-dynamic";
-
-// Helper to sanitize headers and create a safe request object
 const getSafeRequest = (request: Request): Request => {
-    const headers = new Headers(request.headers);
-    // Problematic headers for Node's fetch (undici)
-    headers.delete("connection");
-    headers.delete("keep-alive");
-    headers.delete("proxy-connection");
-    headers.delete("transfer-encoding");
-    headers.delete("host"); // Let fetch set the correct host based on request.url
+    const headers = new Headers();
+
+    // Only pass through non-hop-by-hop headers that are safe for undici
+    const allowedHeaders = [
+        'accept', 'accept-encoding', 'accept-language',
+        'authorization', 'content-type', 'cookie',
+        'origin', 'referer', 'user-agent',
+        'x-requested-with'
+    ];
+
+    request.headers.forEach((value, key) => {
+        if (allowedHeaders.includes(key.toLowerCase())) {
+            headers.set(key, value);
+        }
+    });
+
+    // Explicitly ensure connection-related headers are GONE
+    headers.delete('connection');
+    headers.delete('keep-alive');
+    headers.delete('proxy-connection');
+    headers.delete('transfer-encoding');
+    headers.delete('te');
+    headers.delete('host');
 
     return new Request(request.url, {
         method: request.method,
         headers: headers,
-        body: request.method === "POST" ? request.body : undefined,
-        duplex: "half",
-    } as any);
+        body: request.method === 'POST' ? request.body : undefined,
+        // @ts-ignore
+        duplex: 'half',
+    });
 };
 
-// Wrap handler to add debugging and sanitization
 export async function GET(request: Request) {
-    console.log("[Auth Route] GET request to:", request.url);
-
-    // If handler exists and returns a response, use it
-    if (handler?.GET) {
-        try {
-            const safeReq = getSafeRequest(request);
-            const response = await handler.GET(safeReq);
-            console.log("[Auth Route] Handler response status:", response?.status);
-            return response;
-        } catch (error) {
-            console.error("[Auth Route] Handler error:", error);
-            return NextResponse.json({ error: "Auth handler error" }, { status: 500 });
-        }
+    try {
+        const safeReq = getSafeRequest(request);
+        return await handler.GET(safeReq);
+    } catch (err: any) {
+        console.error('[Auth Proxy GET Error]:', err?.message || err);
+        return NextResponse.json({ error: 'Auth Proxy Error', detail: err?.message }, { status: 500 });
     }
-
-    return NextResponse.json({ error: "No handler available" }, { status: 404 });
 }
 
 export async function POST(request: Request) {
-    console.log("[Auth Route] POST request to:", request.url);
-
-    if (handler?.POST) {
-        try {
-            const safeReq = getSafeRequest(request);
-            const response = await handler.POST(safeReq);
-            console.log("[Auth Route] Handler response status:", response?.status);
-            return response;
-        } catch (error) {
-            console.error("[Auth Route] Handler error:", error);
-            return NextResponse.json({ error: "Auth handler error" }, { status: 500 });
-        }
+    try {
+        const safeReq = getSafeRequest(request);
+        return await handler.POST(safeReq);
+    } catch (err: any) {
+        console.error('[Auth Proxy POST Error]:', err?.message || err);
+        return NextResponse.json({ error: 'Auth Proxy Error', detail: err?.message }, { status: 500 });
     }
-
-    return NextResponse.json({ error: "No handler available" }, { status: 404 });
 }

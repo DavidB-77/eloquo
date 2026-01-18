@@ -5,11 +5,12 @@ import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { components } from "./_generated/api";
 import { DataModel } from "./_generated/dataModel";
-import { query, mutation } from "./_generated/server";
+import { query } from "./_generated/server";
 import { betterAuth } from "better-auth/minimal";
 import authConfig from "./auth.config";
 
-const siteUrl = process.env.SITE_URL || "https://eloquo.io";
+const siteUrl = "https://eloquo.io";
+const authBaseUrl = `${siteUrl}/api/auth/convex`;
 
 // The component client has methods needed for integrating Convex with Better Auth
 export const authComponent = createClient<DataModel>(components.betterAuth);
@@ -17,8 +18,8 @@ export const authComponent = createClient<DataModel>(components.betterAuth);
 // Create the Better Auth instance
 export const createAuth = (ctx: GenericCtx<DataModel>) => {
     return betterAuth({
-        baseURL: siteUrl,
-        secret: process.env.JWT_SECRET || "fallback-secret-at-least-32-chars-long-1234567890", // Prevent crash if env var missing
+        baseURL: authBaseUrl,
+        secret: process.env.JWT_SECRET || "fallback-secret-at-least-32-chars-long-1234567890",
         database: authComponent.adapter(ctx),
 
         // Email and password authentication
@@ -61,7 +62,7 @@ export const getCurrentUser = query({
     handler: async (ctx) => {
         try {
             return await authComponent.getAuthUser(ctx);
-        } catch (e) {
+        } catch {
             return null;
         }
     },
@@ -74,7 +75,7 @@ export const isAuthenticated = query({
         try {
             const user = await authComponent.getAuthUser(ctx);
             return !!user;
-        } catch (e) {
+        } catch {
             return false;
         }
     },
@@ -97,7 +98,7 @@ export const getUserById = query({
                 emailVerified: user.emailVerified,
                 createdAt: user.createdAt,
             };
-        } catch (e) {
+        } catch {
             return null;
         }
     },
