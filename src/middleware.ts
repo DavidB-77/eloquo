@@ -11,7 +11,7 @@ export async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
 
     // Maintenance Mode - Set to true to enable global maintenance page
-    const isMaintenanceMode = true;
+    const isMaintenanceMode = false;
 
     if (isMaintenanceMode) {
         // Allow access to the maintenance page and static assets
