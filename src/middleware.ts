@@ -18,6 +18,7 @@ export async function middleware(request: NextRequest) {
         if (
             !pathname.startsWith('/maintenance') &&
             !pathname.startsWith('/_next') &&
+            !pathname.startsWith('/admin-signup') &&
             !pathname.match(/\.(.*)$/)
         ) {
             return NextResponse.redirect(new URL('/maintenance', request.url));
