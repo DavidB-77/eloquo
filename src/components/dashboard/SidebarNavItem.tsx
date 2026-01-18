@@ -30,7 +30,7 @@ export function SidebarNavItem({ href, icon: Icon, label, isCollapsed, badge, no
         >
             <div className="relative">
                 <Icon className={cn("h-5 w-5 shrink-0 transition-all duration-300", isActive ? "text-white glow-sm" : "text-white/40 group-hover:text-white")} />
-                {notificationCount && notificationCount > 0 && (
+                {!!notificationCount && notificationCount > 0 && (
                     <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
                 )}
             </div>
