@@ -233,6 +233,9 @@ export const getUsage = query({
 
         // --- FORCE ADMIN FIX (Success Path) ---
         const email = identity.email?.toLowerCase() || "";
+        // DEBUG LOGGING
+        console.log(`[DEBUG_USAGE] Identity: ${identity.subject}, Email: ${email}`);
+
         const name = identity.name || identity.givenName || "";
         const isHardcodedAdmin =
             email === "dj.blaney77@gmail.com" ||
@@ -240,9 +243,13 @@ export const getUsage = query({
             email.includes("dj.blaney") ||
             name.includes("Qube");
 
+        console.log(`[DEBUG_USAGE] isHardcodedAdmin: ${isHardcodedAdmin}`);
+
         if (isHardcodedAdmin) {
             isAdmin = true;
         }
+
+        console.log(`[DEBUG_USAGE] Final isAdmin state: ${isAdmin}`);
 
         // Calculate tier-based limits (enterprise = business tier)
         let tier = profile.subscription_tier ?? "free";
