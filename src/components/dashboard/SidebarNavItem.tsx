@@ -39,11 +39,7 @@ export function SidebarNavItem({ href, icon: Icon, label, isCollapsed, badge, no
                     {label}
                 </span>
             )}
-            {!isCollapsed && notificationCount && notificationCount > 0 && (
-                <span className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                    {notificationCount > 9 ? "9+" : notificationCount}
-                </span>
-            )}
+            {/* Numerical badges removed as per user request */}
             {!isCollapsed && badge && !notificationCount && (
                 <span className="text-[8px] font-bold uppercase tracking-wider bg-purple-500/20 text-purple-400 border border-purple-500/30 px-1.5 py-0.5 rounded">
                     {badge}
@@ -51,7 +47,7 @@ export function SidebarNavItem({ href, icon: Icon, label, isCollapsed, badge, no
             )}
             {isCollapsed && (
                 <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded shadow-md opacity-0 group-hover:opacity-100 pointer-events-none z-50 whitespace-nowrap border">
-                    {label} {notificationCount ? `(${notificationCount})` : ""}
+                    {label}
                 </div>
             )}
         </Link>
