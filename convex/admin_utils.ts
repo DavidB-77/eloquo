@@ -1,45 +1,48 @@
-import { internalMutation } from "./_generated/server";
+import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 
-export const deleteUserByEmail = internalMutation({
+export const deleteUserByEmail = mutation({
     args: { email: v.string() },
     handler: async (ctx, args) => {
+        // Cast db to any to bypass schema validation for Better Auth tables
+        const db = ctx.db as any;
+
         // 1. Find user in "users" table (Better Auth)
-        const user = await ctx.db
+        const user = await db
             .query("betterAuth_user")
-            .withIndex("by_email", (q) => q.eq("email", args.email))
+            .withIndex("by_email", (q: any) => q.eq("email", args.email))
             .first();
 
         let deletedUser = false;
         if (user) {
-            await ctx.db.delete(user._id);
+            await db.delete(user._id);
             deletedUser = true;
 
             // Delete associated accounts
-            const accounts = await ctx.db
+            const accounts = await db
                 .query("betterAuth_account")
-                .withIndex("by_userId", (q) => q.eq("userId", user.id))
+                .withIndex("by_userId", (q: any) => q.eq("userId", user.id))
                 .collect();
 
             for (const acc of accounts) {
-                await ctx.db.delete(acc._id);
+                await db.delete(acc._id);
             }
 
             // Delete associated sessions
-            const sessions = await ctx.db
+            const sessions = await db
                 .query("betterAuth_session")
-                .withIndex("by_userId", (q) => q.eq("userId", user.id))
+                .withIndex("by_userId", (q: any) => q.eq("userId", user.id))
                 .collect();
 
             for (const sess of sessions) {
-                await ctx.db.delete(sess._id);
+                await db.delete(sess._id);
             }
         }
 
         // 2. Find profile in "profiles" table
-        const profile = await ctx.db
+        const profile = await db
             .query("profiles")
-            .withIndex("by_email", (q) => q.eq("email", args.email))
+            .withIndex("by_email", (q: any) => q.eq("email", args.email))
             .first();
 
         let deletedProfile = false;
