@@ -1,3 +1,5 @@
+"use node";
+
 // Direct password reset script for admin
 // Run this once via: npx convex run admin_password_reset:setPassword '{"email":"dj.blaney77@gmail.com","password":"YOUR_NEW_PASSWORD"}'
 
@@ -11,15 +13,6 @@ export const setPassword = internalMutation({
     },
     handler: async (ctx, args) => {
         console.log(`[PASSWORD_RESET] Starting password reset for: ${args.email}`);
-
-        // Hash the password using a simple approach
-        // Better Auth uses bcrypt internally, but we'll use a compatible hash
-        const crypto = require("crypto");
-        const salt = crypto.randomBytes(16).toString("hex");
-        const hash = crypto.pbkdf2Sync(args.password, salt, 1000, 64, "sha512").toString("hex");
-        const hashedPassword = `${salt}:${hash}`;
-
-        console.log(`[PASSWORD_RESET] Password hashed successfully`);
 
         // Find user by email in profiles table
         const profile = await ctx.db
