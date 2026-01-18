@@ -1,8 +1,7 @@
 "use client";
 
 import { Container } from "@/components/layout/Container";
-import { Wrench, Clock, ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Wrench, ShieldCheck } from "lucide-react";
 
 export default function MaintenancePage() {
     return (
@@ -33,20 +32,11 @@ export default function MaintenancePage() {
                     We will be back shortly.
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-lg mx-auto mb-10">
-                    <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center gap-3">
-                        <ShieldCheck className="h-5 w-5 text-green-400" />
-                        <div className="text-left">
-                            <div className="text-sm font-medium text-white">Security Upgrade</div>
-                            <div className="text-xs text-white/40">Ensuring data protection</div>
-                        </div>
-                    </div>
-                    <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center gap-3">
-                        <Clock className="h-5 w-5 text-yellow-400" />
-                        <div className="text-left">
-                            <div className="text-sm font-medium text-white">Estimated Time</div>
-                            <div className="text-xs text-white/40">~30 Minutes</div>
-                        </div>
+                <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center justify-center gap-3 col-span-1 md:col-span-2">
+                    <ShieldCheck className="h-5 w-5 text-green-400" />
+                    <div className="text-left">
+                        <div className="text-sm font-medium text-white">Security Upgrade</div>
+                        <div className="text-xs text-white/40">Ensuring data protection</div>
                     </div>
                 </div>
             </Container>
