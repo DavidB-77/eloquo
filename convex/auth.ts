@@ -51,9 +51,14 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
         },
 
         plugins: [
-            // The Convex plugin is required for Convex compatibility
             convex({ authConfig }),
         ],
+
+        user: {
+            creation: {
+                enabled: false, // This explicitly disables user creation via the API
+            }
+        }
     });
 };
 
