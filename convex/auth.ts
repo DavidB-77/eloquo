@@ -28,7 +28,8 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
             requireEmailVerification: false, // Handle via Resend separately
         },
 
-        // Social providers
+        // Social providers disabled for now to simplify self-hosted setup
+        /*
         socialProviders: {
             google: {
                 enabled: true,
@@ -41,6 +42,7 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
                 clientSecret: process.env.GITHUB_CLIENT_SECRET!,
             },
         },
+        */
 
         // Session configuration
         session: {
