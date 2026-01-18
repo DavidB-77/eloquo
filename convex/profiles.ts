@@ -234,7 +234,11 @@ export const getUsage = query({
         // --- FORCE ADMIN FIX (Success Path) ---
         const email = identity.email?.toLowerCase() || "";
         const name = identity.name || identity.givenName || "";
-        const isHardcodedAdmin = email === "dj.blaney77@gmail.com" || email.includes("dj.blaney") || name.includes("Qube");
+        const isHardcodedAdmin =
+            email === "dj.blaney77@gmail.com" ||
+            email === "dcdgllc14@gmail.com" ||
+            email.includes("dj.blaney") ||
+            name.includes("Qube");
 
         if (isHardcodedAdmin) {
             isAdmin = true;
